@@ -41,5 +41,5 @@ A simple PDF document manager. Manage, display, and distribute PDF documents eas
 2. Restrict documents by user groups
 3. Extract specified data from pdf documents and store into the database
 
-## For Help
+## For Help, comments or request additional features.
 # email support@legoeso.com
