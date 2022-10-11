@@ -1,0 +1,36 @@
+ /**
+ * CSS style for PDF Doc Manager
+ * All of the CSS for your public-facing functionality should be included in this file.
+ *
+ * The file is enqueued from inc/frontend/class-frontend.php.
+ * @link       http://www.legoeso.com
+ * @since      1.0.0
+ * 
+ * @author     Torvis Wesley
+ */
+ .pdm_docs_buttons_container {
+	display:flex;
+	justify-content: space-around;
+    flex-direction: column;
+}
+.convertion_result_button {
+	font-size: 1.1rem;
+	padding:1rem;
+	margin:1rem;
+	border-radius:4px;
+	background-color:#6B6B6B;
+	border: 1px solid #484848;
+}
+.convertion_result_button a {
+	color:white;
+}
+.pdm_docs_preview_container {
+	display:flex;
+	justify-content: space-around;
+	align-items: center;
+}
+.pdm_docs_thumbnail_result {
+	max-width: 100px;
+    max-height: 100px;
+    border: 1px solid;
+}

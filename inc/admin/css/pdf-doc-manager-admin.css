@@ -1,0 +1,168 @@
+/**
+ * All of the CSS for your admin-specific functionality should be included in this file.
+ *
+ * The file is enqueued from inc/admin/class-admin.php.
+
+#progressOutter {
+    width: 500px;
+    border: 0px solid #aaa;
+    height: 20px;
+}
+#progressbar {
+    width: 500px;
+    border: 0px solid #aaa;
+    height: 20px;
+}
+#progressbar .bar {
+    background-color: #ccc;
+    height: 20px;
+}
+
+
+.progress {
+    display: block;
+    text-align: center;
+    color:ghostwhite;
+    font-weight:bold;
+    width: 0;
+    height: 20px;
+    background: red;
+    transition: width .3s;
+}*/
+
+
+.progress.hide {
+    opacity: 0;
+    transition: opacity 1.3s;
+} 
+
+.progress.display {
+    vertical-align: middle;
+    text-align: center;
+    margin: 5px 0px 0px 0px;
+    border-top-left-radius: 80px 80px;
+    border-top-right-radius: 80px 80px;
+}
+
+.status_messages {
+	vertical-align: middle;
+    text-align: center;
+    font-size: 12px;
+    border-end-start-radius: 80px 80px;
+    border-end-end-radius: 80px 80px;
+}
+
+.server-response-box {
+	display:  none;   
+    padding: 5px 5px 5px 5px;
+    border-end-start-radius: 20px 20px;
+    border-end-end-radius: 20px 20px;
+    background-color: #e9ecef;
+}
+
+.server-response-head {  
+    line-height: 1;
+    text-align: center;
+    cursor:pointer;
+}
+.server-response-head-expand {  
+    line-height: 1;
+    text-align: center;
+    cursor:pointer;
+}
+
+.server-message{
+    display: none;
+}
+.server-message-expand{
+    display: block;
+    padding: 10px 10px 10px 10px;
+}
+.server-response-head::after { 
+    font-size: 35px;
+    vertical-align: middle;
+    font-family: "dashicons"; 
+    content: "\f139";
+}
+
+.server-response-head-expand::after { 
+    font-size: 35px;
+    vertical-align: middle;
+    font-family: "dashicons"; 
+    content: "\f140";
+}
+
+a.delete_item{
+    color:crimson;
+}
+
+.drag-drop #pdm-drag-drop-area{
+    border: 4px dashed #c3c4c7;
+    height: 200px;  
+}
+
+.drag-drop .drag-drop-inside {
+	margin: 60px auto 0;
+	width: 350px;
+}
+
+.drag-drop-inside p {
+	font-size: 14px;
+	margin: 5px 0;
+	display: none;
+}
+
+.drag-drop .drag-drop-inside p {
+	text-align: center;
+}
+
+.drag-drop-inside p.drag-drop-info {
+	font-size: 20px;
+}
+
+.drag-drop .drag-drop-inside p,
+.drag-drop-inside p.drag-drop-buttons {
+	display: block;
+}
+
+.drag-drop-category {
+	display: block;
+    text-align: center;
+    margin: 5px 0;
+}
+/*
+#drag-drop-area:-moz-drag-over {
+	border-color: #83b4d8;
+}
+border color while dragging a file over the uploader drop area */
+.drag-drop.drag-over #pdm-drag-drop-area {
+	border-color: #9ec2e6;
+}
+
+#pdm-upload-upload-ui {
+	position: relative;
+}
+
+.no-js .hide-if-no-js{
+    display: none;
+}
+
+.wp-filter .view-category {
+	display: inline-block;
+	vertical-align: middle;
+	padding: 12px 0;
+	margin: 0 8px 0 2px;
+}
+
+.view-category span {
+    width: 36px;
+    height: 36px;
+    line-height: 2.53846153;
+}
+
+.view-category:before {
+	content: "\f163";
+}
+.view-category:before {
+	color: #2271b1;
+}

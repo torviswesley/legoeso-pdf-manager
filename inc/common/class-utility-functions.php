@@ -1,0 +1,395 @@
+<?php
+namespace Legoeso_PDF_Manager\Inc\Common;
+
+use Legoeso_PDF_Manager as NS;
+use \ErrorException;
+/**
+ * Utility Class - defines helper utility functions.
+ *
+ * Defines helper functions used by the plugin 
+ *
+ * @link       https://www.legoeso.com
+ * @since      1.0.0
+ *
+ * @author    Torvis Wesley
+ */ 
+class Utility_Functions {
+
+    
+    /**
+     * @param object collects execption objects 
+     */
+    public $Exception_Error = [];
+
+
+    public function __construct() {
+
+        //   set the exeception handler
+        set_error_handler(function ($severity, $message, $file, $line){
+            if( 0 === error_reporting()){
+                // error was suppressed with @-operator
+                return false;
+            }
+            throw ( 
+                (new PDM_Exception_Error($message, 0, $severity, $file, $line))
+                ->setErrorFile($file)
+                ->setErrorLine($line) 
+            );
+        });
+            
+    }
+       
+    /**
+     * Helper Function: writes error/log messages to the webserver's log file
+     * 
+     * @since 1.0.0
+     * @param string $message
+     * @return string
+     */
+    public function pdm_docs_log($message)
+    {
+        if (WP_DEBUG === true) {
+        
+            if (is_array($message) || is_object($message)) {
+                error_log(print_r($message, true));
+            } else {
+                error_log($message);
+            }
+        }
+        return $message;
+    }
+
+    /**
+     * Extends the pdm_docs_log() function 
+     * 
+     * @since 1.0.1
+     * @param string $headerMsg
+     * @param string $resultMsg
+     * @return none
+     */
+    public function pdf_DebugLog($headerMsg="Default Header:",$resultMsg=''){
+        $this->pdm_docs_log($headerMsg);
+
+        if(!is_array($resultMsg)){
+            $this->pdm_docs_log("\t".$resultMsg);
+
+        } 
+        elseif(is_array($resultMsg)){
+            $this->pdm_docs_log("\t".json_encode($resultMsg));
+        }    
+    }
+
+    /**
+     * Uploads the specified file to the WordPress upload directory
+     * 
+     * @since 1.0.1
+     * @param string    $filename
+     * @param object    $file_contents
+     * @param string    $pdm_upload_directory
+     * @param boolean   $return_dirinfo_only
+     * @return boolean
+    */
+    public function pdm_upload($filename, $file_contents, 
+        $pdm_upload_directory = '', $return_dirinfo_only = false){
+        //  check if a string was passed
+        if(!empty($filename)){
+        
+            $file_info = [];
+
+            //  get the WordPress upload directory
+            $wp_upload_dir = wp_upload_dir();
+            $pdm_upload_dir = (!empty($pdm_upload_directory)) ? $pdm_upload_directory : $wp_upload_dir['path'].'/pdm_data';
+
+            $str_filepath = $pdm_upload_dir.'/'.$filename;
+
+            $file_info['wp_info'] = $wp_upload_dir;
+            $file_info['file'] = $str_filepath;
+            $file_info['path'] = $pdm_upload_dir;
+        
+            $this->pdf_DebugLog("Current Upload Directory:: ", $pdm_upload_dir);
+            $this->pdf_DebugLog("Full file path to upload:: ", $str_filepath);
+
+            if($return_dirinfo_only){
+                return $file_info;
+            }
+
+            if(!is_dir($pdm_upload_dir)){
+            mkdir( $pdm_upload_dir, 0755, true);
+            }
+
+            if(file_put_contents($str_filepath, $file_contents)){      
+                $file_info['size'] = filesize($str_filepath);
+                return $file_info;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Removes special characters from string
+     * @since 1.0.0
+     * @param string $string
+     * @return string
+     */
+    public function clean($string)
+    {
+        // Removes special chars.
+        $string = preg_replace('/[^(\x30-\x7a)]/',' ', $string);
+        return $string;
+    }
+        
+    /**
+     *  Recursively removes an entire directory and its subdirectories
+     * 
+     * @since 1.0.1
+     * @param string $directory
+     * @return boolean 
+     */
+    public function clean_dir($directory){
+        if(is_dir($directory) ){       
+            try 
+            {
+                $files = array_diff(scandir($directory), array('.', '..'));
+                foreach($files as $file){
+                    (is_dir("$directory/$file")) ? $this->clean_dir("$directory/$file") : unlink("$directory/$file");
+                }
+                return rmdir($directory);
+            } catch(PDM_Exception_Error $e) {
+                $this->Exception_Error[] = $e->getErrorObject($e);
+            }
+            
+        }
+    }
+
+    /**
+     * Reads the given directory structure
+     * 
+     * @since 1.0.1
+     * @param string $dir
+     * @return array 
+     */
+    public function dir_tree($dir)
+    {
+        // http://www.php.net/manual/de/function.scandir.php#102505
+        $paths = [];
+        $stack[] = $dir;
+        while ($stack) {
+            $thisdir = array_pop($stack);
+            if ($dircont = scandir($thisdir)) {
+                $i = 0;
+                while (isset($dircont[$i])) 
+                {
+                    if ($dircont[$i] !== '.' && $dircont[$i] !== '..') 
+                    {
+                        $current_file = "{$thisdir}/{$dircont[$i]}";
+
+                        if (is_file($current_file)) {
+                            $paths[] = "{$thisdir}/{$dircont[$i]}";
+                        } elseif (is_dir($current_file)) {
+                            $paths[] = "{$thisdir}/{$dircont[$i]}";
+                            $stack[] = $current_file;
+                        }
+                    }
+                    $i ++;
+                }
+            }
+        }
+        return $paths;
+    }
+
+    /**
+     *  Returns a generated nonce as a hidden field, on false returns only the int nonce.
+     * @since 1.0.0
+     * @param bool $hidden
+     * @return string
+     */
+    public function pdm_nonce(){
+        $seed = random_int(0,89615);
+        $pdm_nonce = md5($seed);
+        return "<input type='hidden' id='pdm_nonce' class='button' name='pdm_nonce' value='{$pdm_nonce}'/>";
+    }
+
+    /**
+    * Checks the remaining execution time left for the current running process
+    * @since 1.0.0
+    * 
+    * @return none
+    */
+    public function execTimeRemaining(){
+       return  ini_get('max_execution_time') === "0" ? null :
+            ((int)ini_get('max_execution_time')) - (microtime(true) - $_SERVER['REQUEST_TIME_FLOAT']);
+    }
+
+    /**
+     * Parses the filesize remove unit and non numeric characters
+     * 
+     * @since 1.0.1
+     * @param string $size
+     * @return int 
+     */
+    public function parse_size($size) {
+        // Remove the non-unit characters from the size.
+        $unit = preg_replace('/[^bkmgtpezy]/i', '', $size); 
+
+        // Remove the non-numeric characters from the size.
+        $size = preg_replace('/[^0-9\.]/', '', $size); 
+        if ($unit) {
+            // Find the position of the unit in the ordered string which is the 
+            // power of magnitude to multiply a kilobyte by.
+            return round($size * pow(1024, stripos('bkmgtpezy', $unit[0])));
+        }
+        else {
+            return round($size);
+        }
+    }
+
+    /**
+     * Intercepts the output to the phpinfo() call and returns its values in an associative array
+     * curtouse
+     * 
+     * @since 1.0.1
+     * @return array
+     */
+    public function phpinfo_array()
+    {
+        ob_start();
+        phpinfo();
+        $info_arr = array();
+        $info_lines = explode("\n", strip_tags(ob_get_clean(), "<tr><td><h2>"));
+        $cat = "";
+        foreach($info_lines as $line)
+        {
+            // new cat?
+            preg_match("~<h2>(.*)</h2>~", $line, $title) ? $cat = $title[1] : null;
+            if(preg_match("~<tr><td[^>]+>([^<]*)</td><td[^>]+>([^<]*)</td></tr>~", $line, $val))
+            {
+                $info_arr[$cat][trim($val[1])] =  trim($val[2]);
+            }
+            elseif(preg_match("~<tr><td[^>]+>([^<]*)</td><td[^>]+>([^<]*)</td><td[^>]+>([^<]*)</td></tr>~", $line, $val))
+            {
+                $info_arr[$cat][trim($val[1])] = array("local" => trim($val[2]), "master" => trim($val[3]));
+            }
+        }
+        return $info_arr;
+    }
+
+    /**
+     * Saves the changes made with the settings page
+     * 
+     * @since 1.0.1
+     * 
+     * @param array $_POST
+     * @return none
+     */
+	public function updateSettings($POST){
+		if(!wp_verify_nonce( $POST['_pdm_doc_settings_nonce'], 'pdm-doc-settings-nonce' ) && !is_array($POST)){
+			$this->pdf_DebugLog("Update Settings Security Check::", "failed!");
+			return;
+		}
+  
+		global $wpdb;
+		$wpdb->show_errors(true);
+		// table to update
+		$tablename = $wpdb->prefix.'options';
+
+		// coluns to skip
+		$skip = array('_pdm_doc_settings_nonce', '_wp_http_referer');
+
+		foreach($POST as  $key => $val){
+			
+			if(!in_array($key, $skip)){
+
+				$columns_update = array(
+					'option_name'		=>	$key,
+					'option_value'		=>	wp_unslash($val),
+					'autoload'			=>	'yes',
+				);
+
+				// what to update
+				$_where = array('option_name' => $key);
+
+				//	update values of the WP_Options TABLE
+				$update_result = $wpdb->update($tablename, $columns_update, $_where);
+				$this->pdf_DebugLog("Updated {$key}: Result", $update_result);
+			}
+		}
+	}
+    /**
+     * Saves the changes made to the pdf document using Quick Edit
+     * 
+     * @since 1.0.1
+     * 
+     * @param array $_POST
+     * @return none
+     */
+	public function updatePdfDocument($doc_data){
+
+         try{
+            global $wpdb;
+            $wpdb->show_errors(true);
+            
+            // table to update
+            $tablename = $wpdb->prefix.'legoeso_file_storage';
+            // columns to update
+            $columns_update = array(
+                'filename'		=>	$doc_data['edit-document_filename'],
+                'category'		=>	$doc_data['edit-document_category'],
+            );
+
+            // what to update
+            $_where = array('ID' => $doc_data['docid']);
+
+            //	update values of the WP_Options TABLE
+            $rs = $wpdb->update($tablename, $columns_update, $_where);            
+            
+            $this->pdf_DebugLog("Updated", $columns_update);
+            $this->pdf_DebugLog("Updated: Result", $rs);
+
+            if($rs == 1){
+                return "<ok>";
+            } else {
+                return $wpdb->last_error;
+            }
+
+           
+        }catch(PDM_Exception_Error $e) {
+            $this->Exception_Error[] = $e->getErrorObject($e);
+        }
+        
+	}
+
+    /**
+    * convert MB to bytes, preforms simple conversion
+    *
+    * @since 1.0.2
+    *
+    * @num int expects number represented as i.e. 256M (megabytes)
+    *
+    * @return int 
+    */
+    public function php_to_bytes($num){
+        $const_b = 1048576; // 1MB = 1048576 bytes
+        $n = explode('M', $num); 
+        // expects number represented as i.e. 256M (megabytes)
+        $num_conv = ($n[0] * $const_b);
+        return ($num_conv);
+    }
+    
+    /**
+    * toggle checkbox values
+    *
+    * @since 1.0.1
+    *
+    * @value string  current value of checkox
+    *
+    * @return array
+    */
+    public function toggle_checkbox($value){
+        if(empty($value)){
+            return array('off','');
+        }
+        return ($value == 'on') ? array('off','checked') : array('on',''); 
+    }
+}
+
+?>
