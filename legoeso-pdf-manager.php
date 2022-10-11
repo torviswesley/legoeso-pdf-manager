@@ -14,7 +14,7 @@
  * @wordpress-plugin
  * Plugin Name:       Legoeso PDF Manager
  * Plugin URI:        https://www.legoeso.com/legoeso-pdf-document-manager
- * Description:       A simple PDF document manager. Manage, display, and distribute PDF documents easily. Initially a custom solution designed for the purpose of extracting invoice and account information from scanned documents.  This plugin allows the storing, organizing, and archiving of PDF documents for distribution within a WordPress site. Features include uploading, searching, and viewing saved PDF documents.		  
+ * Description:       A simple PDF document manager. Manage, display, and distribute PDF documents easily. Initially a custom solution designed for the purpose of extracting invoice and account information from scanned documents.  This plugin allows the storing, organizing, and archiving of PDF documents for distribution within a WordPress site. Features include uploading, searching, and viewing saved PDF documents.
  * Version:           1.0.4
  * Author:            Torvis Wesley
  * Author URI:        https://www.legoeso.com
