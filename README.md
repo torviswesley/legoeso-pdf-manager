@@ -17,7 +17,7 @@ A simple PDF document manager. Manage, display, and distribute PDF documents eas
 3. PDFMiner
 
 ## Setup after activation
-# The following will need to be set within "Legoeso Settings" menu before the plugin can work correctly.
+## The following will need to be set within "Legoeso Settings" menu before the plugin can work correctly.
 1.  Path to the python executable 
 2.  Path to PDFMiner
 
@@ -33,15 +33,15 @@ A simple PDF document manager. Manage, display, and distribute PDF documents eas
 9. This plugin provides optional support for Google's Pytesseract to improve OCR accuracy.  Simply install Pytesseract on your server, supply the plugin with the Pytesseract installation executable and enable the feature.
 
 ## Usage
-# To add new PDF Documents, select Legoeso PDFs 
+## To add new PDF Documents, select Legoeso PDFs 
 1. Locate Legoeso PDFs within the WordPress menu. 
 2. Select a category, Drag and Drop your PDF documents to the upload area. You can choose to a single .pdf document, multiple documents or a zip file containing multiple PDF documents. 
 
-# Add Categories. Documents can be grouped by categories. 
+## Add Categories. Documents can be grouped by categories. 
 1. To add categories locate 'Post' within the WordPress Menu, select categories.  
 2. Add a new categories then return to Legoeso PDFs, the category will now be listed within the drop-down menu. 
 
-# Displaying PDF Documents
+## Displaying PDF Documents
 1. To list you document within your WordPress site. Create or edit a page, insert one the shortcodes listed on the Legoeso setting page
 2. Save your page. A list of documents or link shall appear on the page.
 
