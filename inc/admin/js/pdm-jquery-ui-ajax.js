@@ -108,7 +108,7 @@
 			$('.progress').addClass('hide');
 		}
 	}
-	/**
+	/**#legoeso-drop-text
 	 * Resets the upload form
 	 */
 	function reset_upload_form(){
@@ -118,7 +118,7 @@
 
 		$('.progress').removeClass('hide');
 		$('.progress').addClass('display');
-		$('#legoeso-drop-area').text('Drag file here to upload');
+		$('#legoeso-drop-text').text('Drag file here to upload');
 
 		if(_upload_form){
 			// Reset select category drop down 
@@ -131,8 +131,16 @@
 		window.clearInterval(timer);
 	}
 
-	function change_drag_area_text(_text = ''){
-		 $("#legoeso-drop-area").text(_text);
+	function change_drag_area_text(_text = '', t_color = 'none'){
+		let drop_area = $("#legoeso-drop-text")
+			drop_area.text(_text);
+
+			if(t_color == 'green'){
+				drop_area.addClass('drag-drop-text');
+			} else {
+				drop_area.removeClass('drag-drop-text');
+			}
+				
 	}
 
 	function bytesToSize(bytes) {
@@ -233,7 +241,7 @@
 
 	//	refreshes the progress-bar and keeps open communication with the server
 	function refreshProgress() {
-		setdebug_log('Refreshing Progress...');
+		setdebug_log('Called: refreshProgress()');
 		//	show the hidden element
 		$('.progress').removeClass('hide');
 
@@ -246,8 +254,10 @@
 
 			dataType: 'json',
 			success: function (data) {
+
 				// count the number of time the script calls refresh
 				console.log(refreshCount++);
+
 				// build progress message 
 				let strProgStatus = null;
 				strProgStatus = (data.percent) ? '(' + data.percent + '%) ' : '';
@@ -256,23 +266,21 @@
 				if (refreshCount > 1 && data.status_message == 'Calculating...') {
 					strProgStatus += 'Extracting Data from document(s)...';
 				} else {
+
 					strProgStatus += data.status_message;
                 }
 				
-
-
+				// draw status bar
+				change_drag_area_text(strProgStatus);
+				update_progress_bar(data.percent, strProgStatus);
+				setdebug_log(strProgStatus);
+				setdebug_log(data.upload_status);
+				
 				// if the process is complete stop the checking process.
 				if (data.percent == 100 || data.percent == null) {
 					console.log('call complete: ' + data.percent);
 					// clear refresh interval
 					window.clearInterval(timer);
-				} else{
-					// draw status bar
-					update_progress_bar(data.percent, strProgStatus);
-					change_drag_area_text(strProgStatus);
-
-					setdebug_log(strProgStatus);
-					setdebug_log(data.upload_status);
 				}
 			},
 			error: function (e) {
@@ -396,22 +404,65 @@
 	 * 
 	 * Drag n drop handlers
 	 */
-	// prevent page from redirecting
-	$("#pdm-drag-drop-area").on("dragover", function(e) {
-		e.preventDefault();
-		e.stopPropagation();
-		change_drag_area_text("Drag Files Here");
-	});
-
-	$("#pdm-drag-drop-area").on("drop", function(e) { e.preventDefault(); e.stopPropagation(); });
 
 	// Drag enter 
-	$('#pdm-drag-drop-area').on('dragenter', function(e){
-		e.stopPropagation();
+	$('.pdm-drag-drop-area').on('dragenter', function(e){
+		//e.stopPropagation();
 		e.preventDefault();
-		change_drag_area_text('Drop Here');
+		change_drag_area_text('Drop Here', 'green');
+		console.log('dragenter');
 	});
 
+	// prevent page from redirecting
+	$(".pdm-drag-drop-area").on("dragover", function(e) {
+		e.preventDefault();
+		//e.stopPropagation();
+		change_drag_area_text("Drop Here", "green");
+		console.log('dragover');
+	});
+
+
+	// Drag enter 
+	$('.pdm-drag-drop-area').on('dragleave', function(e){
+		e.stopPropagation();
+		e.preventDefault();
+		change_drag_area_text('Drag PDF Files Here');
+		console.log('dragleave');
+	});
+
+	// Drop - Fires after files have been dropped
+	$('.pdm-drag-drop-area').on('drop', function(e) {
+		e.stopPropagation();
+		e.preventDefault();
+		// clear the server response box if it is visible
+		$("#server-response-box").attr('style', 'display:none');
+
+		change_drag_area_text('Uploading...');
+
+		try{
+			// get the current form and create a new from it
+			let _pdm_upload_frm = $('#pdm-upload-form')[0];
+			// filter file types and update form
+			let _valid_file_list = _filter_file_types(e.originalEvent.dataTransfer.files);
+			_pdm_upload_frm.pdm_file.files = _valid_file_list;
+
+			// validate the files
+			let _data = validate_file_upload(_pdm_upload_frm, _valid_file_list);
+
+			// validate and process upload
+			if(_data.passed_validation && _valid_file_list){
+				// updload form/data 
+				_upload_file_data(_pdm_upload_frm);
+			} else {
+				show_server_response(_data.error_message + ' - File validation failed.', 'error');
+				reset_upload_form();
+			}
+
+		} catch( error){
+			show_server_response(error, 'error');
+		}
+
+	});
 	/**
 	 * 
 	 *  Begin ajax processing when the form is successfully submitted
@@ -488,39 +539,7 @@
 		});
 	});	
 
-	// Drop - Fires after files have been dropped
-	$('#pdm-drag-drop-area').on('drop', function(e) {
-		e.stopPropagation();
-		e.preventDefault();
-		// clear the server response box if it is visible
-		$("#server-response-box").attr('style', 'display:none');
 
-		change_drag_area_text('Uploading...');
-
-		try{
-			// get the current form and create a new from it
-			let _pdm_upload_frm = $('#pdm-upload-form')[0];
-			// filter file types and update form
-			let _valid_file_list = _filter_file_types(e.originalEvent.dataTransfer.files);
-			_pdm_upload_frm.pdm_file.files = _valid_file_list;
-
-			// validate the files
-			let _data = validate_file_upload(_pdm_upload_frm, _valid_file_list);
-
-			// validate and process upload
-			if(_data.passed_validation && _valid_file_list){
-				// updload form/data 
-				_upload_file_data(_pdm_upload_frm);
-			} else {
-				show_server_response(_data.error_message + ' - File validation failed.', 'error');
-				reset_upload_form();
-			}
-
-		} catch( error){
-			show_server_response(error, 'error');
-		}
-
-	});
 
 })(jQuery);
 
