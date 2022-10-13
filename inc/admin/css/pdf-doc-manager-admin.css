@@ -135,8 +135,11 @@ a.delete_item{
 	border-color: #83b4d8;
 }
 border color while dragging a file over the uploader drop area */
-.drag-drop.drag-over #pdm-drag-drop-area {
-	border-color: #9ec2e6;
+.drag-drop.drag-over {
+	border-color: #0bb313;
+}
+.drag-drop-text {
+    color: #106e15;
 }
 
 #pdm-upload-upload-ui {

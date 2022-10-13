@@ -1254,6 +1254,7 @@ class WP_List_Table extends Common\Utility_Functions {
 	public function single_row( $item ) {
 		// 
 		/**
+		 * Legoeso PDF Manager
 		 * 9.11.22	modifying class to include ID and doc_info attr for TR to be used with inline quick edit box
 		 * @since 1.0.3
 		 * @param object $item 

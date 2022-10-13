@@ -346,7 +346,7 @@ class Utility_Functions {
             $this->pdf_DebugLog("Updated: Result", $rs);
 
             if($rs == 1){
-                return "<ok>";
+                return $rs;
             } else {
                 return $wpdb->last_error;
             }

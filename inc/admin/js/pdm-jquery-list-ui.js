@@ -550,23 +550,18 @@
                      $( 'table.widefat .spinner' ).removeClass( 'is-active' );
  
                      if (r) {
-                         if ( -1 !== r.indexOf( '<ok' ) ) {
+                         if ( 1 == r ) {
                              legoeso_list.update(data);
 
                          } else {
                              r = r.replace( /<.[^<>]*?>/g, '' );
                              $errorNotice.removeClass( 'hidden' );
                              $error.html( r );
-                             if(wp.ally) {
-                                 wp.a11y.speak( $error.text() );
-                             } else{
-                                 $error.text();
-                             }
+                             legoeso_list.update(data);
                          }
                      } else {
                          $errorNotice.removeClass( 'hidden' );
                          $error.text( wp.i18n.__( 'Error while saving the changes.' ) );
-                         //wp.a11y.speak( wp.i18n.__( 'Error while saving the changes.' ) );
                      }
                  },
              'html');

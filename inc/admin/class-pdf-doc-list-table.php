@@ -52,7 +52,7 @@ class PDF_Doc_List_Table extends Libraries\WP_List_Table  {
 	public function __construct( $plugin_text_domain ) {
 		
 		$this->plugin_text_domain = $plugin_text_domain;
-		$this->disable_preview_images = true;
+		$this->disable_preview_images = false;
 		$this->plugin_db_tablename = 'legoeso_file_storage'; 	// specifiy the database tablename 
 
 		parent::__construct(  array( 
@@ -84,7 +84,7 @@ class PDF_Doc_List_Table extends Libraries\WP_List_Table  {
 		$hidden = array('');
 
 		// disables  the image preview
-        if($this->disable_preview_images){
+        if ($this->disable_preview_images){
 			$hidden = array_merge($hidden, array('pdf_image'));
 		}
 		
@@ -108,14 +108,14 @@ class PDF_Doc_List_Table extends Libraries\WP_List_Table  {
 		/**
 		 * Filter the data in case of a search.
 		 */
-		if(!empty( $pdf_search_key) ) {
+		if (!empty( $pdf_search_key) ) {
 			$table_data = $this->filter_table_data( $table_data, $pdf_search_key );
 		}	
 	
 		/**
 		 * Set number of documents to display per page 
 		 */
-		$pdfs_per_page = $this->get_items_per_page('upload_per_page');
+		$pdfs_per_page = $this->get_items_per_page('upload_per_page', 10);
 		
 		/**
 		 * Get and set the page number
