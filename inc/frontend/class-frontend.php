@@ -282,7 +282,7 @@ class Frontend extends Common\Utility_Functions {
 	 */
 	public function create_pdm_json_file($objDataset, $json_filename, $row_count){
 
-		if(!is_array($objDataset) || empty($json_filename)){
+		if (!is_array($objDataset) || empty($json_filename)){
 			return false;
 		}
 
@@ -297,23 +297,26 @@ class Frontend extends Common\Utility_Functions {
 		$this->pdf_DebugLog("Json File Dir::", $json_file_dir);
 		$this->pdf_DebugLog("Json File Path::", $json_filename);
 
-		if(is_dir($json_file_dir)){
-			// if file exists delete and create the file
-			if(file_exists( $json_filename )){
-				unlink( $json_filename );
-			}
+		if (!is_dir($json_file_dir)) {
+			mkdir($json_file_dir, 0777);
+		}
+		
+		// if file exists delete and create the file
+		if (file_exists( $json_filename )){
+			unlink( $json_filename );
+		}
 
-			//  attempt to write the contents of the data to the file location in JSON format
-			file_put_contents($json_filename , json_encode($objDataset));
+		//  attempt to write the contents of the data to the file location in JSON format
+		file_put_contents($json_filename , json_encode($objDataset));
 
-			//	 when everything goes well with json file, pass it to javascript
-			//$this->set_localize_json_file();
-			// if there was an error encoding json file add message to debug
-			if((json_last_error() !== JSON_ERROR_NONE)){
-				$this->pdf_DebugLog("Json last Error::", json_last_error().' Message:'.json_last_error_msg());
-			}
-			
-		} 
+		//	 when everything goes well with json file, pass it to javascript
+		//$this->set_localize_json_file();
+		// if there was an error encoding json file add message to debug
+		if ((json_last_error() !== JSON_ERROR_NONE)){
+			$this->pdf_DebugLog("Json last Error::", json_last_error().' Message:'.json_last_error_msg());
+		}
+		
+
 		
 	}
 	/**

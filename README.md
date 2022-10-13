@@ -27,7 +27,7 @@ A simple PDF document manager. Manage, display, and distribute PDF documents eas
 3. Single or bulk download of pdf documents.
 4. Sort by category, document name, upload by, or date uploaded.
 5. Perform key word search through for PDF documents.
-6. Easiy list or display all documents or a single category of documents within a WordPress page.
+6. Easily list or display all documents or a single category of documents within a WordPress page.
 7. Quick adjust the documents display name or category.
 8. All PDF documents have links to access document
 9. This plugin provides optional support for Google's Pytesseract to improve OCR accuracy.  Simply install Pytesseract on your server, supply the plugin with the Pytesseract installation executable and enable the feature.
