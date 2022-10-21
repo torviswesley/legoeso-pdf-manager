@@ -75,7 +75,7 @@ class Utility_Functions {
 
         } 
         elseif(is_array($resultMsg)){
-            $this->pdm_docs_log("\t".json_encode($resultMsg));
+            $this->pdm_docs_log("\t".wp_json_encode($resultMsg));
         }    
     }
 
@@ -109,12 +109,12 @@ class Utility_Functions {
             $this->pdf_DebugLog("Current Upload Directory:: ", $pdm_upload_dir);
             $this->pdf_DebugLog("Full file path to upload:: ", $str_filepath);
 
-            if($return_dirinfo_only){
-                return $file_info;
+            if(!file_exists($pdm_upload_dir)){
+                mkdir( $pdm_upload_dir, 0755, true);
             }
 
-            if(!is_dir($pdm_upload_dir)){
-            mkdir( $pdm_upload_dir, 0755, true);
+            if($return_dirinfo_only){
+                return $file_info;
             }
 
             if(file_put_contents($str_filepath, $file_contents)){      
@@ -123,6 +123,18 @@ class Utility_Functions {
             }
         }
         return false;
+    }
+
+    /**
+     * Removes special characters from string
+     * @since 1.1.0
+     * @param string $string
+     * @return string
+     */
+    public function get_pdfversion($pdf_file_path){
+        if(file_exists($pdf_file_path)){
+            return substr(file_get_contents($pdf_file_path), 0, 15);
+        }
     }
 
     /**
@@ -390,6 +402,70 @@ class Utility_Functions {
         }
         return ($value == 'on') ? array('off','checked') : array('on',''); 
     }
+
+    /**
+     * Sanitize Input $_POST data, aggressive approach
+     * 
+     * @since 1.1.0
+     * @return Array
+     */
+    public function sanitize_postdata_strong(string $HTTP_RAW_POST_DATA): string {
+        return strip_tags(
+            stripslashes(
+                sanitize_text_field(
+                    filter_input(INPUT_POST, $HTTP_RAW_POST_DATA)
+                )
+            )
+        );
+    }
+
+    /**
+     * Sanitize Input $_POST data
+     * 
+     * @since 1.1.0
+     * @return Array
+     */
+    public function sanitize_postdata(string $HTTP_RAW_POST_DATA): string {
+        return sanitize_text_field( $HTTP_RAW_POST_DATA );
+    }
+
+    /**
+    * Checks/returns a list of required dependencies
+    * @since 1.0.1
+    * @plugin_dir string   directory location of the plugin
+    * @return array
+    */
+    public function check_dependencies(){
+
+        // initialze output buffer variables
+        $arrOutput = null;
+        $retval = null;
+
+        //  initialize installed lib array
+        $installed_libs = array();
+
+        //  Add the settings from php enviroment variables
+        $phpinfo = $this->phpinfo_array();
+
+		$installed_libs['server'] = $phpinfo['']['System'];
+		$installed_libs['imagick'] =$phpinfo['imagick'];
+        $installed_libs['phpinfo'] = $phpinfo['zip'];
+        
+        //  add relavant php.ini values
+        $installed_libs['server_limits']['max_execution_time'] = $phpinfo['Core']['max_execution_time'];
+        $installed_libs['server_limits']['memory_limit'] = $phpinfo['Core']['memory_limit'];
+        $installed_libs['server_limits']['memory_limit']['local_bytes'] = $this->php_to_bytes($phpinfo['Core']['memory_limit']['local']);
+        $installed_libs['server_limits']['memory_limit']['master_bytes'] = $this->php_to_bytes($phpinfo['Core']['memory_limit']['master']);
+        $installed_libs['server_limits']['post_max_size'] = $phpinfo['Core']['post_max_size'];
+
+        // add server information to $installed_dependencies
+        $this->installed_dependencies = $installed_libs;
+
+        // Add to debug log    
+        $this->pdf_DebugLog("Class: init.php - Medthod:: check_dependencies()", wp_json_encode($installed_libs));
+        return($installed_libs);
+    }
+
 }
 
 ?>

@@ -8,8 +8,9 @@
 	 * The file is enqueued from inc/admin/class-admin.php.
 	 */
 
-	var timer;
-	let refreshCount = 1;
+	
+	var refreshCount = 1;
+	var uploadTimer = 0;
 
 	/**
 	 * Declare Constants
@@ -17,6 +18,12 @@
 	// valid file types
 	const allowedTypes = ['application/pdf', 'application/x-zip-compressed'];
 	const _debug = true;
+
+	// clears timerInterval
+	function stopRefresh(){
+		clearInterval(uploadTimer);
+		uploadTimer = null;
+	}
 
 	function _show_status_messages(_message_txt, _msg_class = 'warning'){
 		if(_debug){
@@ -60,18 +67,38 @@
 	 * @param {string} _text 
 	 */
 	function show_server_response_long(_result_data, _text = ''){
-
-		// display the server response box div element 
-		$("#server-response-box").attr('style', 'display:block');
+		let _data_type = typeof(_result_data);
+		let _response_text = '';
+		
+		// display the server response box div element
+		$("#server-response-box").removeClass('server-response-box'); 
+		$("#server-response-box").addClass('server-response-box-show');
 
 		// get a reference to both inside elements
  		let _server_response_head = $("#server-response-head");
+
 		// get reference to <pre></pre> element for server messages
 		let _server_response_messages = $("#server-response-messages");
 
-		// add response from server to both
+		switch(_data_type){
+			case "string":
+				_response_text = _result_data.toString();
+			break;
+			case "object":
+				if(typeof(_result_data.status) != "undefined"){
+					_response_text = _result_data.responseText;
+				} else {
+					_response_text = JSON.stringify(_result_data, null, 2);
+				}
+			break;
+			default:
+				_response_text = _result_data.toString();
+			break;
+		}
+
+		// add text for header 
 		_server_response_head.html(_text);
-		_server_response_messages.text(_result_data);	
+		_server_response_messages.html( _response_text );	
 
 	}
 
@@ -108,13 +135,21 @@
 			$('.progress').addClass('hide');
 		}
 	}
+
+	// clears the response text area
+	function clear_response_area(){
+		// clear the server response box if it is visible
+		$("#server-response-box").removeClass('server-response-box-show');
+		$("#server-response-box").addClass('server-response-box');
+	}
+
 	/**#legoeso-drop-text
 	 * Resets the upload form
 	 */
 	function reset_upload_form(){
 
 		toggle_submit_buttons(false);
-		let _upload_form = $('#pdm-upload-form')[0];
+		let _upload_form = $('#pdm_upload_form')[0];
 
 		$('.progress').removeClass('hide');
 		$('.progress').addClass('display');
@@ -128,12 +163,11 @@
 
 		// reset progress bar
 		update_progress_bar(0,'');
-		window.clearInterval(timer);
 	}
 
 	function change_drag_area_text(_text = '', t_color = 'none'){
-		let drop_area = $("#legoeso-drop-text")
-			drop_area.text(_text);
+		let drop_area = $("#legoeso-drop-text");
+			drop_area.html(_text);
 
 			if(t_color == 'green'){
 				drop_area.addClass('drag-drop-text');
@@ -184,6 +218,19 @@
 		let _val = (_on) ? true : false;
 		$('#pdm-upload-browse-button').prop('disabled', _val);
 		$('#pdm-upload-submit-button').prop('disabled', _val);
+	}
+
+	/**
+	 * Traverse Json Object 
+	 * @param {object} js_obj 
+	 * @return {string}
+	 */
+	function do_JsonTree(js_obj){
+		let str_text = '';
+		for( let pn in js_obj){
+			str_text +=  pn +': ' +js_obj[pn] + '&#13;&#10;&#9;';
+		}
+		return (str_text);
 	}
 	/**
 	 * validates submitted files are ready to be uploaded
@@ -247,45 +294,41 @@
 
 		$.ajax({
 
-			url: ajax_obj.ajax_process_uploads_url +
-				'?nonce=' + ajax_obj.pdm_nonce +
-				'&pdm_process_text=' +
-				ajax_obj.pdm_process_text,
-
+			url: ajax_obj.ajax_url + '?action='+ ajax_obj.ajax_process_uploads +'&nonce=' + 
+				ajax_obj.pdm_nonce + '&pdm_process_text=' + ajax_obj.pdm_process_text,
 			dataType: 'json',
 			success: function (data) {
-
-				// count the number of time the script calls refresh
-				console.log(refreshCount++);
-
 				// build progress message 
-				let strProgStatus = null;
-				strProgStatus = (data.percent) ? '(' + data.percent + '%) ' : '';
+				let str_ajax_response = null;
+				str_ajax_response =		'Processing File: "' + data.filename + '"<br>';
+				str_ajax_response += 	data.file + ' of ' + data.total_files;
 
-				//	update the use as to the progess of the script
-				if (refreshCount > 1 && data.status_message == 'Calculating...') {
-					strProgStatus += 'Extracting Data from document(s)...';
+				if(data.percent != 100){
+					// draw status bar
+					change_drag_area_text(str_ajax_response);				
+					update_progress_bar(data.percent, '('+ data.percent +'%)' );
+					
+				} 
+				else if(data.percent == 100 && data.status == 'complete') 
+				{
+					// stop the timer
+					stopRefresh();
+					// draw status bar
+					change_drag_area_text(str_ajax_response);
+					reset_upload_form();
 				} else {
-
-					strProgStatus += data.status_message;
-                }
-				
-				// draw status bar
-				change_drag_area_text(strProgStatus);
-				update_progress_bar(data.percent, strProgStatus);
-				setdebug_log(strProgStatus);
-				setdebug_log(data.upload_status);
-				
-				// if the process is complete stop the checking process.
-				if (data.percent == 100 || data.percent == null) {
-					console.log('call complete: ' + data.percent);
+					setdebug_log('clause: 3');
+					reset_upload_form();
 					// clear refresh interval
-					window.clearInterval(timer);
+					stopRefresh();
 				}
+				
 			},
 			error: function (e) {
-				let errmsg = 'Response: ' + e.status + ' (' + e.statusText + ') ' + e.responseText;
+				// stop refreh timer on error
+				stopRefresh();
 
+				let errmsg = 'Response: ' + e.status + ' (' + e.statusText + ') ' + e.responseText;
 				if (e.status == 200) {
 					show_server_response(errmsg, 'success');
 				}
@@ -308,24 +351,27 @@
 			function (evt) {
 				let strText = 'Uploading file(s)...';
 				let percentComplete = 0;
-				
+
 				setdebug_log(strText);
-				//setdebug_log(percentComplete);
-				
 				if (evt.lengthComputable) {
 					percentComplete = Math.round( (evt.loaded / evt.total  * 100).toFixed(2) );
 					update_progress_bar(percentComplete, percentComplete + '%' + ' ' +strText);
 				}
-				change_drag_area_text(percentComplete + '%' + strText  );
-		}, 
-		xhr.upload.addEventListener("load", function(evt){
-			console.log('file(s) upload done.');
-			// after file(s) uploaded start/set the refresh 
-			// timer interval for processing data.
-			timer = window.setInterval(refreshProgress, 500);
-		}),
-		false);
+				change_drag_area_text(percentComplete + '% ' + strText  );
+			}, false
+		);
+		xhr.upload.addEventListener("load", 
+		function(evt){
+			
+			if(!uploadTimer){
+				uploadTimer = setInterval(refreshProgress, 900);
+			}
+			console.log('file(s) upload done. Timer ID: ' + uploadTimer);
 
+		}),
+		xhr.upload.addEventListener('error', function(e){
+			console.log('error on upload.')
+		});
 		return xhr;
 	}
 
@@ -357,7 +403,6 @@
 
 		$.ajax({
 			xhr: callXHR,
-
 			url: ajax_obj.ajax_url,
 			type: 'POST',
 			contentType: false,
@@ -366,30 +411,38 @@
 			data: formData,
 			dataType:'json',
 			success: function (data) {	
-
-				let  strmsg = 'Upload Completed';
+				// when everything has completed
+				let  response_header_msg = 'Upload Completed';
 				let _failed = data.failed;
 				let _php_errors = data.php_exceptions;
+				let err_text = "";
 
 				if (_failed != 0 || _php_errors.length != 0) { 
-					strmsg += ' However, (' + _failed + ') files failed. \n'; 
-					show_server_response_long(JSON.stringify(data), strmsg );
+					response_header_msg += ' However, (' + _failed.length + ') files failed. \n'; 
+					for(let fn in _failed){
+						err_text += "Filename: " + _failed[fn].filename +" &#13;&#10;&#9;" + do_JsonTree(_failed[fn].results) + " &#13;&#10;";
+					}
+					show_server_response_long(err_text, response_header_msg );
 				} else {
+
 					if(ajax_obj.wp_debug == 1){
-						strmsg = ' <strong>Upload completed. See details below:</strong> \n';
-						show_server_response_long(JSON.stringify(data, null, 2), strmsg );
+						response_header_msg = '<strong>Upload completed. See details below:</strong><br />';
+						show_server_response_long(data, response_header_msg );
 					} 
 					else {
 						show_server_response('Upload completed!', 'sucess');
 					}
 				}
-
+				
 				reset_upload_form();
 				legoeso_list.display();
-
+				
 			},
 			error: function (error) {
-				show_server_response_long(JSON.stringify(error, null, 2), 'Process completed with errors.' );
+				// clear refresh interval
+				stopRefresh();
+				show_server_response_long(error, 'Process completed with errors.' );
+
 				// reset the form
 				reset_upload_form();
 				//	update list table
@@ -397,7 +450,7 @@
 			}
 		});
 
-
+	
 	}
 
 	/**
@@ -421,7 +474,6 @@
 		console.log('dragover');
 	});
 
-
 	// Drag enter 
 	$('.pdm-drag-drop-area').on('dragleave', function(e){
 		e.stopPropagation();
@@ -434,14 +486,14 @@
 	$('.pdm-drag-drop-area').on('drop', function(e) {
 		e.stopPropagation();
 		e.preventDefault();
-		// clear the server response box if it is visible
-		$("#server-response-box").attr('style', 'display:none');
 
+		// clear the server response box if it is visible
+		clear_response_area();
 		change_drag_area_text('Uploading...');
 
 		try{
 			// get the current form and create a new from it
-			let _pdm_upload_frm = $('#pdm-upload-form')[0];
+			let _pdm_upload_frm = $('#pdm_upload_form')[0];
 			// filter file types and update form
 			let _valid_file_list = _filter_file_types(e.originalEvent.dataTransfer.files);
 			_pdm_upload_frm.pdm_file.files = _valid_file_list;
@@ -471,7 +523,8 @@
 		function (e) {
 			e.preventDefault();
 			// clear the server response box if it is visible
-			$("#server-response-box").attr('style', 'display:none');
+			clear_response_area();
+
 			try {
 			
 				console.log('ready!');
@@ -505,35 +558,40 @@
 	 */
 	$("#pdm-upload-browse-button").on("click", function(){
 		$("#pdm_file").click();
-		$("#pdm_file").on('change', function(){
-		// clear the server response box if it is visible
-		$("#server-response-box").attr('style', 'display:none');
-		try {
-		
-			console.log('ready!');
-			// grab the form element
-			let _pdm_upload_frm = this.closest('form');
 
-			//	filter the file list 
-			let _valid_file_list = _filter_file_types(this.files);
+		$("#pdm_file").on('change', function(evt){
+			evt.stopImmediatePropagation();
+			evt.preventDefault();
+			// clear the server response box if it is visible
+			clear_response_area();
+			
+			console.log('clicked browse..');
+			try {
+			
+				console.log('ready!');
+				// grab the form element
+				let _pdm_upload_frm = this.closest('form');
 
-			// update the file list in the form
-			_pdm_upload_frm.pdm_file.files = _valid_file_list;
+				//	filter the file list 
+				let _valid_file_list = _filter_file_types(this.files);
 
-			// validate the files
-			let _data = validate_file_upload(_pdm_upload_frm, _valid_file_list);
-			//validate and process upload
-			if(_data.passed_validation && _valid_file_list){
-				// updload form/data 
-				_upload_file_data(_pdm_upload_frm);
-			} else {
-				show_server_response(_data.error_message + ' - File validation failed.', 'error');
+				// update the file list in the form
+				_pdm_upload_frm.pdm_file.files = _valid_file_list;
+
+				// validate the files
+				let _data = validate_file_upload(_pdm_upload_frm, _valid_file_list);
+				//validate and process upload
+				if(_data.passed_validation && _valid_file_list){
+					// updload form/data 
+					_upload_file_data(_pdm_upload_frm);
+				} else {
+					show_server_response(_data.error_message + ' - File validation failed.', 'error');
+				}
+
+			} catch (error) {
+				show_server_response( error + ' Error, unable to upload files or complete process.', 'error');
+				reset_upload_form();
 			}
-
-		} catch (error) {
-			show_server_response( error + ' Error, unable to upload files or complete process.', 'error');
-			reset_upload_form();
-		}
 		
 			
 		});

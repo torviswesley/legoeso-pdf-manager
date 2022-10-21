@@ -43,8 +43,7 @@
                 <div id=server-response-head class="server-response-head">
 
                 </div> 
-                <pre class="server-message" id="server-response-messages">  
-                </pre>
+				<textarea class="server-message" id="server-response-messages"></textarea>  
             </div>
 
 			<div class="progress display">

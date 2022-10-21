@@ -1,0 +1,19 @@
+[15-Oct-2022 23:22:36 America/New_York] PHP Warning:  unlink(C:\Apache24\apps\demo2/wp-content/uploads/2022/10/pdm_data/1665890319.075/4804136.txt): Permission denied in C:\Apache24\apps\demo2\wp-content\plugins\legoeso-pdf-manager\inc\admin\pdm-ajax-process-uploads.php on line 41
+[16-Oct-2022 00:31:01 America/New_York] PHP Warning:  unlink(C:\Apache24\apps\demo2/wp-content/uploads/2022/10/pdm_data/1665894623.3267/4382542.txt): No such file or directory in C:\Apache24\apps\demo2\wp-content\plugins\legoeso-pdf-manager\inc\admin\pdm-ajax-process-uploads.php on line 41
+[16-Oct-2022 09:38:43 America/New_York] PHP Fatal error:  Uncaught Error: Call to undefined function wp_json_encode() in C:\Apache24\apps\demo2\wp-content\plugins\legoeso-pdf-manager\inc\admin\pdm-ajax-process-uploads.php:46
+Stack trace:
+#0 {main}
+  thrown in C:\Apache24\apps\demo2\wp-content\plugins\legoeso-pdf-manager\inc\admin\pdm-ajax-process-uploads.php on line 46
+[16-Oct-2022 09:38:43 America/New_York] PHP Fatal error:  Uncaught Error: Call to undefined function wp_json_encode() in C:\Apache24\apps\demo2\wp-content\plugins\legoeso-pdf-manager\inc\admin\pdm-ajax-process-uploads.php:46
+Stack trace:
+#0 {main}
+  thrown in C:\Apache24\apps\demo2\wp-content\plugins\legoeso-pdf-manager\inc\admin\pdm-ajax-process-uploads.php on line 46
+[16-Oct-2022 09:38:44 America/New_York] PHP Fatal error:  Uncaught Error: Call to undefined function wp_json_encode() in C:\Apache24\apps\demo2\wp-content\plugins\legoeso-pdf-manager\inc\admin\pdm-ajax-process-uploads.php:46
+Stack trace:
+#0 {main}
+  thrown in C:\Apache24\apps\demo2\wp-content\plugins\legoeso-pdf-manager\inc\admin\pdm-ajax-process-uploads.php on line 46
+[16-Oct-2022 09:38:44 America/New_York] PHP Fatal error:  Uncaught Error: Call to undefined function wp_json_encode() in C:\Apache24\apps\demo2\wp-content\plugins\legoeso-pdf-manager\inc\admin\pdm-ajax-process-uploads.php:46
+Stack trace:
+#0 {main}
+  thrown in C:\Apache24\apps\demo2\wp-content\plugins\legoeso-pdf-manager\inc\admin\pdm-ajax-process-uploads.php on line 46
+[18-Oct-2022 01:01:40 America/New_York] PHP Warning:  unlink(C:\Apache24\apps\demo2/wp-content/uploads/2022/10/pdm_data/1666068493.0078/2446577.txt): No such file or directory in C:\Apache24\apps\demo2\wp-content\plugins\legoeso-pdf-manager\inc\admin\pdm-ajax-process-uploads.php on line 41

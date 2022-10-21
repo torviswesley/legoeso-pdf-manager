@@ -55,14 +55,6 @@ class Admin extends Common\Utility_Functions{
 	 */
 	private $pdf_list_table;	
 
-	/**
-	 * Stores the plugin dependencies
-	 * @since    1.0.0
-	 * @access   private
-	 * @var      object    $plugin_dependencies
-	 */
-	public $plugin_dependencies;	
-
     /**
 	 * Specfifies and stores the upload dirctory of the processed files
 	 *
@@ -107,12 +99,11 @@ class Admin extends Common\Utility_Functions{
 	 * @param    string $version	The version of this plugin.
 	 * @param	 string $plugin_text_domain	The text domain of this plugin
 	 */
-	public function __construct( $plugin_name, $version, $plugin_text_domain, $plugin_dependencies) {
+	public function __construct( $plugin_name, $version, $plugin_text_domain) {
 
 		$this->plugin_name = $plugin_name;
 		$this->version = $version;
 		$this->plugin_text_domain = $plugin_text_domain;
-		$this->plugin_dependencies = $plugin_dependencies;
 
 		//set the upload directory
 		$this->pdm_upload_dir_args = $this->set_upload_directory();
@@ -135,12 +126,12 @@ class Admin extends Common\Utility_Functions{
 		$pdm_upload_status_file = $pdm_upload_dir."/".rand(01,9999999).".txt";
 
 		$upload_dir_ars  = array(
-			'wp_upload_dir'					=>	$wp_upload_dir,
+			'wp_upload_dir'					=>	serialize($wp_upload_dir),
 			'pdm_upload_dir'				=>	$pdm_upload_dir,
 			'pdm_upload_status_filename'	=>	base64_encode($pdm_upload_status_file),
 		);
-
-		return wp_json_encode($upload_dir_ars);
+		// return sanitized json object
+		return ($upload_dir_ars);
 	}
 	/**
 	 * WP Register the stylesheets for the admin area.
@@ -165,7 +156,7 @@ class Admin extends Common\Utility_Functions{
 		$this->pdm_nonce = wp_create_nonce('ajax-pdm-doc-list-nonce');
 
 		//	set progress/status text path to be passed to JavaScript
-		$pdm_progress_text_path = json_decode($this->pdm_upload_dir_args, true);
+		$pdm_progress_text_path = $this->pdm_upload_dir_args;
 
 		// get the maximum post size and file uploads from the php ini file
 		// and pass it to JavaScript
@@ -180,8 +171,11 @@ class Admin extends Common\Utility_Functions{
 			'ajax_url'					=>	admin_url( 'admin-ajax.php'), 
 			'pdm_nonce'					=>  $this->pdm_nonce,
 			'pdm_process_text'			=>	$pdm_progress_text_path['pdm_upload_status_filename'],
-			'pdm_upload_info'			=>	$this->pdm_upload_dir_args,
+			'pdm_upload_info'			=>	serialize($this->pdm_upload_dir_args),
 			'wp_debug'					=>	WP_DEBUG, 
+
+			//	action used to check the status the uploaded pdfs
+			'ajax_process_uploads'	=>	'file_upload_status',
 
 			// maximum number of files that can be uploaded via the form post
 			'php_max_files_upload'		=>	$php_max_files_upload,
@@ -192,8 +186,7 @@ class Admin extends Common\Utility_Functions{
 			// maximum number of bytes that can be uploaded via the form post.
 			'php_post_max_size'			=>	$php_max_post_size,
 
-			//	script that processes the uploaded pdfs
-			'ajax_process_uploads_url'	=> plugin_dir_url( __FILE__ ) . 'pdm-ajax-process-uploads.php'
+
 		);
 
 		//	enque the ajax handler for the file uploading process
@@ -292,15 +285,14 @@ class Admin extends Common\Utility_Functions{
 
 		// render and display initial List Table
 		include_once( 'views/partials-pdm-display.php' );
-		$this->pdf_DebugLog("Method: load_pdf_doc_list_table()::", json_encode($this->pdf_list_table));
+		$this->pdf_DebugLog("Method: load_pdf_doc_list_table()::", wp_json_encode($this->pdf_list_table));
 	}
 
 	/**
-	 * Callback for the ajax wp_ajax__ajax_pdm_display_callback in define_admin_hooks() for class Init.
-	 *
-	 * this function is called on inital display of Wp_List_Table of PDF documents.
-	 * @since  1.0.0
-	 * @return object json
+	 * Ajax Callback - Renders PDF Doc List Table
+	 * 
+	 * @since 1.0.1
+	 * @return none
 	 */
 	public function _ajax_pdm_display_callback(){
 		check_ajax_referer( 'ajax-pdm-doc-list-nonce', '_ajax_pdm_doc_list_nonce');
@@ -314,10 +306,47 @@ class Admin extends Common\Utility_Functions{
 		$display  = ob_get_clean();
 
 		die(
-			json_encode(array( "display" => $display))
+			wp_json_encode(array( "display" => $display))
 		);
 	}
 
+	/**
+	 * The progress checker file for the PHP/ Ajax Progress Bar
+	 *
+	 * This callback is called several times by the Ajax script, retreiving a text file in the background, 
+	 * returning the status / percent compeleted of the file extraction process until all files
+	 * have been processed. The text file is in JSON format which is then read by the calling JavaScript.
+	 * The process is complete when the status reaches 100.  The file will be
+	 * deleted when completed.  See also PDF_Doc_Core::save_progress()
+	 * @since  1.2.0
+	 * @return object json
+	 */
+	public function _file_upload_status_callback(){
+		// Verify the Ajax request
+		check_ajax_referer( 'ajax-pdm-doc-list-nonce', 'nonce');
+
+		//	decode the server path for text file that contains upload status info
+		//	and set the filename variable
+		$status_filename = base64_decode($_REQUEST['pdm_process_text']);
+
+		// check and get the contents from the status file
+		if( file_exists($status_filename) ) {
+			//	get the contents of the file.
+			$status_text = file_get_contents($status_filename);
+			// send the json object back the client-side JavaScript
+			
+			//	convert to JSON to read the status of the process
+			$obj = json_decode($status_text);
+			if($status_text){
+				die($status_text);
+			} else {
+				// send Ajax response JSON encoded
+				die(json_encode(array('status' => 'file not found.')));
+			}
+
+		}
+
+	}
 	/**
 	 * Callback for the ajax wp_ajax__ajax_pdm_history_callback for checking ajax response.
 	 *
@@ -349,19 +378,15 @@ class Admin extends Common\Utility_Functions{
 	 * @return	none
 	 */
 	public function ajax_upload_handler(){
-		$this->pdf_DebugLog("Medthod: ajax_upload_handler(): Fired Callback Function ::", "ajax_upload_handler");
-		if( !is_user_logged_in() ){
-			die("You must be logged in to use this feature!") ;	
-		}		
-		// Logging actions taken
-		$this->pdf_DebugLog("Current user login?:", "Yes");
-
 		//	verify a valid nonce
 		check_ajax_referer( 'ajax-pdm-doc-list-nonce', '_ajax_pdm_doc_list_nonce');
 
-		// Logging actions taken
-		$this->pdf_DebugLog("nonce:", "Valid");
+		$this->pdf_DebugLog("Medthod: ajax_upload_handler(): Beginning Upload Process ::", "ajax_upload_handler");
 		
+		if( !is_user_logged_in() ){
+			die("You must be logged in to use this feature!") ;	
+		}
+
 		/**
 		* PDF_Doc_Core handles the upload request.
 		*
@@ -370,7 +395,7 @@ class Admin extends Common\Utility_Functions{
 		$uploadHandler = new Libraries\PDF_Doc_Core();
 		 // Get uploaded file(s) array from HTTP $_FILES super global variable  
 		 // and begin the uploading process
-		$uploadHandler->process_pdf_upload($_FILES['pdm_file']);
+		$uploadHandler->process_pdf_upload($_FILES['pdm_file'], $_POST);
 		die();
 	}
 		

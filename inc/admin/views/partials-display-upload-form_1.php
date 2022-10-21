@@ -1,5 +1,5 @@
     <br><br>
-    <form enctype="multipart/form-data" method="post" id="pdm-upload-form">
+    <form enctype="multipart/form-data" method="post" id="pdm_upload_form">
 
     
         <?php wp_nonce_field( 'ajax-pdm-doc-list-nonce', '_ajax_pdm_doc_list_nonce' ); ?>
@@ -14,7 +14,6 @@
                             'show_option_none'	=>	'Select Category',
                             'orderby'			=>	'name',
                             'order'				=>	'ASC',		
-                            //'include'			=>	'3,8,33,183,187',
                             'value_field'		=>	'name',
                             'name'				=>	'pdf_category',
                             'id'				=>	'pdf_category'
@@ -37,7 +36,7 @@
 
             <div id="server-response-box" class="server-response-box">
                 <div id=server-response-head class="server-response-head"></div>
-                <pre class="server-message" id="server-response-messages"></pre>  
+                <textarea class="server-message" id="server-response-messages"></textarea>  
             </div>
 		
             <div class="progress display">

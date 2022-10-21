@@ -52,3 +52,9 @@ A simple PDF document manager. Manage, display, and distribute PDF documents eas
 
 ## For Help, comments or request additional features.
 Email support@legoeso.com
+
+## Changes v1.1.0 
+1. Added support for standalone PDF Parser see https://github.com/smalot/pdfparser
+2. Add Imagick support to convert PDF to image
+3. Removed all python scripts
+4. Removed and/or Updated required dependencies

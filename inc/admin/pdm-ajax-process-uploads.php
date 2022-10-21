@@ -33,7 +33,7 @@ header('Content-Type: application/json');
 		//	get the contents of the file and echo it.
 		$text = file_get_contents($status_filename);
 		// send the json object back the client-side JavaScript
-		echo $text;
+		
 		//	convert to JSON to read the status of the process
 		$obj = json_decode($text);
 		//	if the process is finished, delete the file

@@ -261,7 +261,7 @@ class Frontend extends Common\Utility_Functions {
 		$num_of_rows = $wpdb->num_rows;
 		$json_filename = (empty($category)) ? 'default' : $category;
 
-		$this->pdf_DebugLog("Json File Query: Rows Found {$num_of_rows}::", json_encode($sql_query));
+		$this->pdf_DebugLog("Json File Query: Rows Found {$num_of_rows}::", wp_json_encode($sql_query));
 
 		if ($num_of_rows > 0){
 			return $this->create_pdm_json_file($results, $json_filename, $num_of_rows);
@@ -307,7 +307,7 @@ class Frontend extends Common\Utility_Functions {
 		}
 
 		//  attempt to write the contents of the data to the file location in JSON format
-		file_put_contents($json_filename , json_encode($objDataset));
+		file_put_contents($json_filename , wp_json_encode($objDataset));
 
 		//	 when everything goes well with json file, pass it to javascript
 		//$this->set_localize_json_file();
