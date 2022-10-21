@@ -4,12 +4,19 @@ namespace Legoeso_PDF_Manager\Inc\Libraries;
 use Legoeso_PDF_Manager as NS;
 use Legoeso_PDF_Manager\Inc\Common as Common;
 use Timer;
+use \Imagick;
+
+/**
+ * Adding support for PDF Parser Library see
+ * @since       1.1.0
+ */
+include __DIR__.'/class-parser.php';
 
 /**
  * Class for processing PDF documents. Extends Utility_Functions class 
  * All documents  will be stored within the custom legoeso_file_storage table.
  * 
- *
+ *S
  * @link       http://www.legoeso.com
  * @since      1.0.0
  * 
@@ -22,7 +29,7 @@ class PDF_Doc_Core extends Common\Utility_Functions {
 	 *
 	 * @since    1.0.0
 	 * @access   private
-	 * @var      string    $start_time      The process end start time.
+	 * @var      String    $start_time      The process end start time.
 	 */
 	private $set_start_time;
 
@@ -31,7 +38,7 @@ class PDF_Doc_Core extends Common\Utility_Functions {
 	 *
 	 * @since    1.0.0
 	 * @access   private
-	 * @var      string    $end_time        The process end time.
+	 * @var      String    $end_time        The process end time.
 	 */
 	private $set_end_time;
 
@@ -40,7 +47,7 @@ class PDF_Doc_Core extends Common\Utility_Functions {
 	 *
 	 * @since    1.0.0
 	 * @access   private
-	 * @var      string    $total_time      The total process time.
+	 * @var      String    $total_time      The total process time.
 	 */
 	private $total_time;
 
@@ -59,7 +66,7 @@ class PDF_Doc_Core extends Common\Utility_Functions {
 	 *
 	 * @since    1.0.4
 	 * @access   private
-	 * @var      string    $pdm_upload_errs  stores any errors during upload of the processed files
+	 * @var      String    $pdm_upload_errs  stores any errors during upload of the processed files
 	 */
 	private $pdm_upload_errs;
 
@@ -68,7 +75,7 @@ class PDF_Doc_Core extends Common\Utility_Functions {
 	 *
 	 * @since    1.0.0
 	 * @access   private
-	 * @var      string    $pdm_upload_dir stores the upload dirctory of the processed files
+	 * @var      String    $pdm_upload_dir stores the upload dirctory of the processed files
 	 */
 	private $pdm_upload_dir;
 
@@ -77,7 +84,7 @@ class PDF_Doc_Core extends Common\Utility_Functions {
 	 *
 	 * @since    1.0.0
 	 * @access   private
-	 * @var      string    $pdm_upload_dir stores the upload dirctory args of the processed files
+	 * @var      String    $pdm_upload_dir stores the upload dirctory args of the processed files
 	 */
 	private $pdm_upload_dir_agrs;
 
@@ -106,7 +113,7 @@ class PDF_Doc_Core extends Common\Utility_Functions {
 	 *
 	 * @since    1.0.0
 	 * @access   private
-	 * @var      string    $pdm_library    The directroy location to the class libraries for this plugin.
+	 * @var      String    $pdm_library    The directroy location to the class libraries for this plugin.
 	 */
     public $pdm_library;
 
@@ -115,7 +122,7 @@ class PDF_Doc_Core extends Common\Utility_Functions {
 	 *
 	 * @since    1.0.0
 	 * @access   private
-	 * @var      string    $pdm_plugin_dir    The directory path location for the plugin
+	 * @var      String    $pdm_plugin_dir    The directory path location for the plugin
 	 */
     public $pdm_plugin_dir;
 
@@ -124,7 +131,7 @@ class PDF_Doc_Core extends Common\Utility_Functions {
 	 *
 	 * @since    1.0.0
 	 * @access   private
-	 * @var      string    $pdm_Python    The directory path location to pyhton.exe on the server.
+	 * @var      String    $pdm_Python    The directory path location to pyhton.exe on the server.
 	 */
     public $pdm_Python;
 
@@ -133,7 +140,7 @@ class PDF_Doc_Core extends Common\Utility_Functions {
 	 *
 	 * @since    1.0.0
 	 * @access   public
-	 * @var      string    $pdm_PdfMiner    The directory location to PDF Miner for this plugin.
+	 * @var      String    $pdm_PdfMiner    The directory location to PDF Miner for this plugin.
 	 */
     public $pdm_PdfMiner;
 
@@ -141,7 +148,7 @@ class PDF_Doc_Core extends Common\Utility_Functions {
 	 * Path to poppler-utils executables, used to extract images from PDF files
 	 * @since    1.0.0
 	 * @access   private
-	 * @var      string    $pdm_PdfMiner    The directory location to PDF Miner for this plugin.
+	 * @var      String    $pdm_PdfMiner    The directory location to PDF Miner for this plugin.
 	 */
     private $pdm_PdfImages;
 
@@ -149,7 +156,7 @@ class PDF_Doc_Core extends Common\Utility_Functions {
 	 * Property used to store the filename used to save upload status
 	 * @since    1.0.1
 	 * @access   private
-	 * @var      string   $pdm_status_filename   stores the filename used to save upload status
+	 * @var      String   $pdm_status_filename   stores the filename used to save upload status
 	 */
     private $pdm_status_filename;
 
@@ -168,13 +175,30 @@ class PDF_Doc_Core extends Common\Utility_Functions {
 	 * @var      boolean   $pdm_large_file - specifies wether the file uploaded is large.
 	 */
     private $pdm_large_file = false;
+    
      /**
 	 * specifies valid file types/ 
 	 * @since    1.0.2
 	 * @access   private
-	 * @var      array   $pdm_valid_file_types - specifies the supported files types. 
+	 * @var      Array   $pdm_valid_file_types - specifies the supported files types. 
 	 */
     private $pdm_valid_file_types;
+
+     /**
+	 * stores global $_POST data 
+	 * @since    1.2.0
+	 * @access   private
+	 * @var      Array   $_post_data - stores global $_POST data. 
+	 */
+    private $_post_data;
+
+     /**
+	 * stores extraction processing status counter 
+	 * @since    1.2.0
+	 * @access   private
+	 * @var      integer   $_post_data - stores global $_POST data. 
+	 */
+    private $_status_counter = 1;
 
 	/**
 	 * Initializes class variables and set its properties.
@@ -193,11 +217,30 @@ class PDF_Doc_Core extends Common\Utility_Functions {
         $this->pdm_valid_file_types = array('application/pdf','application/x-zip-compressed');
         
         parent::__construct();
-        
-        // Gets the current option for the tesserct library setting, enable/disable'
-        $this->use_Tesseract = (get_option("legoeso_pytesseract_enabled") == 'on') ? 1: 0;
-        // Get/set the current options to force_image_extraction '
+
+        // Get current options set for force_image_extraction
         $this->force_image_extraction = (get_option("legoeso_force_image_enabled") == 'on') ? 1: 0;
+    }
+
+    
+    /**
+	 * Gets the value of $_post_data field and returns sanitized values
+	 *
+	 * @since 1.2.0
+	 * @return Array
+	 */
+    private function get_post_data(string $what, bool $raw = false) {
+        return ($raw) ? $this->_post_data[$what] : $this->sanitize_postdata($this->_post_data[$what]);
+    }
+
+    /**
+	 * sets the value of $_post_data field
+	 *
+	 * @since 1.2.0
+	 * @return none
+	 */
+    private function set_post_data($_post){
+        $this->_post_data =  $_post;
     }
 
     /**
@@ -208,36 +251,35 @@ class PDF_Doc_Core extends Common\Utility_Functions {
 	 * @since 1.0.0
 	 * @return none
 	 */
-    public function process_pdf_upload($_files){ 
+    public function process_pdf_upload($_files, $_post_data){ 
 
+        //
         /**
         * Step 1: 
         * Check to see if a file was submitted if not return nothing
         */
         // step out if varibale not set
-        if (!isset($_files)){
+        if (!isset($_files) || !isset($_post_data)){
             return;
         }
-            
+
+        // set the post data field
+        $this->set_post_data($_post_data);
+       
         //  get the upload directory info
-        $set_upload_dir_info = json_decode(stripslashes($_POST['_pdm_upload_info']));
+        $set_upload_dir_info = unserialize( stripslashes($this->get_post_data('_pdm_upload_info', true) ) );
+        $set_upload_dir_info['wp_upload_dir'] = unserialize(  $set_upload_dir_info['wp_upload_dir']); 
+        $set_upload_dir_info['pdm_upload_status_filename'] = base64_decode($set_upload_dir_info['pdm_upload_status_filename']);
         $this->pdm_upload_dir_agrs = $set_upload_dir_info;
 
         // set the upload directory, including the file use to monitor the status of the process
-        $this->pdm_upload_dir = $this->pdm_upload_dir_agrs->pdm_upload_dir;
-        $this->pdm_status_filename = base64_decode($this->pdm_upload_dir_agrs->pdm_upload_status_filename);
-
-        // write to the debug log
-        $this->pdf_DebugLog('Method: process_pdf_upload(): *** STEP 1: BEGIN UPLOAD PROCESS *** ', "STARTED");
-
-        // write to the debug log
-        $this->pdf_DebugLog('Method: process_pdf_upload(): Files Submitted [Object]::', ($_files));
+        $this->pdm_upload_dir =  $this->pdm_upload_dir_agrs['pdm_upload_dir'];
+        // get the filename user to save the processing status 
+        $this->pdm_status_filename = $this->pdm_upload_dir_agrs['pdm_upload_status_filename'];
 
         //  override the current option for legoeso_force_image_enabled 
-        if(array_key_exists('legoeso_force_image_enabled', $_POST)){
-                $this->force_image_extraction = ($_POST['legoeso_force_image_enabled'] == 'on') ? 1: 0;
-        }
-
+        $this->force_image_extraction = ($this->get_post_data('legoeso_force_image_enabled') == 'on') ? 1: 0;
+       
         /**
         * Step 2:
         * Validate, filter and process the uploaded file(s)
@@ -311,10 +353,6 @@ class PDF_Doc_Core extends Common\Utility_Functions {
         // check files for errors
         check_files_for_errors($_submitted_files);
 
-        # Add to debug/log 
-        $this->pdf_DebugLog("Method: validateFileUpload(): File Upload Status:", "Success");
-        $this->pdf_DebugLog("Method: validateFileUpload(): Number of File(s) Submitted:", $file_count);
-
         // filter and process the uploaded files
         $this->processFileUploads($this->filter_file_types($_submitted_files));
 
@@ -340,12 +378,11 @@ class PDF_Doc_Core extends Common\Utility_Functions {
             return $val == 'failed';
         });
 
-        // return a list of filenames that have failed. no other information will be provided
-        // at this time other the filename.
+        // return a list of filenames with the result objects for files that have failed. 
         function get_failed_files($f_results, $f_files){ 
             $a = array();
             foreach($f_files as $k => $v){
-                $a[] = $f_results[$k]['filename'];
+                $a[] = array('filename' => $f_results[$k]['filename'], 'results' => $f_results[$k]);
             }
             return empty($a) ? 0 : $a;
         };
@@ -353,13 +390,13 @@ class PDF_Doc_Core extends Common\Utility_Functions {
         // do cleanup.  Remove files after files have been added to the database
         $this->clean_dir($this->pdm_upload_dir);
 
-        //  send results back to ajax caller
-        die( json_encode(
+        //  send upload results back to ajax caller
+        die( wp_json_encode(
             array(
-                'total_files'   => count($file_results),
-                'results'       => $file_results,
-                '_status'       => 'complete',
-                'failed'        => get_failed_files($file_results, $r_failed_files),
+                'total_files'       => count($file_results),
+                'results'           => $file_results,
+                '_status'           => 'complete',
+                'failed'            => get_failed_files($file_results, $r_failed_files),
                 'php_exceptions'    => $this->Exception_Error,
                 )
             ) 
@@ -429,12 +466,12 @@ class PDF_Doc_Core extends Common\Utility_Functions {
         // loop over the row of  files
         for($i=0; $i < $_num_of_files;$i++){
             // get the file information for each file
-            $_filename      = sanitize_file_name($_files['name'][$i]);
-            $_file_type     = $_files['type'][$i];
+            $filename      = sanitize_file_name($_files['name'][$i]);
+            $_file_type     = sanitize_file_name($_files['type'][$i]);
             $_tmp_filename  = $_files['tmp_name'][$i];
             
             //  save the curent progress for the progress bar. 
-            $this->save_progress($i+1, $_num_of_files, $this->processPDFFile($_filename, $_tmp_filename));
+            $this->save_progress($i+1, $_num_of_files, $filename, $this->processPDFFile($filename, $_tmp_filename));
         }
         
     }
@@ -505,7 +542,7 @@ class PDF_Doc_Core extends Common\Utility_Functions {
                 $zip_file['error']   =  $_files['error'][$index];
                 $zip_file['size']    =  $_files['size'][$index];
 
-                // $this->pdf_DebugLog("Method: processZipFile(): **** Prepare to UNZIP FILE Type: $type Name:".$_files['name'][$index]." - ".$index,  $zip_file);
+                 $this->pdf_DebugLog("Method: processZipFile(): **** Prepare to UNZIP FILE Type: $type Name:".$_files['name'][$index]." - ".$index,  $zip_file);
                 // pass the zip file to unzip and collect the extracted files in an array
                 $this->unzipfiles( $zip_file, $unzipped );
                  
@@ -546,10 +583,12 @@ class PDF_Doc_Core extends Common\Utility_Functions {
 
         // Build folder path to temp directory         
         $folder = $writeToPath . "unzipped_" . basename($zip_tmp_name);
-
+        $this->pdf_DebugLog("Method: unzipfiles(): Temp Directory ", $zip_tmp_name);
+        $this->pdf_DebugLog("Method: unzipfiles(): Adding Directory ", $folder);
+    
         //  create the temp directory
-        if (!is_dir($folder) && file_exists($folder)) {
-            mkdir($folder);
+        if (!file_exists($folder)) {
+            mkdir($folder, 0755, true);
         }
 
         // unzip and filter the files
@@ -579,8 +618,8 @@ class PDF_Doc_Core extends Common\Utility_Functions {
 	 *  Processess a single PDFFile for futher processing.
 	 *
 	 * @since 1.0.0
-	 * @param string $filename
-     * @param string $tmpFilename
+	 * @param String $filename
+     * @param String $tmpFilename
 	 * @return array
 	 */
     private function processPDFFile($filename, $tmpFilename){
@@ -594,14 +633,15 @@ class PDF_Doc_Core extends Common\Utility_Functions {
                 // set the large file flag to true
                 $this->pdm_large_file = true;
 
-            } else {
+            } 
+            else {
                 // move the uploaded file for processing and get the directory information
                 $file_info_arr =  $this->uploadFileToWp($filename, $tmpFilename);
                 // reset the large file flag to the default
                 $this->pdm_large_file = false;
             }
-            $this->pdf_DebugLog("Uploaded DIR Args: Object::", json_encode($this->pdm_upload_dir_agrs));
-            $this->pdf_DebugLog("Uploaded File Information: Object::", json_encode($file_info_arr));
+            $this->pdf_DebugLog("Uploaded DIR Args: Object::", wp_json_encode($this->pdm_upload_dir_agrs));
+            $this->pdf_DebugLog("Uploaded File Information: Object::", wp_json_encode($file_info_arr));
             // Get the file path that was uploaded
             $fileUploaded = $file_info_arr['file'];
             
@@ -616,35 +656,36 @@ class PDF_Doc_Core extends Common\Utility_Functions {
                 # Add to debug/log 
                 $this->pdf_DebugLog("Upload Status::", "File successfully uploaded!");
             }
-
+           
             //  add file to database / returns an array
             //  return result to the caller
             return $this->addFileToDatabase($fileUploaded, $filename);
         }
+
+       
     }
     
     /** 
     * Saves the status of the file upload process. this function is 
     * used in conjuction with JavaScript and ajax.  It converts the status 
     * to a json object and writes the current status to a file, which is then
-    * usd by the JavaScript 
+    * usd by the JavaScript.  See also Admin::_file_upload_status_callback()
     *
 	* @since 1.0.0
 	* @param int $idx
     * @param int $total_files
-    * @param array $status_arr
+    * @param array $arr_status
 	* @return none
     */
-    function save_progress($idx, $total_files, $status_arr){
+    function save_progress($idx, $total_files, $_filename, $arr_status){
+        
 
-        if( !is_array($status_arr)){
+        if( !is_array($arr_status)){
             return;
         }
         
         // get the remaining time of the process   
         $time_remaining = $this->execTimeRemaining();
-
-        $status_message = "Processing File: ".($idx)." of {$total_files} ";
         
         // calculate the percentage
         $percent_complete = intval($idx / $total_files * 100);
@@ -659,17 +700,28 @@ class PDF_Doc_Core extends Common\Utility_Functions {
         // use the nonce to create the text file
         $status_filename = $this->pdm_status_filename;
 
-        // populate the status array
-        $status_arr['percent'] = $percent_complete;
-        $status_arr['status_message'] = $status_message;
+        // populate response array
+        $_ajax_response = array(
+            'percent'           =>  $percent_complete,
+            'total_files'       =>  $total_files,
+            'status'            =>  ($percent_complete == 100) ? 'complete' : 'processing',
+            'file'              =>  $idx,
+            'retries'           =>  $this->_status_counter += 1,
+        );
 
-        # Add to debug/log 
+        $ajax_response = array_merge($arr_status, $_ajax_response);
+        
        try {
-            file_put_contents($status_filename, json_encode($status_arr));
+            // create directory to upload status files
+            if(! file_exists($this->pdm_upload_dir_agrs['pdm_upload_dir'])) 
+            { 
+                //$this->pdf_DebugLog("Making file:: $status_filename", $this->pdm_upload_dir_agrs['pdm_upload_dir']);
+                mkdir($this->pdm_upload_dir_agrs['pdm_upload_dir'], 0755, true); 
+            } 
+            file_put_contents($status_filename, wp_json_encode($ajax_response));
        } 
        catch(PDM_Exception_Error $e) {
-            $this->Exception_Error[] = $e->getErrorObject($e);
-            $status_arr['status_message'] = 'Error updating status. Unable to write file.';
+            throw new Exception("Error updating Ajax Response Object. ".$e->getMessage());
        }
         
         // Sleep one second so we can see the delay
@@ -698,8 +750,8 @@ class PDF_Doc_Core extends Common\Utility_Functions {
 	 * Inserts file into database 
      *
 	 * @since 1.0.0
-	 * @param string $uploadFilename
-     * @param string $filename
+	 * @param String $uploadFilename
+     * @param String $filename
 	 * @return array
 	 */
     private function addFileToDatabase($uploadFilename, $filename){
@@ -708,23 +760,25 @@ class PDF_Doc_Core extends Common\Utility_Functions {
         */
         // do two things.
         // 1. get the raw contents of the PDF file 
-        // 2. Extract the text from the pdf file so that it can be
+        // 2. Extract text from the pdf file so that it can be
         // parsable and searched.
+        $this->pdf_DebugLog("Method: addFileToDatabase():", "Called...");
 
         global $wpdb;
         $wpdb->show_errors(true);
 
-        //  set/get the tablename document will be inserted
+        //  set the tablename document will be inserted
         $tablename = $wpdb->prefix. 'legoeso_file_storage';
 
         //  get the category the document will be associated with
-        $pdf_category = ( $_REQUEST['pdf_category'] == -1 ) ? 'General' : $_REQUEST['pdf_category'];
+        $pdf_category = ( $this->get_post_data('pdf_category') == -1 ) ? 'General' : $this->get_post_data('pdf_category');
 
         // initialize the rowID, will be used later to update the table data
         $insert_rowID = null;
 
         //  Extract the text from the PDF file and get the document properties
         $objDocumentProperties = $this->extractTextFromPDF($uploadFilename);
+
         $extracted_data = $objDocumentProperties['extracted_data'];
         $extraction_outputType = $objDocumentProperties['output_type'];
         
@@ -736,9 +790,7 @@ class PDF_Doc_Core extends Common\Utility_Functions {
         $logged_in_user = wp_get_current_user();
         $current_user = $logged_in_user->data->user_login;
 
-        $this->pdf_DebugLog("Extraction Output Object::", json_encode($objDocumentProperties));
-        $this->pdf_DebugLog("Extraction Output Type::", $extraction_outputType);
-        $this->pdf_DebugLog("Insert Date::", $theDateFormat);
+        // $this->pdf_DebugLog("Extraction Output Object::", wp_json_encode($objDocumentProperties));
 
         // Add additional field data to the database
         switch ($extraction_outputType) 
@@ -750,24 +802,20 @@ class PDF_Doc_Core extends Common\Utility_Functions {
                     $this->pdf_DebugLog(":: Missing Image Data ::", "Image File/Path Name Missing!");
                     $extracted_data = "no_image_data";
                 }
-                else{
-                    if(file_exists($extracted_data))
-                        $extracted_data = file_get_contents($extracted_data);
-                }
-
+                // add pdf_image column to sql query
                 $added_columns = array( 
                     'pdf_image'     =>  $extracted_data, 
                     );
             break;
-	
             default:
+            // add text_data column to sql query
                 $added_columns = array( 
                     'text_data'     =>  $extracted_data, 
                     );
             break;
         }           
      
-        // insert data into database 
+        // coluns to insert data into database 
         $columnData = array(
             'filename'                  =>      $filename,
             'filetype'                  =>      'application/pdf',
@@ -777,22 +825,23 @@ class PDF_Doc_Core extends Common\Utility_Functions {
             'pdf_doc_num'               =>      rand(0000001,9999999)
         );
 
-        // if the filesize is less than or equal the max truncate file before insert, 
+        // if the filesize is less than or equal the maxfile size truncate file before insert, 
         // otherwise the file is too big save file to file system
-
-        // store the size of the uoloaded file
+        // store the size of the uploaded file
         $upload_filesize = filesize($uploadFilename);
 
         if($this->pdm_large_file){
             $columnData['has_url'] = 1;
-            $columnData['pdf_url'] = $this->pdm_upload_dir_agrs->wp_upload_dir->url.'/pdm_data/'.$filename;
+            $columnData['pdf_url'] = $this->pdm_upload_dir_agrs['wp_upload_dir']['url'].'/pdm_data/'.$filename;
             
             $query_data = array_merge($columnData, $added_columns);
+            // execute sql query
             $this->pdm_execute_query($wpdb, $tablename,  $query_data);
 
         } else {
             // merege all the added columns into one array
             $query_data = array_merge($columnData, $added_columns);
+
             if($upload_filesize > $this->pdm_max_filesize){
                 $this->pdm_split_execute_query($wpdb, $tablename, $uploadFilename, $query_data); 
              } else {
@@ -800,24 +849,24 @@ class PDF_Doc_Core extends Common\Utility_Functions {
                 //  Get pdf file/data contents -  Reads entire file into a string
                 // add the file contents to the column data array
                 $query_data['pdf_data'] = (file_exists($uploadFilename)) ? file_get_contents($uploadFilename) : '';
+                // execute query
                 $this->pdm_execute_query($wpdb, $tablename, $query_data);
             }
         }
         
         $insert_rowID = $wpdb->insert_id;
-        $this->pdf_DebugLog("Insert data into database for file::", $filename.':: insert id '.$insert_rowID);
-        $this->pdf_DebugLog("Uploaded FILE SIZE::", $upload_filesize);
+
         //  if there was an error during the insert
         if($insert_rowID < 1){
-            $this->pdf_DebugLog("SQL Query result::{$filename}", $wpdb->last_error);
-
+            // $this->pdf_DebugLog("SQL Query result::{$filename}", $wpdb->last_error);
+            // $this->pdf_DebugLog("SQL Query result:: Text ", $extracted_data);
             $uploadStatus = "failed";
             $status_message = "failed to add '{$filename}' to database.";
             
         }
         else {
 
-            $this->pdf_DebugLog("SQL Query result::{$filename}", "*** SQL insert sucessful. ***");
+            // $this->pdf_DebugLog("SQL Query result::{$filename}", "*** SQL insert sucessful. ***");
             $uploadStatus = "success";
             $status_message  = "{$filename} added successfully.";
         }
@@ -827,6 +876,7 @@ class PDF_Doc_Core extends Common\Utility_Functions {
             'wpdb_errorText'    =>  $wpdb->last_error,
             'status_message'    =>  $status_message,
             'filename'          =>  $filename,
+            'pdf_version'        =>  $objDocumentProperties['pdf_version'],
             'percent'           =>  100
         );
         
@@ -842,10 +892,10 @@ class PDF_Doc_Core extends Common\Utility_Functions {
 	 * 
      * Excecutes appropriate SQL query 
      * @param object    $wpdb
-     * @param string    $tablename
+     * @param String    $tablename
      * @param object    $query_data
      * @param int       $rowID
-     * @param string    $type
+     * @param String    $type
 	 * @return integer
 	 */
     private function pdm_execute_query($wpdb, $tablename, $query_data, $rowID = null, $type = 'insert')
@@ -882,97 +932,115 @@ class PDF_Doc_Core extends Common\Utility_Functions {
      * @since 1.0.1
      * 
      * Extracts text from PDF document
-     * @param string $input_filename
+     * @param String $input_filename
      * @return array
      */
     public function extractTextFromPDF($input_filename)
     {
-        
-        if(is_file($input_filename)){
- 
+        if(file_exists($input_filename)){
 
-        $this->pdf_DebugLog("Text Extraction: File Validation Check:: "," Passed!");
-
-            // initialze output buffer and return value variables
-            $arrOutput = null;
-            $retval = null;
             $truncate_file = false;
             $force_img_only = $this->force_image_extraction;
-            $outputType = 'text_data';
-            $extraction = true;
-        
+           
             $file_size = filesize($input_filename);
             // sets the maximum up filesize limit, if file size is greater set the $truncate_file
             // flag and we'll break the file into chunks when inserting into the db
             $max_filesize = $this->pdm_max_filesize; 
             $truncate_file = ($file_size > $max_filesize) ? true : false;
-            $tries = ($force_img_only == 1 || $this->pdm_large_file == true) ? 3 : 1;
 
-            $this->pdf_DebugLog("Use pyTesseract On?:: ", $this->use_Tesseract);
-            $this->pdf_DebugLog("Force Images On?:: ",$force_img_only);
-            $this->pdf_DebugLog("Text Extraction: File Size:: ", $file_size);
+            // obtain the version of PDF
+            $pdf_v = $this->get_pdfversion($input_filename);
 
-            // Try all thress extraction methods until text or image has been
-            while($extraction){
+            $this->pdf_DebugLog("Python Version:: ", $pdf_v);
 
-                switch($tries){
-                    case 1:
-                        // Build initial text extaction path for command to execute
-                        // 1st attempt:
-                        $pathToScript = $this->pdm_Python.' '.$this->pdm_PdfMiner;
-                        $strCommand = $pathToScript." -t text ".$input_filename;
-                    break;
-                    case 2:
-                        // Build secondary text extaction path for command to execute
-                        // 2nd attempt:
-                        if(!$this->use_Tesseract){
-                            break;
-                        }
-                            
-                        $pathToScript = $this->pdm_Python.' '.$this->pdm_plugin_dir.'inc/py/pyConvertPDF.py';
-                        $strCommand = $pathToScript.' '.$input_filename.' "'. get_option("legoeso_pytesseract_path") .'" 6';
-                        // adding a few more seconds to extend execution time of second command
-                        set_time_limit(120);
-                    break;
-                    default:
-                        // Build Image Extraction Commmand
-                        // 3rd Attempt
-                        $pathToScript = $this->pdm_Python.' '.$this->pdm_plugin_dir.'inc/py/getImages.py';
-                        $strCommand = $pathToScript." ".$input_filename." {$this->pdm_upload_dir}";
-                        # set the output type
+            if($force_img_only == 1 || $truncate_file){
+                // set output type
+                $outputType = 'image_data';
+                // extract image data from PDF file
+                $extractedData =  $this->extract_image_from_pdf($input_filename);
+            } else {
+                // set output type
+                $outputType = 'text_data';
+                
+                // create new instance of PdfParser
+                $pdf_parser = new \Smalot\PdfParser\Parser();
+
+                try{
+                    // parse the pdf file
+                    $_pdffile = $pdf_parser->parseFile($input_filename);
+
+                    // attempt to extract the text from the file, only extract text from 1st page
+                    $extractedData = trim( $_pdffile->getPages()[1]->getText() );
+
+                    // clear pdf_parser reference in attempt to free its resources
+                    unset($pdf_parser);
+
+                    // if no data was extracted from file extract image
+                    if (strlen($extractedData) < 1){
                         $outputType = 'image_data';
-                        $extraction = false;
-                    break;
+                        // try to extract image data from PDF file
+                        $extractedData =  $this->extract_image_from_pdf($input_filename);
+                    }
+
+                } catch(\Exception | \Error $e) { 
+                    
+                    // catch if error extracting the text from the pdf file
+                    // extract an image instead
+                    if(preg_match('/[Invalid object reference for $obj.]+/', $e->getMessage()) ){
+                        $outputType = 'image_data';
+                        // try to extract image data from PDF file
+                        $extractedData =  $this->extract_image_from_pdf($input_filename);
+                    }
+                    else {
+                        throw new Exception("Error extracting image from PDF ".$e->getMessage());
+                    }
                 }
-
-                // Execute initial command
-                exec($strCommand, $arrOutput, $retval);
-                // remove all special characters and return the output
-                $extractedData = ($outputType == 'image_data' ) ? implode("",$arrOutput) : $this->clean(implode("\t", $arrOutput));
-
-                // count the length of the strings
-                $strLen = strlen($extractedData);
-                $extraction = ($strLen < 10 && $outputType == "text_data") ? true : false;
-                // Add to debug log
-                $this->pdf_DebugLog("Text Extraction Command Attempt {$tries}:: ",$strCommand);
-
-                $tries++;
+                
             }
 
             return array(
-                'extracted_data'    => $extractedData,
-                'output_type'       => $outputType,
+                'extracted_data'    =>  $extractedData,
+                'output_type'       =>  $outputType,
+                'pdf_version'       =>  $pdf_v,
             );
         }
     }
+
+    /**
+	 * @since 1.1.0
+     *  Converts a PDF file to JPEG Image using Imagick 
+     * 
+     * @param String $pdf_filename
+	 * @return blob of raw image data
+	 */
+    private function extract_image_from_pdf($pdf_filename){
+
+        if ( file_exists($pdf_filename) ){
+            $_ftype = mime_content_type($pdf_filename);
+
+            // attempt to extract image only if the file is pdf
+            if ($_ftype == 'application/pdf'){                
+                    $get_image = new \Imagick();
+                    // extract on the first page
+                    $get_image->readImage($pdf_filename."[0]");
+                    $get_image = $get_image->mergeImageLayers(Imagick::LAYERMETHOD_FLATTEN);
+                    $get_image->resizeImage( 350, 500, imagick::FILTER_LANCZOS, 0 );
+                    $get_image->setImageFormat( 'jpg' );
+                    $pdf_image = $get_image->getImageBlob();
+                    $get_image->clear();
+                return( $pdf_image );
+            }
+        }
+    }
+
     /**
      *
 	 * @since 1.0.2
 	 * 
      * splits file into chunks then excecutes appropriate SQL query 
      * @param object $wpdb
-     * @param string $tablename
-     * @param string $filename
+     * @param String $tablename
+     * @param String $filename
      * @param array  $columnData
 	 * @return None
 	 */
@@ -981,9 +1049,12 @@ class PDF_Doc_Core extends Common\Utility_Functions {
         if(!file_exists($filename)){
             return;
         }
+
         $buffer = $this->pdm_max_filesize;
+
         // get file size
         $file_size = filesize($filename);
+
         // number of parts to split
         $parts = $file_size / $buffer;
 

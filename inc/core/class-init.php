@@ -52,14 +52,6 @@ class Init extends Common\Utility_Functions {
 	 */
 	protected $plugin_text_domain;
 
-	/**
-	 * Stores dependency check results
-	 * @since    1.0.2
-	 * @access   protected
-	 * @var      object    $plugin_dependencies
-	 */
-	protected $plugin_dependencies;
-
 	// define the core functionality of the plugin.
 	public function __construct() {
 
@@ -68,7 +60,6 @@ class Init extends Common\Utility_Functions {
 		$this->plugin_basename = NS\PLUGIN_BASENAME;
 		$this->plugin_text_domain = NS\PLUGIN_TEXT_DOMAIN;
 		$this->plugin_dependencies = $this->load_dependencies();
-		
 		
 		$this->set_locale();
 		$this->define_admin_hooks();
@@ -87,7 +78,6 @@ class Init extends Common\Utility_Functions {
 	 */
 	private function load_dependencies() {
 		$this->loader = new Loader();
-		return $this->check_dependencies();
 	}
 
 	/**
@@ -122,7 +112,6 @@ class Init extends Common\Utility_Functions {
 			$this->get_plugin_name(), 
 			$this->get_version(), 
 			$this->get_plugin_text_domain(),
-			$this->get_plugin_dependencies()
 		);
 
 		// enque admin styles and scripts
@@ -147,6 +136,10 @@ class Init extends Common\Utility_Functions {
 
 		// Action wp_ajax, for fetch ajax_response
 		$this->loader->add_action( 'wp_ajax__ajax_fetch_pdm_history_callback', $plugin_admin, '_ajax_fetch_pdm_history_callback' );
+		
+		// Action wp_ajax, for file upload status
+		$this->loader->add_action( 'wp_ajax_file_upload_status', $plugin_admin, '_file_upload_status_callback' );
+		
 	}
 
 	/**
@@ -163,76 +156,6 @@ class Init extends Common\Utility_Functions {
 		$this->loader->add_action( 'wp_enqueue_scripts', $plugin_public, 'enqueue_scripts' );
 	}
 
-    /**
-     * Setup and initialize array used for the dependency check
-     * @since 1.0.1
-     * @return array
-     */
-    private function set_dependency_arr(){
-        // default array
-        $installed_pkgs = array(
-            array('pytesseract' => null),
-            array('pdf2image' => null),
-            array('pdfminer.six' => null),
-            array('platform' => null),
-        );
-
-        return (array(
-            'installed_packages'    => $installed_pkgs,
-            'phpinfo'               => array(''),
-        ));
-    }
-
-    /**
-    * Checks/returns a list of required dependencies
-    * @since 1.0.1
-    * @plugin_dir string   directory location of the plugin
-    * @return array
-    */
-    public function check_dependencies(){
-
-        // initialze output buffer variables
-        $arrOutput = null;
-        $retval = null;
-
-        //  initialize installed lib array
-        $installed_libs = $this->set_dependency_arr();
-
-        //  Build and exceute initial dependencies command
-        $strCommand = NS\PYTHON_DIR.' '.plugin_dir_path(__DIR__).'py/check_dependencies.py';    
-        exec($strCommand, $arrOutput, $retval);
-
-		// build and execute python version check
-        $pyv_command = NS\PYTHON_DIR.' --version';
-        exec($pyv_command, $py_out, $rval);
-
-        if(!is_array($arrOutput) || empty($arrOutput)){
-            $installed_libs['python'] = "Python not detected or installed, or not configured incorrectly. -  code: {$retval}";
-            $installed_libs['python_failed'] = true;
-        } else {
-            // get the put from the executed command  
-            $installed_libs = json_decode($arrOutput[0], true);
-            $installed_libs['python'] = (!empty($py_out[0]) ? $py_out[0]:'Not Detected');
-        }
-
-        //  Add the settings from php enviroment variables
-        $phpinfo = $this->phpinfo_array();
-        $installed_libs["phpinfo"] = $phpinfo['zip'];
-        
-        //  add relavant php.ini values
-        $installed_libs['server_limits']['max_execution_time'] = $phpinfo['Core']['max_execution_time'];
-        $installed_libs['server_limits']['memory_limit'] = $phpinfo['Core']['memory_limit'];
-        $installed_libs['server_limits']['memory_limit']['local_bytes'] = $this->php_to_bytes($phpinfo['Core']['memory_limit']['local']);
-        $installed_libs['server_limits']['memory_limit']['master_bytes'] = $this->php_to_bytes($phpinfo['Core']['memory_limit']['master']);
-        $installed_libs['server_limits']['post_max_size'] = $phpinfo['Core']['post_max_size'];
-
-        // add server information to $installed_dependencies
-        $this->installed_dependencies = $installed_libs;
-
-        // Add to debug log    
-        $this->pdf_DebugLog("Class: init.php - Medthod:: check_dependencies()", json_encode($installed_libs));
-        return($installed_libs);
-    }
 
 	/**
 	 * Run the loader to execute all of the hooks with WordPress.
@@ -248,13 +171,7 @@ class Init extends Common\Utility_Functions {
 	public function get_plugin_name() {
 		return $this->plugin_name;
 	}
-	/**
-	 * The path to the directory of the plugin, used to specifiy the absolute 
-	 * path for included files within WordPress.
-	 */
-	public function get_plugin_dependencies() {
-		return $this->plugin_dependencies;
-	}
+
 	/**
 	 * The reference to the class that orchestrates the hooks with the plugin.
 	 *
