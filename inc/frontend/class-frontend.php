@@ -83,6 +83,7 @@ class Frontend extends Common\Utility_Functions {
 
 		// add and load the shortcodes
 		$this->load_pdm_short_codes();
+
 	}
 
 	/**
@@ -93,8 +94,8 @@ class Frontend extends Common\Utility_Functions {
 	public function enqueue_styles() {
 				
 		// load stylesheets
-		wp_enqueue_style( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'css/pdf-doc-manager-frontend.css', array(), $this->version, 'all' );
-        wp_enqueue_style('pdm-doc-style1-css', plugin_dir_url( __FILE__ ) .'css/pmd_datatables_style_1.css');
+		wp_enqueue_style( 'legoeso-frontend-styles', plugin_dir_url( __FILE__ ) . 'css/pdf-doc-manager-frontend.css', array(), $this->version, 'all' );
+        wp_enqueue_style( 'legoeso-frontend-styles-datatable', plugin_dir_url( __FILE__ ) .'css/pmd_datatables_style_1.css');
 		
 	}
 
@@ -105,15 +106,45 @@ class Frontend extends Common\Utility_Functions {
 	 */
 	public function enqueue_scripts() {
 
-		wp_enqueue_script( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'js/pdf-doc-manager-frontend.js', array( 'jquery' ), $this->version, false );
+		wp_enqueue_script('legoeso-frontend-js-one', plugin_dir_url( __FILE__ ) . 'js/pdf-doc-manager-frontend.js', array( 'jquery' ), $this->version, false );
 
 		//	enque the jquery ui scripts
-		wp_enqueue_script( 'pdm_simple_datatables', 'https://cdn.jsdelivr.net/npm/simple-datatables@latest', array(), $this->version, true);
-		wp_enqueue_script( 'pdm_datatables_jquery', plugin_dir_url( __DIR__) . 'frontend/js/pdm_jquery.datatables.js', array( ), $this->version, true);
-		wp_enqueue_script( 'pdm_datatables_script', plugin_dir_url( __DIR__) . 'frontend/js/pdm_datatables.js', array( 'jquery' ), $this->version, true);
-	
+		// wp_enqueue_script( 'legoeso_simple_datatables', 'https://cdn.jsdelivr.net/npm/simple-datatables@latest', array(), $this->version, true);
+
+		wp_enqueue_script( 'legoeso-frontend-js-datatables',  plugin_dir_url( __DIR__) . 'frontend/js/index.d.ts', array(), $this->version, true);
+		wp_enqueue_script( 'legoeso-frontend-js-datatables-2', plugin_dir_url( __DIR__) . 'frontend/js/pdm_jquery.datatables.js', array( ), $this->version, true);
+		wp_enqueue_script( 'legoeso-frontend-js-datatables-3', plugin_dir_url( __DIR__) . 'frontend/js/pdm_datatables.js', array( 'jquery' ), $this->version, true);
+
 		// when everything goes well with the json file, pass it to javascript
 		$this->set_localize_json_file();
+	}
+
+	/**
+	 * Register the filteres for the public-facing side of the site.
+	 *
+	 * @since    1.2.0
+	 */
+	public function add_filters(){
+		add_filter('script_loader_tag', [$this, 'add_datatable_mod_type_attrib'], 10, 3);
+	} 
+
+
+	/**
+	 * Callback to modify script tag to include the module attribute fro datatables
+	 * 
+	 * @since 1.2.0
+	 * 
+	 */
+	public function add_datatable_mod_type_attrib($tag, $handle, $src) {
+		
+		// if not datatable script, do nothing and return
+		if( 'legoeso-frontend-js-datatables' == $handle ) {
+			// change the script tag by adding type=module and return it
+			$tag = '<script type="module" src="' . esc_url( $src ) . '" </script>';
+			return ($tag);
+		}
+
+		return $tag;
 	}
 
 	/** *******************************************************************
