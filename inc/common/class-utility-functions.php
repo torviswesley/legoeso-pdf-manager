@@ -304,16 +304,16 @@ class Utility_Functions {
 		// table to update
 		$tablename = $wpdb->prefix.'options';
 
-		// coluns to skip
-		$skip = array('_pdm_doc_settings_nonce', '_wp_http_referer');
+		// columns to process
+		$do = array('legoeso_force_image_enabled');
 
 		foreach($POST as  $key => $val){
 			
-			if(!in_array($key, $skip)){
+			if(in_array($key, $do)){
 
 				$columns_update = array(
 					'option_name'		=>	$key,
-					'option_value'		=>	wp_unslash($val),
+					'option_value'		=>	sanitize_option($val),
 					'autoload'			=>	'yes',
 				);
 
@@ -334,7 +334,7 @@ class Utility_Functions {
      * @param array $_POST
      * @return none
      */
-	public function updatePdfDocument($doc_data){
+	public function save_changes_pdf_quick_edit($doc_data){
 
          try{
             global $wpdb;
@@ -344,23 +344,27 @@ class Utility_Functions {
             $tablename = $wpdb->prefix.'legoeso_file_storage';
             // columns to update
             $columns_update = array(
-                'filename'		=>	$doc_data['edit-document_filename'],
-                'category'		=>	$doc_data['edit-document_category'],
+                'filename'		=>	sanitize_text_field($doc_data['edit-document_filename']),
+                'category'		=>	sanitize_text_field($doc_data['edit-document_category']),
             );
 
             // what to update
-            $_where = array('ID' => $doc_data['docid']);
+            $_where = array('ID' => absint($doc_data['docid']));
 
             //	update values of the WP_Options TABLE
             $rs = $wpdb->update($tablename, $columns_update, $_where);            
-            
-            $this->pdf_DebugLog("Updated", $columns_update);
-            $this->pdf_DebugLog("Updated: Result", $rs);
+           
+       
+
 
             if($rs == 1){
-                return $rs;
+                $this->pdf_DebugLog("Updated", $columns_update);
+                $this->pdf_DebugLog("Updated: Result", $rs);
+                return wp_json_encode( array('response' => $rs ) );
+                
             } else {
-                return $wpdb->last_error;
+                $this->pdf_DebugLog("Error Updating: Result", $wpdb->last_error);
+                return wp_json_encode( array('response' =>  $wpdb->last_error) );
             }
 
            
@@ -442,7 +446,7 @@ class Utility_Functions {
         $retval = null;
 
         //  initialize installed lib array
-        $installed_libs = array();
+        $installed_libs = [];
 
         //  Add the settings from php enviroment variables
         $phpinfo = $this->phpinfo_array();
@@ -458,10 +462,7 @@ class Utility_Functions {
         $installed_libs['server_limits']['memory_limit']['master_bytes'] = $this->php_to_bytes($phpinfo['Core']['memory_limit']['master']);
         $installed_libs['server_limits']['post_max_size'] = $phpinfo['Core']['post_max_size'];
 
-        // add server information to $installed_dependencies
-        $this->installed_dependencies = $installed_libs;
-
-        // Add to debug log    
+          // Add to debug log    
         $this->pdf_DebugLog("Class: init.php - Medthod:: check_dependencies()", wp_json_encode($installed_libs));
         return($installed_libs);
     }

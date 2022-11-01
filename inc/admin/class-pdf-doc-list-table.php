@@ -324,8 +324,8 @@ class PDF_Doc_List_Table extends Libraries\WP_List_Table  {
 	 */
 	protected function column_cb( $item ) {
 		return sprintf(		
-				'<label class="screen-reader-text" for="pdfdoc_' . $item['ID'] . '">' . sprintf( __( 'Select %s' ), $item['pdf_doc_num'] ) . '</label>'
-				. "<input type='checkbox' name='pdfdocs[]' id='pdfdoc_{$item['ID']}' value='{$item['ID']}' />"					
+				'<label class="screen-reader-text" for="pdfdoc_' . esc_attr($item['ID']) . '">' . sprintf( __( 'Select %s' ), esc_attr($item['pdf_doc_num']) ) . '</label>'
+				. "<input type='checkbox' name='pdfdocs[]' id='pdfdoc_".esc_attr($item['ID'])."' value='".esc_attr($item['ID'])."' />"					
 			);
 	}
 
@@ -381,21 +381,20 @@ class PDF_Doc_List_Table extends Libraries\WP_List_Table  {
 		 */
 		
 		$admin_page_url =  admin_url( 'admin.php' );
-		$hlink_path = $this->plugin_text_domain.'/inc/frontend/views/';
-		$load_pdf_page_url =  plugins_url( $hlink_path.'load-view-pdf-doc.php');
+		$load_pdf_page_url =  site_url('index.php');
 	
 		/**
 		 * Row action: View 
 		 */
 		$query_args_view_pdfdoc = array(
 			//'page'		=>	wp_unslash( isset($_REQUEST['page']) ?$_REQUEST['page'] : ''  ),
-			'action'	=>	'view_pdf_doc',
-			'file_id'	=>	absint( $item['ID']),
+			'action'	=>	'view_document',
+			'pid'	=>	absint( $item['ID']),
 			'_wpnonce'	=>	wp_create_nonce( 'view_pdf_file_nonce' ),
 		);
 		
 		$view_pdf_doc_meta_link = esc_url( add_query_arg( $query_args_view_pdfdoc, $load_pdf_page_url ) );
-		$actions['view_pdf_doc'] = '<a target="_blank" href="' . $view_pdf_doc_meta_link . '">'. __( 'View', $this->plugin_text_domain ) . '</a>';
+		$actions['view_pdf_doc'] = '<a target="_blank" href="' .$view_pdf_doc_meta_link. '">'. __( 'View', $this->plugin_text_domain ) . '</a>';
 		 
 
 		/**
@@ -498,37 +497,43 @@ class PDF_Doc_List_Table extends Libraries\WP_List_Table  {
 		// check for individual row actions
 		$the_table_action = $this->current_action();
 		$this->pdf_DebugLog("Bulk ACTION Fired::", $the_table_action);
+		
+		// specify the valid action types
+		$valid_actions = ['bulk-download', 'bulk-delete', 'bulk-email'];
 
 		// check for table bulk actions
 		if ( isset( $_REQUEST['bulk_action'] ) || isset( $_REQUEST['bulk_action2'] ) ) {
-			$nonce = wp_unslash( $_REQUEST['_ajax_pdm_doc_list_nonce'] );
+			
 			// verify the nonce.
 			/*
 			 * Note: the nonce field is set by the parent class
 			 * wp_nonce_field( 'bulk-' . $this->_args['plural'] );
 			 * 
 			 */
+			$nonce = sanitize_text_field( $_REQUEST['_ajax_pdm_doc_list_nonce'] );
 			if ( ! wp_verify_nonce( $nonce, 'ajax-pdm-doc-list-nonce' ) ) {
 				$this->invalid_nonce_redirect();
 				return;
 			}
-			$bulk_action = (isset($_REQUEST['bulk_action']) ? $_REQUEST['bulk_action'] : $_REQUEST['bulk_action2']);
-
-			switch($bulk_action) {
-				case 'bulk-download':
-					//	get and pass the list of pdfs for processing
-					$this->pdf_bulk_download($_REQUEST['checkedVals']);
-					$this->graceful_exit();
-				break;
-				case 'bulk-delete':
-					die( wp_json_encode($this->pdf_bulk_delete($_REQUEST['checkedVals'])) );
-				break;
-				case 'bulk-email':
-					//die( json_encode($this->pdf_bulk_email($_REQUEST['checkedVals'])) );
-				break;
-				default:
-					return;
-				break;
+			$bulk_action = (isset($_REQUEST['bulk_action']) ? sanitize_text_field($_REQUEST['bulk_action']) : sanitize_text_field($_REQUEST['bulk_action2']));
+			
+			if(in_array($bulk_action, $valid_actions)) {
+				switch($bulk_action) {
+					case 'bulk-download':
+						//	get and pass the list of pdfs for processing
+						$this->pdf_bulk_download((sanitize_text_field($_REQUEST['checkedVals'])));
+						$this->graceful_exit();
+					break;
+					case 'bulk-delete':
+						die( wp_json_encode($this->pdf_bulk_delete(sanitize_text_field($_REQUEST['checkedVals'])) ) );
+					break;
+					case 'bulk-email':
+						// not implemented!
+					break;
+					default:
+						return;
+					break;
+				}
 			}
 		}
 	}
@@ -580,6 +585,7 @@ class PDF_Doc_List_Table extends Libraries\WP_List_Table  {
 	 * @param array $bulk_pdf_ids
 	 */		
 	public function pdf_bulk_delete($bulk_pdf_ids){
+		print_r($bulk_pdf_ids);exit();
 		function delete_pdf_files($files){
 			if(!isset($files) && !is_array($files))
 				return;
@@ -799,8 +805,8 @@ class PDF_Doc_List_Table extends Libraries\WP_List_Table  {
 	public function display(){
 		wp_nonce_field( 'ajax-pdm-doc-list-nonce', '_ajax_pdm_doc_list_nonce' );
 
-		echo '<input id="order" type="hidden" name="order" value="'. $this->_pagination_args['order'] . '" />';
-		echo '<input id="orderby" type="hidden" name="orderby" value="'. $this->_pagination_args['orderby'] . '" />';
+		echo '<input id="order" type="hidden" name="order" value="'. esc_attr($this->_pagination_args['order']) . '" />';
+		echo '<input id="orderby" type="hidden" name="orderby" value="'. esc_attr($this->_pagination_args['orderby']) . '" />';
 		$this->search_box( __( 'Search Docs', $this->plugin_text_domain ), 'pdm-doc-find');
 
 		parent::display();

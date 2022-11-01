@@ -1260,8 +1260,8 @@ class WP_List_Table extends Common\Utility_Functions {
 		 * @param object $item 
 		 * attr doc_info contains row data doc_info = [id, filename, category]
 		 */
-		echo '<tr id="pdf_doc-'.$item['ID'].'" doc_info="'.$item['ID'].'|'.$item['filename'].'|'.$item['category'].'" class="iedit type-pdf_doc">';
-		$this->single_row_columns( $item );
+		echo '<tr id="pdf_doc-'.esc_attr($item['ID']).'" doc_info="'.esc_attr($item['ID']).'|'.esc_attr($item['filename']).'|'.esc_attr($item['category']).'" class="iedit type-pdf_doc">';
+			$this->single_row_columns( $item );
 		echo '</tr>';
 	}
 

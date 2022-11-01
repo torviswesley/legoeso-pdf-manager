@@ -546,11 +546,13 @@
                  function(r) {
                      var $errorNotice = $( '#edit-' + id + ' .inline-edit-save .notice-error' ),
                          $error = $errorNotice.find( '.error' );
- 
+                     r = JSON.parse(r); // parse and update var
                      $( 'table.widefat .spinner' ).removeClass( 'is-active' );
  
-                     if (r) {
-                         if ( 1 == r ) {
+                     if (r.response) {
+                        
+                         if ( 1 == r.response ) {
+                             legoeso_list.display();
                              legoeso_list.update(data);
 
                          } else {

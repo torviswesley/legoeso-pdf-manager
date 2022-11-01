@@ -22,7 +22,7 @@ header('Content-Type: application/json');
 	}
 
 	// build the text file used to obtain the processing status
-	$pdm_nonce = $_REQUEST['nonce']; //	get the wp_nonce
+	$pdm_nonce = sanitize_text_field($_REQUEST['nonce']); //	get the wp_nonce
 
 	//	decode the server path for text file that contains upload status info
 	//	and set the filename variable
@@ -43,7 +43,7 @@ header('Content-Type: application/json');
 	} 
 	else {
 		// returning empty array
-		die( json_encode(array( 
+		die( wp_json_encode(array( 
 					"percent" 			=> 0, 
 					"status_message" 	=> 'Calculating...',
 					'upload_status'     => 0,

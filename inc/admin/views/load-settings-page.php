@@ -1,3 +1,7 @@
+<?php 
+		wp_nonce_field( 'pdm-doc-settings-nonce', '_pdm_doc_settings_nonce' ); 
+		$sys_info = $this->check_dependencies();
+?>
 <div class="accordion" id="accordionEnvVariables">
 
   <div class="accordion-item">
@@ -48,7 +52,7 @@
 
                 </ul>
             </li>
-            <li> Document View - Lists a single document or multiple documents within a page. 
+            <li> Document Listview - Lists a single document or multiple documents as an unordered list within a page within a page.
                 <ul style="list-style-type:square;">
                    <li> <strong>[legoeso_document_item pdf_id="954647"]</strong> - Single document</li> 
                   <li> <strong>[legoeso_document_item pdf_id="6183770, 221932, 744517, 683331"]</strong> - Multiple documents, notice the document ids are separated by a comma.</li> 
@@ -87,7 +91,7 @@
         This plugin uses Simple-DataTables to display the list of PDF documents within WordPress - for more information see 
         <a href="https://github.com/fiduswriter/Simple-DataTables/wiki"> Simple-DataTables</a>
         <br>
-        <strong>Your php Server Settings </strong> - <a href="<?php echo plugin_dir_url( __FILE__ );?>partials-view-phpinfo.php" target="_blank">PHP version and settings</a>
+        <strong>Your php Server Settings </strong> - <a href="<?php echo esc_attr(plugin_dir_url( __FILE__ )); ?>partials-view-phpinfo.php" target="_blank">PHP version and settings</a>
         <br>
         <strong>E-mail support request or suggestions to:</strong> <a href="mailto:support@legoeso.com">support@legoeso.com</a>
       </p>   

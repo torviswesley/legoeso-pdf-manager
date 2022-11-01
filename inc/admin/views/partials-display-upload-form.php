@@ -33,7 +33,7 @@
 						<button class="btn btn-success btn-sm" type="submit" id="pdm-upload-submit-button">Upload</button>
 
 						<input type="checkbox" class="form-control" 
-						name="legoeso_force_image_enabled" id="force_image_enabled" <?php echo $force_image_enabled;?> > 
+						name="legoeso_force_image_enabled" id="force_image_enabled" <?php echo esc_attr($force_image_enabled);?> > 
 						<strong>Force PDF Preview Only</strong> 
 					</div>
 
@@ -58,7 +58,7 @@
 
 	</div>
 	<br>
-	<p class="upload-flash-bypass">Use the <a href="<?php echo $_SERVER['PHP_SELF']."?page={$this->plugin_text_domain}"; ?>"> drag-drop uploader</a> instead?</p>
+	<p class="upload-flash-bypass">Use the <a href="<?php echo esc_url( add_query_arg('page', $this->plugin_text_domain, admin_url('admin.php')) ); ?>"> drag-drop uploader</a> instead?</p>
 </div>
 	
                 

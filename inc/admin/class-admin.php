@@ -91,6 +91,14 @@ class Admin extends Common\Utility_Functions{
 	 */
 	private $pdm_nonce;
 
+    /**
+	 * Specifies minimum required access capabilities 
+	 *
+	 * @since    1.2.0
+	 * @access   private
+	 * @var      string    $pdm_required_cap
+	 */
+	private $pdm_required_cap;
 	/**
 	 * Initialize the class and set its properties.
 	 *
@@ -104,7 +112,7 @@ class Admin extends Common\Utility_Functions{
 		$this->plugin_name = $plugin_name;
 		$this->version = $version;
 		$this->plugin_text_domain = $plugin_text_domain;
-
+		$this->pdm_required_cap = 'manage_categories'; // specify minimum required capability
 		//set the upload directory
 		$this->pdm_upload_dir_args = $this->set_upload_directory();
 
@@ -121,8 +129,8 @@ class Admin extends Common\Utility_Functions{
 
 		//  setup the upload directory to store pdf files
 		$wp_upload_dir = wp_upload_dir();
-
-		$pdm_upload_dir = $wp_upload_dir['path']."/pdm_data/".$_SERVER['REQUEST_TIME_FLOAT'];
+		// build path to current upload directory
+		$pdm_upload_dir = $wp_upload_dir['path']."/pdm_data/".time();
 		$pdm_upload_status_file = $pdm_upload_dir."/".rand(01,9999999).".txt";
 
 		$upload_dir_ars  = array(
@@ -189,16 +197,18 @@ class Admin extends Common\Utility_Functions{
 
 		);
 
-		//	enque the ajax handler for the file uploading process
-		wp_enqueue_script( 'pdm_ajax_script', plugin_dir_url( __FILE__ ) . 'js/pdm-jquery-ui-ajax.js', array( 'jquery' ), $this->version, true );
+		//	enqueue the ajax handler for the file uploading process
+		wp_enqueue_script( 'legoeso_ajax_ui', plugin_dir_url( __FILE__ ) . 'js/pdm-jquery-ui-ajax.js', array( 'jquery' ), $this->version, true );
 
-		//	enque the ajax handler for the file uploading process
-		wp_enqueue_script( 'pdm_ajax_script_2', plugin_dir_url( __FILE__ ) . 'js/pdm-jquery-list-ui.js', array( 'jquery' ), $this->version, true );
-
-		wp_enqueue_script( 'pdm_bootstrap','https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js', array( 'jquery' ), $this->version, true);	
+		//	enqueue the ajax handler for the file uploading process
+		wp_enqueue_script( 'legoeso_ajax_list_ui', plugin_dir_url( __FILE__ ) . 'js/pdm-jquery-list-ui.js', array( 'jquery' ), $this->version, true );
 		
+		// enqueue function to handle jquery accordion ui
+		wp_enqueue_script('jquery-ui-accordion');
+		wp_enqueue_script( 'legoeso_ajax_accordion_ui', plugin_dir_url( __FILE__ ) . 'js/pdm-jquery-ui-accordion.js', array( 'jquery'), $this->version, true );
+
 		// send/add local values to JavaScript to communicate with JavaScript handler
-		wp_localize_script( 'pdm_ajax_script', 'ajax_obj', $params );
+		wp_localize_script( 'legoeso_ajax_ui', 'ajax_obj', $params );
 	}
 
 	/**
@@ -212,7 +222,7 @@ class Admin extends Common\Utility_Functions{
 		$page_hook = add_menu_page( 
 						__( 'Legoeso PDF Manager', $this->plugin_text_domain ), //page title
 						__( 'Legoeso PDFs', $this->plugin_text_domain ), 		//menu title
-							'manage_categories',								// capability
+							$this->pdm_required_cap,								// capability
 							$this->plugin_name,									// menu_slug,
 				array( $this, 'load_pdf_doc_list_table' ),	
 							'dashicons-database-import',						// icon url
@@ -223,7 +233,7 @@ class Admin extends Common\Utility_Functions{
 		add_submenu_page($this->plugin_name,
 				__( 'Legoeso PDF Settings', $this->plugin_text_domain ),	// page title
 				__( 'Legoeso Settings', $this->plugin_text_domain ),		// menu title
-				'manage_categories',										// capability
+				$this->pdm_required_cap,										// capability
 				$this->plugin_name.'_settings',								// menu slug
 				array($this, 'load_pdf_doc_settings'),						// cal back
 		);
@@ -232,7 +242,7 @@ class Admin extends Common\Utility_Functions{
 		add_submenu_page($this->plugin_name,
 				__( 'Categories', $this->plugin_text_domain ),		// page title
 				__( 'Categories', $this->plugin_text_domain ),		// menu title
-				'manage_categories',								// capability
+				$this->pdm_required_cap,								// capability
 				'edit-tags.php?taxonomy=category',					// menu slug
 																	// cal back
 		);
@@ -324,28 +334,28 @@ class Admin extends Common\Utility_Functions{
 	public function _file_upload_status_callback(){
 		// Verify the Ajax request
 		check_ajax_referer( 'ajax-pdm-doc-list-nonce', 'nonce');
+		if(is_user_logged_in() && current_user_can($this->pdm_required_cap)){
+			//	decode the server path for text file that contains upload status info
+			//	and set the filename variable
+			$status_filename = base64_decode($_REQUEST['pdm_process_text']);
 
-		//	decode the server path for text file that contains upload status info
-		//	and set the filename variable
-		$status_filename = base64_decode($_REQUEST['pdm_process_text']);
+			// check and get the contents from the status file
+			if( file_exists($status_filename) ) {
+				//	get the contents of the file.
+				$status_text = file_get_contents($status_filename);
+				// send the json object back the client-side JavaScript
+				
+				//	convert to JSON to read the status of the process
+				$obj = json_decode($status_text);
+				if($status_text){
+					die($status_text);
+				} else {
+					// send Ajax response JSON encoded
+					die(json_encode(array('status' => 'file not found.')));
+				}
 
-		// check and get the contents from the status file
-		if( file_exists($status_filename) ) {
-			//	get the contents of the file.
-			$status_text = file_get_contents($status_filename);
-			// send the json object back the client-side JavaScript
-			
-			//	convert to JSON to read the status of the process
-			$obj = json_decode($status_text);
-			if($status_text){
-				die($status_text);
-			} else {
-				// send Ajax response JSON encoded
-				die(json_encode(array('status' => 'file not found.')));
 			}
-
 		}
-
 	}
 	/**
 	 * Callback for the ajax wp_ajax__ajax_pdm_history_callback for checking ajax response.
@@ -355,8 +365,6 @@ class Admin extends Common\Utility_Functions{
 	 * @return	none
 	 */
 	public function _ajax_fetch_pdm_history_callback(){
-		// add hook_suffix back to global variable scope, bug after setting AJAX to true
-		//$GLOBALS['hook_suffix'] = 'toplevel_page_pdf-doc-manager';
 		
 		// instantiate a new instance of the PDF_Doc_List_Table class 
 		$this->pdf_list_table = new PDF_Doc_List_Table( $this->plugin_text_domain);
@@ -381,22 +389,21 @@ class Admin extends Common\Utility_Functions{
 		//	verify a valid nonce
 		check_ajax_referer( 'ajax-pdm-doc-list-nonce', '_ajax_pdm_doc_list_nonce');
 
-		$this->pdf_DebugLog("Medthod: ajax_upload_handler(): Beginning Upload Process ::", "ajax_upload_handler");
+		if(is_user_logged_in() && current_user_can($this->pdm_required_cap)){
 		
-		if( !is_user_logged_in() ){
-			die("You must be logged in to use this feature!") ;	
+			$this->pdf_DebugLog("Medthod: ajax_upload_handler(): Beginning Upload Process ::", "ajax_upload_handler");
+			
+			/**
+			* PDF_Doc_Core handles the upload request.
+			*
+			* create a new instance of the PDF document handler
+			*/
+			$uploadHandler = new Libraries\PDF_Doc_Core();
+			// Get uploaded file(s) array from HTTP $_FILES super global variable  
+			// and begin the uploading process
+			$uploadHandler->process_pdf_upload($_FILES['pdm_file'], $_POST);
+			die();
 		}
-
-		/**
-		* PDF_Doc_Core handles the upload request.
-		*
-		* create a new instance of the PDF document handler
-		*/
-		$uploadHandler = new Libraries\PDF_Doc_Core();
-		 // Get uploaded file(s) array from HTTP $_FILES super global variable  
-		 // and begin the uploading process
-		$uploadHandler->process_pdf_upload($_FILES['pdm_file'], $_POST);
-		die();
 	}
 		
 	/** *******************************************************************
@@ -412,66 +419,33 @@ class Admin extends Common\Utility_Functions{
 	 * @return	none
 	 */
 	public function load_pdf_doc_settings(){
-		if($_POST){	
-			//	manaully add checkbox element/value if not present
-			if(!array_key_exists('legoeso_pytesseract_enabled', $_POST)){
-				$_POST['legoeso_pytesseract_enabled'] = 'off';
-			}
-			if(!array_key_exists('legoeso_force_image_enabled', $_POST)){
-				$_POST['legoeso_force_image_enabled'] = 'off';
+		if(is_user_logged_in() && current_user_can($this->pdm_required_cap)){
+			if($_POST){	
+				//	manaully add checkbox element/value if not present
+				if(!array_key_exists('legoeso_pytesseract_enabled', $_POST)){
+					$_POST['legoeso_pytesseract_enabled'] = 'off';
+				}
+				if(!array_key_exists('legoeso_force_image_enabled', $_POST)){
+					$_POST['legoeso_force_image_enabled'] = 'off';
+				}
+				
+				//	update setting upon saving changes.
+				$this->updateSettings($_POST);
 			}
 			
-			//	update setting upon saving changes.
-			$this->updateSettings($_POST);
+			/** *******************************************************************
+			 * Begin collection of dependency variables
+			 **********************************************************************/
+
+			// toggle force image only
+			$cb_force_img = $this->toggle_checkbox(get_option("legoeso_force_image_enabled"));
+			$force_image_enabled_value = $cb_force_img[0];
+			$force_image_enabled = $cb_force_img[1];
+
+
+			// render and displays the Seettngs tabs
+			include( 'views/partials-pdm-settings.php' );
 		}
-		
-		/** *******************************************************************
-		 * Begin collection of dependency variables
-		 **********************************************************************/
-		$installed_libs = $this->plugin_dependencies;
-		// Logging actions taken
-
-		$python_error = (isset($installed_libs['python_failed'])) ? $installed_libs['python_failed'] : false;
-		
-		// get the list of installed libraries
-		$obj_libraries = $installed_libs['installed_packages'];
-
-		// get the Python version
-		$python_version = $installed_libs['python'];
-
-		// get the Zip version
-		$zip_enabled = $installed_libs['phpinfo']['Zip'];
-		$zip_version = $installed_libs['phpinfo']['Zip version'];
-		
-		// check tesseract version
-		$tesseract = $obj_libraries[0]['pytesseract'];
-
-		// get the platform running on the server
-		$sys_platform = $obj_libraries[3]['platform'];
-		// get the PDF2Image version
-		$pdfimage_version = $obj_libraries[1]['pdf2image'];
-		// get PDFMiner version
-		$pdfMinder_version = $obj_libraries[2]['pdfminer.six'];
-		
-		// toggle enable Pytesseract
-		$cb_pyTess = $this->toggle_checkbox(get_option("legoeso_pytesseract_enabled"));
-		$enable_PyTesseract_value = $cb_pyTess[0];
-		$enable_PyTesseract = $cb_pyTess[1];
-		
-		// toggle force image only
-		$cb_force_img = $this->toggle_checkbox(get_option("legoeso_force_image_enabled"));
-		$force_image_enabled_value = $cb_force_img[0];
-		$force_image_enabled = $cb_force_img[1];
-
-		// verify the file path specified for he PDFMiner script exists on the server
-		if(file_exists(get_option("legoeso_pdfminer_dir"))){
-			$pdf2txt_detected = "OK - PDFMiner script found.";
-		} else {
-			$pdf2txt_detected = "File not found on server.";
-		}
-
-		// render and displays the Seettngs tabs
-		include( 'views/partials-pdm-settings.php' );
 	}
 
 	/** *******************************************************************
@@ -489,6 +463,8 @@ class Admin extends Common\Utility_Functions{
 	public function pdm_inline_quick_edit(){		
 		//	verify a valid nonce
 		check_ajax_referer( 'ajax-pdm-doc-list-nonce', '_ajax_pdm_doc_list_nonce');
-		die($this->updatePdfDocument($_REQUEST)) ;
+		if(is_user_logged_in() && current_user_can($this->pdm_required_cap)){
+			die( $this->save_changes_pdf_quick_edit($_REQUEST) ) ;
+		}
 	}
 }

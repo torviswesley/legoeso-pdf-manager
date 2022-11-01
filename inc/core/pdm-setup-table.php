@@ -48,35 +48,8 @@ function setupPDF_DocTables()
 	$wpdb->query( $sql_query );
 	$wpdb->show_errors();
 
-	/**
-	* Default values for use of Python libraries on Windows. 
-	* More information about pdfminer3 can be found @ https://pypi.org/project/pdfminer.six/
-	* More information about pdf2image can be found @ https://pypi.org/project/pdf2image/
-	* More information about Python3 can be found @ https://www.python.org/doc/
-	*/
-
 	//	Initial values/ defaults for 
-	
-	$data_pdfminer = array(
-		'option_name'		=>	'legoeso_pdfminer_dir',
-		'option_value'		=>	'/home/usr/bin/pdf2txt.py',
-		'autoload'			=>	'yes',
-	);
-	$data_python = array(
-		'option_name'		=>	'legoeso_python_dir',
-		'option_value'		=>	'/usr/bin/python3',
-		'autoload'			=>	'yes',
-	);
-	$data_tesseract = array(
-		'option_name'		=>	'legoeso_pytesseract_path',
-		'option_value'		=>	'',
-		'autoload'			=>	'yes',
-	);
-	$data_tesseract_enabled = array(
-		'option_name'		=>	'legoeso_pytesseract_enabled',
-		'option_value'		=>	'off',
-		'autoload'			=>	'yes',
-	);
+
 	$data_force_image_enabled = array(
 		'option_name'		=>	'legoeso_force_image_enabled',
 		'option_value'		=>	'off',
@@ -84,12 +57,9 @@ function setupPDF_DocTables()
 	);
 
 	//	Insert values into the WP_Options TABLE
-	$wpdb->insert($wpdb->prefix.'options', $data_pdfminer);
-	$wpdb->insert($wpdb->prefix.'options', $data_python);
 	$wpdb->insert($wpdb->prefix.'options', $data_force_image_enabled);
-	$wpdb->insert($wpdb->prefix.'options', $data_tesseract);
-	$wpdb->insert($wpdb->prefix.'options', $data_tesseract_enabled);
+
 }
 
 setupPDF_DocTables();
-?>
+

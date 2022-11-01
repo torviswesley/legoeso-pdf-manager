@@ -48,7 +48,7 @@ class Frontend extends Common\Utility_Functions {
 	 * @access   private
 	 * @var      boolean    $_localize_json_file
 	 */
-	protected $_localized_json_file;
+	private $_localized_json_file;
 
 	/**
 	 * 
@@ -56,7 +56,7 @@ class Frontend extends Common\Utility_Functions {
 	 * @access   private
 	 * @var      string    $pdf_json_file
 	 */
-	protected $pdf_json_file;	
+	private $pdf_json_file;	
 
 	/**
 	 *  used to store datatable object information/data which will be localized for JavaScript access
@@ -95,8 +95,8 @@ class Frontend extends Common\Utility_Functions {
 				
 		// load stylesheets
 		wp_enqueue_style( 'legoeso-frontend-styles', plugin_dir_url( __FILE__ ) . 'css/pdf-doc-manager-frontend.css', array(), $this->version, 'all' );
-        wp_enqueue_style( 'legoeso-frontend-styles-datatable', plugin_dir_url( __FILE__ ) .'css/pmd_datatables_style_1.css');
-		
+        wp_enqueue_style( 'legoeso-frontend-styles-datatable', plugin_dir_url( __FILE__ ) .'css/dataTables.jqueryui.min.css');
+		//wp_enqueue_style( 'legoeso-frontend-styles-datatables', plugin_dir_url( __FILE__ ) .'css/datatables.min.css');
 	}
 
 	/**
@@ -106,46 +106,14 @@ class Frontend extends Common\Utility_Functions {
 	 */
 	public function enqueue_scripts() {
 
-		wp_enqueue_script('legoeso-frontend-js-one', plugin_dir_url( __FILE__ ) . 'js/pdf-doc-manager-frontend.js', array( 'jquery' ), $this->version, false );
-
-		//	enque the jquery ui scripts
-		// wp_enqueue_script( 'legoeso_simple_datatables', 'https://cdn.jsdelivr.net/npm/simple-datatables@latest', array(), $this->version, true);
-
-		wp_enqueue_script( 'legoeso-frontend-js-datatables',  plugin_dir_url( __DIR__) . 'frontend/js/index.d.ts', array(), $this->version, true);
-		wp_enqueue_script( 'legoeso-frontend-js-datatables-2', plugin_dir_url( __DIR__) . 'frontend/js/pdm_jquery.datatables.js', array( ), $this->version, true);
-		wp_enqueue_script( 'legoeso-frontend-js-datatables-3', plugin_dir_url( __DIR__) . 'frontend/js/pdm_datatables.js', array( 'jquery' ), $this->version, true);
-
+		//	enque frontend ui scripts
+		wp_enqueue_script( 'legoeso-frontend-js-datatables',  plugin_dir_url( __DIR__) . 'frontend/js/datatables.min.js', array('jquery'), $this->version, true);
+		wp_enqueue_script( 'legoeso-frontend-js', plugin_dir_url( __DIR__) . 'frontend/js/legoeso-frontend.js', array( 'jquery' ), $this->version, true);
+	
 		// when everything goes well with the json file, pass it to javascript
 		$this->set_localize_json_file();
 	}
 
-	/**
-	 * Register the filteres for the public-facing side of the site.
-	 *
-	 * @since    1.2.0
-	 */
-	public function add_filters(){
-		add_filter('script_loader_tag', [$this, 'add_datatable_mod_type_attrib'], 10, 3);
-	} 
-
-
-	/**
-	 * Callback to modify script tag to include the module attribute fro datatables
-	 * 
-	 * @since 1.2.0
-	 * 
-	 */
-	public function add_datatable_mod_type_attrib($tag, $handle, $src) {
-		
-		// if not datatable script, do nothing and return
-		if( 'legoeso-frontend-js-datatables' == $handle ) {
-			// change the script tag by adding type=module and return it
-			$tag = '<script type="module" src="' . esc_url( $src ) . '" </script>';
-			return ($tag);
-		}
-
-		return $tag;
-	}
 
 	/** *******************************************************************
 	 * Begin Methods for Shorcodes
@@ -179,19 +147,21 @@ class Frontend extends Common\Utility_Functions {
 			//	generate json data to be displayed in DataTable 
 			$this->pdm_set_display_docs_json_data($category, '1000', true);
 			// generate datatable object id
-			$pdm_datatable_id = "pdm_datatable_preview_".$_view_count;
+			$pdm_datatable_id = "legoeso_datatable_preview_".$_view_count;
 			$_view_type = 'preview';
 		}
 		else {
 			//	generate json data to be displayed in DataTable 
 			$this->pdm_set_display_docs_json_data($category, '');
 			// generate datatable object id
-			$pdm_datatable_id = "pdm_datatable_listview_".$_view_count;
+			$pdm_datatable_id = "legoeso_datatable_listview_".$_view_count;
 			$_view_type = 'listview';
 		}
 
 		// set/ add object data for datatable view generated
-		self::$datatable_views[] = array('view_type' => $_view_type, 'view' => $_view_count, 'table_id' => $pdm_datatable_id, 'data_filename' => $this->get_json_file());
+		self::$datatable_views[] = array('view_type' => $_view_type, 
+			'view' => $_view_count, 'view_doc_url' => home_url('index.php'), 
+			'table_id' => $pdm_datatable_id, 'data_filename' => $this->get_json_file());
 
 		ob_start();
 			include  plugin_dir_path( __FILE__). 'views/partials-pdf-frontend-listview.php';
@@ -235,19 +205,17 @@ class Frontend extends Common\Utility_Functions {
 			$sql_query .= "FROM `{$wpdb->prefix}legoeso_file_storage` WHERE pdf_doc_num IN ({$doc_ids})";
 
 			$document_data = $wpdb->get_results($sql_query, OBJECT);
-			$hlink_path = $this->plugin_text_domain.'/inc/frontend/views/';
-			$load_pdf_page_url =  plugins_url( $hlink_path.'load-view-pdf-doc.php');
 
 			ob_start();
 			echo '<ul id="" name="" class="pdm-document-view">';
 			foreach($document_data as $data){
 				$query_args_view_pdfdoc = array(
-					'action'	=>	'view_pdf_doc',
-					'file_id'	=>	absint( $data->ID),
+					'action'	=>	'view_document',
+					'pid'	=>	absint( $data->ID),
 					'_wpnonce'	=>	wp_create_nonce( 'view_pdf_file_nonce' ),
 				);
 			
-				$view_pdf_doc_meta_link = esc_url( add_query_arg( $query_args_view_pdfdoc, $load_pdf_page_url ) );
+				$view_pdf_doc_meta_link = esc_url( add_query_arg( $query_args_view_pdfdoc, home_url('index.php') ) );
 
 				echo '<li>';
 				echo '<a target="_blank" href="' . $view_pdf_doc_meta_link . '">'. __($data->filename , $this->plugin_text_domain ) . '</a> <br>';
@@ -273,9 +241,12 @@ class Frontend extends Common\Utility_Functions {
 		 */
 		global $wpdb;
 		$wpdb->show_errors;
-
+		$json_columns = [];
+		$results = [];
 		//  specify the columns
 		$columns = array('ID', 'filename', 'category', 'upload_userid', 'date_uploaded');
+		$json_columns = $columns;
+
 		$sql_filter = (!empty($category) || $category != '') ? " WHERE category = '{$category}'" : '';
 		$order_by = "ORDER BY date_uploaded DESC";
 		$_limit = (! empty($limit) ) ? "LIMIT {$limit} " : "";
@@ -283,16 +254,22 @@ class Frontend extends Common\Utility_Functions {
 		// build an SQL query
 		$sql_query = "SELECT ";
 		// Base64 encode image data column
-		if($get_pdf_image) { $sql_query .= " TO_BASE64(`pdf_image`), "; } 
+		if($get_pdf_image) { $sql_query .= " TO_BASE64(`pdf_image`), "; $json_columns = array_merge(array('pdf_image'), $columns );} 
+
 		$sql_query .= "`".implode("`,`", $columns)."` ";
+
 		// hard coding a limit to prevent Fatal error: Allowed memory size xxx bytes exhausted error
 		$sql_query .= "FROM `{$wpdb->prefix}legoeso_file_storage` {$sql_filter}{$order_by} $_limit;";
 
-		$results = $wpdb->get_results($sql_query, ARRAY_A);
+		$_results = $wpdb->get_results($sql_query, ARRAY_N);
+		// add
+		$results['data'] = $_results;
+		$results['columns'] = $json_columns;
+
 		$num_of_rows = $wpdb->num_rows;
 		$json_filename = (empty($category)) ? 'default' : $category;
 
-		$this->pdf_DebugLog("Json File Query: Rows Found {$num_of_rows}::", wp_json_encode($sql_query));
+		$this->pdf_DebugLog("Method: pdm_set_display_docs_json_data(): Json File Query: Rows Found {$num_of_rows}::", wp_json_encode($sql_query));
 
 		if ($num_of_rows > 0){
 			return $this->create_pdm_json_file($results, $json_filename, $num_of_rows);
@@ -311,43 +288,50 @@ class Frontend extends Common\Utility_Functions {
 	 * @param string	$json_filename
 	 * @return none
 	 */
-	public function create_pdm_json_file($objDataset, $json_filename, $row_count){
+	public function create_pdm_json_file($objDataset, $_json_file, $row_count){
 
-		if (!is_array($objDataset) || empty($json_filename)){
+		if (!is_array($objDataset) || empty($_json_file)){
 			return false;
 		}
 
-		$objDataset = array('data' => $objDataset);
-		$json_filename = preg_replace('[\x20]','_',  strtolower($json_filename)).'.json';
+		$objDataset = array('data' => $objDataset['data'], 'columns' =>  $objDataset['columns']);
+		$json_file = preg_replace('[\x20]','_',  strtolower($_json_file)).'.json';
 		
-		$this->pdf_json_file = $json_filename;
-		$json_file_dir = plugin_dir_path(__DIR__).'frontend/data/';
-
 		// build path to the json file that store the data
-		$json_filename = $json_file_dir.$json_filename;
-		$this->pdf_DebugLog("Json File Dir::", $json_file_dir);
-		$this->pdf_DebugLog("Json File Path::", $json_filename);
+		
+		$json_file_dir = plugin_dir_path(__DIR__).'frontend/data/';
+		$json_file_path = $json_file_dir.$json_file;
 
 		if (!is_dir($json_file_dir)) {
-			mkdir($json_file_dir, 0777);
+			if(mkdir($json_file_dir, 0777)){
+				$this->pdf_DebugLog("Dir Created::", $json_file_dir);
+			}
+			else{
+				$this->pdf_DebugLog("Error Creating Dir::", $json_file_dir);
+			}
 		}
 		
 		// if file exists delete and create the file
-		if (file_exists( $json_filename )){
-			unlink( $json_filename );
+		if (file_exists( $json_file_path )){
+			unlink( $json_file_path );
 		}
 
 		//  attempt to write the contents of the data to the file location in JSON format
-		file_put_contents($json_filename , wp_json_encode($objDataset));
+		if( $f_bytes = file_put_contents($json_file_path , wp_json_encode($objDataset) ) ){
+			$this->pdf_json_file = $json_file;
+			$this->pdf_DebugLog("Json File Size: {$f_bytes}::", $json_file);
 
-		//	 when everything goes well with json file, pass it to javascript
-		//$this->set_localize_json_file();
+		} else {
+			$this->pdf_DebugLog("Failed to write Json File Path::", $json_file_path);
+		}
+
+		
+		//
 		// if there was an error encoding json file add message to debug
 		if ((json_last_error() !== JSON_ERROR_NONE)){
 			$this->pdf_DebugLog("Json last Error::", json_last_error().' Message:'.json_last_error_msg());
 		}
 		
-
 		
 	}
 	/**
@@ -395,16 +379,122 @@ class Frontend extends Common\Utility_Functions {
 
 		// add javascript local variables 
 		$pdm_args = array(
-			'datatable_views'		=>	$this->get_datatable_views(),
-			'pdm_json_datafiles_url'		=>	plugin_dir_url( __DIR__) .'frontend/data/',
-			'pdm_view_pdf_url'	=>	plugin_dir_url( __DIR__) . 'frontend/views/load-view-pdf-doc.php',
+			'datatable_views'	=>	$this->get_datatable_views(),
+			'json_data_url'		=>	plugin_dir_url( __DIR__) .'frontend/data/',
+			'_wpnonce'			=>	wp_create_nonce( 'view_pdf_file_nonce' ),
 		);
+
+
 		//  Add local JavaScript data objects to datatable script
 		//	check to see if the property pdf_json_file is empty if so return and do nothing
-		if( empty( $this->_localized_json_file = wp_localize_script('pdm_datatables_script','pdm_dataobj', $pdm_args ) )){
-			$this->pdf_DebugLog("Json File Added to JavaScript::", $this->get_json_file());
+		if(  $this->_localized_json_file = wp_localize_script('legoeso-frontend-js','legoesodata', $pdm_args ) ){
+			$this->pdf_DebugLog("Json File Added to JavaScript 2::", $this->_localized_json_file);
+			$this->pdf_DebugLog("Json File Added to JavaScript 3::", $this->get_json_file());
 		}
 
 	}
+
+
+	/**
+	 * Retrieves PDF data from database using the requested ID
+	 *
+	 * @since   1.0.0
+	 * @access  protected
+	 * @return  array - 404 redirect on failure
+	 */
+    function db_get_pdf_data($doc_id)
+    {
+		if($doc_id){
+			global $wpdb;
+			$wpdb_table = $wpdb->prefix. 'legoeso_file_storage';
+			$charset_collate = $wpdb->get_charset_collate();
+
+			$pdm_doc_query = "SELECT 
+							pdf_data, filename, has_url, pdf_url
+							FROM $wpdb_table WHERE ID = '$doc_id'";
+		
+			// query output_type will be an associative array with ARRAY_A.
+			$wpdb_results = $wpdb->get_results( $pdm_doc_query, ARRAY_A  );
+			
+			if(count($wpdb_results) == 1){
+				return $wpdb_results; 
+			}
+		}
+         return false;
+    }
+
+	/**
+	 * Sets document Content headers to display inline PDF document.
+	 *
+	 * @since   1.0.0
+	 * @access  protected
+	 * @return  None - exit on failure
+	 */
+    function display_pdf_content($pdf_file_id = null){
+
+        if($pdf_file_id){
+			// get the data for the document using the ID
+			$pdf_data = $this->db_get_pdf_data($pdf_file_id); 
+
+			if(is_array($pdf_data)){
+				$pdfContent = $pdf_data[0]['pdf_data'];
+				$filename = $pdf_data[0]['filename'];
+				$has_url = $pdf_data[0]['has_url'];
+				$pdf_url = $pdf_data[0]['pdf_url'];
+
+				if(empty($pdfContent) || $pdfContent == null){
+					//header( "Location: {$_SERVER["REQUEST_SCHEME"]}://{$_SERVER["HTTP_HOST"]}/404?error=2&docid={$pdf_file_id}");
+					$surl = home_url('index.php');
+					header( "Location: {$surl}/404?&docid={$pdf_file_id}");
+				} 
+				else {
+					header('Content-type: application/pdf');
+					header('Content-Disposition: inline; filename="'.$filename.'"');
+					header('Content-Transfer-Encoding: binary');
+					header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
+					header('Accept-Ranges: bytes'); 
+					ob_clean();
+					flush();
+					echo  $pdfContent; 
+				}
+			}
+			else {
+				$surl = home_url('index.php');
+				header( "Location: {$surl}/404?&docid={$pdf_file_id}");
+			}
+
+		}
+        return;
+    }	
+	
+	/**
+	 * Register the filters for the public-facing side of the site.
+	 *
+	 * @since    1.2.0
+	 */
+	// TODO: display when users is logged in and if false display message to user or direct to login page.
+	public function add_legoeso_viritual_pages(){
+
+		if( isset($_GET['action']) &&  $_GET['action'] == 'view_document') {
+
+			if(! is_user_logged_in()){
+				return;
+			}		
+			//	verify a valid nonce
+			wp_verify_nonce( 'view_pdf_file_nonce', '_wpnonce');
+			$pid = absint($_GET['pid']);
+
+			if(is_numeric($pid)){
+				$dt = $this->display_pdf_content($pid);
+
+			}
+			else {
+				//header( "Location: {$_SERVER["REQUEST_SCHEME"]}://{$_SERVER["HTTP_HOST"]}/404");
+				$surl = home_url('index.php');
+				header( "Location: {$surl}/404?&docid={$pdf_file_id}");
+			}
+			
+		}
+	} 
 }
 

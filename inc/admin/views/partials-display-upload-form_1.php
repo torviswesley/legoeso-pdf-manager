@@ -21,7 +21,7 @@
                         //  Using WordPress function to create dropdown menu of categories
                         wp_dropdown_categories($args);
                     ?>
-                    <input type="checkbox" name="legoeso_force_image_enabled" id="force_image_enabled" <?php echo $force_image_enabled;?>/> 
+                    <input type="checkbox" name="legoeso_force_image_enabled" id="force_image_enabled" <?php echo esc_html($force_image_enabled);?>/> 
                     <strong>Force PDF Preview Only</strong>  
                 </div>
                 <div class="drag-drop-inside"  >
@@ -49,7 +49,11 @@
             
             <div class="status_messages" id="status_message"></div>
             <p class="upload-flash-bypass">
-                You are using the multi-file drag-drop uploader. Problems? Try the <a href="<?php echo $_SERVER['PHP_SELF']."?page={$this->plugin_text_domain}&pdm_upload_view=1"; ?>">browser uploader</a> instead.	
+            <?php 
+                $up_link = add_query_arg( array('page' => $this->plugin_text_domain, 'pdm_upload_view' => '1', ), admin_url('admin.php') );
+            ?>
+
+                You are using the multi-file drag-drop uploader. Problems? Try the <a href="<?php  echo esc_url( $up_link ); ?>">browser uploader</a> instead.	
             </p>
         </div>
     </form>
