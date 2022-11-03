@@ -2,7 +2,7 @@
 /**
  * The admin area of the plugin to load the User List Table
  */
-$upload_frm = ( isset($_REQUEST['pdm_upload_view']) && $_REQUEST['pdm_upload_view'] == '1') ? '': '_1';
+$upload_frm = ( isset($_REQUEST['pdm_upload_view']) && sanitize_text_field($_REQUEST['pdm_upload_view']) == '1') ? '': '_2';
 /**
  * Get the value of the checkbox Force PDF Preview, the value overrides the current
  * setting set within the settings page
@@ -22,8 +22,6 @@ $force_image_enabled = $cb_force_img[1];
 			*/
 			include "partials-display-upload-form{$upload_frm}.php";
 		?>
-
-			
 		</div>
 	<!-- /row-middle -->
 		<div>

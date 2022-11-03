@@ -68,6 +68,15 @@ class Frontend extends Common\Utility_Functions {
 	static $datatable_views = [];	
 
 	/**
+	 * Specifies minimum required access capabilities 
+	 *
+	 * @since    1.2.0
+	 * @access   private
+	 * @var      string    $pdm_required_cap
+	 */
+	private $pdm_required_cap;
+
+	/**
 	 * Initialize the class and set its properties.
 	 *
 	 * @since		1.0.0
@@ -80,7 +89,7 @@ class Frontend extends Common\Utility_Functions {
 		$this->plugin_name = $plugin_name;
 		$this->version =  $version;
 		$this->plugin_text_domain = $plugin_text_domain;
-
+		$this->pdm_required_cap = 'read';
 		// add and load the shortcodes
 		$this->load_pdm_short_codes();
 
@@ -420,7 +429,7 @@ class Frontend extends Common\Utility_Functions {
 				return $wpdb_results; 
 			}
 		}
-         return false;
+		return -1;
     }
 
 	/**
@@ -434,18 +443,16 @@ class Frontend extends Common\Utility_Functions {
 
         if($pdf_file_id){
 			// get the data for the document using the ID
-			$pdf_data = $this->db_get_pdf_data($pdf_file_id); 
+			$pdf_results = $this->db_get_pdf_data($pdf_file_id); 
 
-			if(is_array($pdf_data)){
-				$pdfContent = $pdf_data[0]['pdf_data'];
-				$filename = $pdf_data[0]['filename'];
-				$has_url = $pdf_data[0]['has_url'];
-				$pdf_url = $pdf_data[0]['pdf_url'];
+			if(is_array($pdf_results)){
+				$pdfContent = $pdf_results[0]['pdf_data'];
+				$filename = $pdf_results[0]['filename'];
+				$has_url = $pdf_results[0]['has_url'];
+				$pdf_url = $pdf_results[0]['pdf_url'];
 
 				if(empty($pdfContent) || $pdfContent == null){
-					//header( "Location: {$_SERVER["REQUEST_SCHEME"]}://{$_SERVER["HTTP_HOST"]}/404?error=2&docid={$pdf_file_id}");
-					$surl = home_url('index.php');
-					header( "Location: {$surl}/404?&docid={$pdf_file_id}");
+					header( "Location: ".home_url('index.php')."/404?&pid={$pdf_file_id}");
 				} 
 				else {
 					header('Content-type: application/pdf');
@@ -455,12 +462,11 @@ class Frontend extends Common\Utility_Functions {
 					header('Accept-Ranges: bytes'); 
 					ob_clean();
 					flush();
-					echo  $pdfContent; 
+					die($pdfContent); 
 				}
 			}
 			else {
-				$surl = home_url('index.php');
-				header( "Location: {$surl}/404?&docid={$pdf_file_id}");
+				header( "Location: ".home_url('index.php')."/404?&pid={$pdf_file_id}");
 			}
 
 		}
@@ -476,25 +482,23 @@ class Frontend extends Common\Utility_Functions {
 	public function add_legoeso_viritual_pages(){
 
 		if( isset($_GET['action']) &&  $_GET['action'] == 'view_document') {
-
-			if(! is_user_logged_in()){
-				return;
-			}		
-			//	verify a valid nonce
 			wp_verify_nonce( 'view_pdf_file_nonce', '_wpnonce');
+			if(!is_user_logged_in() && !current_user_can($this->pdm_required_cap)){
+				header( "Location: ".home_url('index.php')."/404");
+				die();
+			}		
+
 			$pid = absint($_GET['pid']);
 
 			if(is_numeric($pid)){
 				$dt = $this->display_pdf_content($pid);
-
 			}
 			else {
-				//header( "Location: {$_SERVER["REQUEST_SCHEME"]}://{$_SERVER["HTTP_HOST"]}/404");
-				$surl = home_url('index.php');
-				header( "Location: {$surl}/404?&docid={$pdf_file_id}");
+				header( "Location: ".home_url('index.php')."/404?&pid={$pid}");
 			}
 			
-		}
+			die();
+		} 
 	} 
 }
 

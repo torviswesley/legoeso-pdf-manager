@@ -112,7 +112,7 @@ class Admin extends Common\Utility_Functions{
 		$this->plugin_name = $plugin_name;
 		$this->version = $version;
 		$this->plugin_text_domain = $plugin_text_domain;
-		$this->pdm_required_cap = 'manage_categories'; // specify minimum required capability
+		$this->pdm_required_cap = 'upload_files'; // specify minimum required capability
 		//set the upload directory
 		$this->pdm_upload_dir_args = $this->set_upload_directory();
 
@@ -237,16 +237,17 @@ class Admin extends Common\Utility_Functions{
 				$this->plugin_name.'_settings',								// menu slug
 				array($this, 'load_pdf_doc_settings'),						// cal back
 		);
-		
+		// only include if user has manage_categories
 		//	add submenu 
-		add_submenu_page($this->plugin_name,
-				__( 'Categories', $this->plugin_text_domain ),		// page title
-				__( 'Categories', $this->plugin_text_domain ),		// menu title
-				$this->pdm_required_cap,								// capability
-				'edit-tags.php?taxonomy=category',					// menu slug
-																	// cal back
-		);
-		
+		if(current_user_can('manage_categories')){
+			add_submenu_page($this->plugin_name,
+					__( 'Categories', $this->plugin_text_domain ),		// page title
+					__( 'Categories', $this->plugin_text_domain ),		// menu title
+					$this->pdm_required_cap,								// capability
+					'edit-tags.php?taxonomy=category',					// menu slug
+																		// cal back
+			);
+		}
 		/*
 		 * The $page_hook_suffix can be combined with the load-($page_hook) action hook
 		 * https://codex.wordpress.org/Plugin_API/Action_Reference/load-(page) 
@@ -292,10 +293,11 @@ class Admin extends Common\Utility_Functions{
 	 * @return none
 	 */
 	public function load_pdf_doc_list_table(){
-
-		// render and display initial List Table
-		include_once( 'views/partials-pdm-display.php' );
-		$this->pdf_DebugLog("Method: load_pdf_doc_list_table()::", wp_json_encode($this->pdf_list_table));
+		if(is_user_logged_in() && current_user_can($this->pdm_required_cap)){
+			// render and display initial List Table
+			include_once( 'views/partials-pdm-display.php' );
+			$this->pdf_DebugLog("Method: load_pdf_doc_list_table()::", wp_json_encode($this->pdf_list_table));
+		}
 	}
 
 	/**
@@ -306,18 +308,19 @@ class Admin extends Common\Utility_Functions{
 	 */
 	public function _ajax_pdm_display_callback(){
 		check_ajax_referer( 'ajax-pdm-doc-list-nonce', '_ajax_pdm_doc_list_nonce');
+		if(is_user_logged_in() && current_user_can($this->pdm_required_cap)){
+			$this->pdf_list_table = new PDF_Doc_List_Table( $this->plugin_text_domain );
 
-		$this->pdf_list_table = new PDF_Doc_List_Table( $this->plugin_text_domain );
+			$this->pdf_list_table->prepare_items();
+			
+			ob_start();
+			$this->pdf_list_table->display();
+			$display  = ob_get_clean();
 
-		$this->pdf_list_table->prepare_items();
-		
-		ob_start();
-		$this->pdf_list_table->display();
-		$display  = ob_get_clean();
-
-		die(
-			wp_json_encode(array( "display" => $display))
-		);
+			die(
+				wp_json_encode(array( "display" => $display))
+			);
+		}
 	}
 
 	/**
@@ -365,12 +368,13 @@ class Admin extends Common\Utility_Functions{
 	 * @return	none
 	 */
 	public function _ajax_fetch_pdm_history_callback(){
-		
-		// instantiate a new instance of the PDF_Doc_List_Table class 
-		$this->pdf_list_table = new PDF_Doc_List_Table( $this->plugin_text_domain);
+		if(is_user_logged_in() && current_user_can($this->pdm_required_cap)){
+			// instantiate a new instance of the PDF_Doc_List_Table class 
+			$this->pdf_list_table = new PDF_Doc_List_Table( $this->plugin_text_domain);
 
-		// Send and display the response back to the browser
-		$this->pdf_list_table->ajax_response();
+			// Send and display the response back to the browser
+			$this->pdf_list_table->ajax_response();
+		}
 
 	}
 

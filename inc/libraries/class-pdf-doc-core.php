@@ -89,16 +89,6 @@ class PDF_Doc_Core extends Common\Utility_Functions {
 	private $pdm_upload_dir_agrs;
 
     /**
-	 * Indicates use of the tesserct library to extract data from PDF's
-	 * when PDFminer fails
-     * 
-	 * @since    1.0.1
-	 * @access   private
-	 * @var      boolean    $use_Tesseract set to true to use the tesserct library on second extraction attempt
-	 */
-	private $use_Tesseract;
-
-    /**
 	 * Enable/disable image extraction of PDF documents - overrides saved settings if enabled text extraction will
 	 * be disabled
      * 
@@ -125,24 +115,6 @@ class PDF_Doc_Core extends Common\Utility_Functions {
 	 * @var      String    $pdm_plugin_dir    The directory path location for the plugin
 	 */
     public $pdm_plugin_dir;
-
-     /**
-	 * The directory path location to pyhton.exe on the server.
-	 *
-	 * @since    1.0.0
-	 * @access   private
-	 * @var      String    $pdm_Python    The directory path location to pyhton.exe on the server.
-	 */
-    public $pdm_Python;
-
-     /**
-	 * Directory to the location of the Python script for PDFMiner
-	 *
-	 * @since    1.0.0
-	 * @access   public
-	 * @var      String    $pdm_PdfMiner    The directory location to PDF Miner for this plugin.
-	 */
-    public $pdm_PdfMiner;
 
      /**
 	 * Path to poppler-utils executables, used to extract images from PDF files
@@ -780,6 +752,8 @@ class PDF_Doc_Core extends Common\Utility_Functions {
         $objDocumentProperties = $this->extractTextFromPDF($uploadFilename);
 
         $extracted_data = $objDocumentProperties['extracted_data'];
+        $image_extracted = $objDocumentProperties['extracted_image']; // bool
+
         $extraction_outputType = $objDocumentProperties['output_type'];
         
         // create the date object to use in the query
@@ -939,9 +913,10 @@ class PDF_Doc_Core extends Common\Utility_Functions {
     {
         if(file_exists($input_filename)){
 
-            $truncate_file = false;
-            $force_img_only = $this->force_image_extraction;
-           
+            $truncate_file      = false;
+            $force_img_only     = $this->force_image_extraction;
+            $extracted_image    = false;
+
             $file_size = filesize($input_filename);
             // sets the maximum up filesize limit, if file size is greater set the $truncate_file
             // flag and we'll break the file into chunks when inserting into the db
@@ -958,6 +933,7 @@ class PDF_Doc_Core extends Common\Utility_Functions {
                 $outputType = 'image_data';
                 // extract image data from PDF file
                 $extractedData =  $this->extract_image_from_pdf($input_filename);
+                $extracted_image = true;
             } else {
                 // set output type
                 $outputType = 'text_data';
@@ -980,6 +956,7 @@ class PDF_Doc_Core extends Common\Utility_Functions {
                         $outputType = 'image_data';
                         // try to extract image data from PDF file
                         $extractedData =  $this->extract_image_from_pdf($input_filename);
+                        $extracted_image = true;
                     }
 
                 } catch(\Exception | \Error $e) { 
@@ -990,6 +967,7 @@ class PDF_Doc_Core extends Common\Utility_Functions {
                         $outputType = 'image_data';
                         // try to extract image data from PDF file
                         $extractedData =  $this->extract_image_from_pdf($input_filename);
+                        $extracted_image = true;
                     }
                     else {
                         throw new Exception("Error extracting image from PDF ".$e->getMessage());
@@ -1000,6 +978,7 @@ class PDF_Doc_Core extends Common\Utility_Functions {
 
             return array(
                 'extracted_data'    =>  $extractedData,
+                'extracted_image'   =>  $extracted_image,
                 'output_type'       =>  $outputType,
                 'pdf_version'       =>  $pdf_v,
             );

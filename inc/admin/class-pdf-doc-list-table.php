@@ -42,6 +42,15 @@ class PDF_Doc_List_Table extends Libraries\WP_List_Table  {
 	 */
 	protected $disable_preview_images;
 
+	/**
+	 * Holds the utility object created from the Utitlity Class
+	 *
+	 * @since    1.2.0
+	 * @access   private
+	 * @var      string    $plugin_text_domain    The text database tablename of this plugin.
+	 */
+	private $utilities;	
+
     /*
 	 * Call the parent constructor to override the defaults $args
 	 * 
@@ -54,7 +63,7 @@ class PDF_Doc_List_Table extends Libraries\WP_List_Table  {
 		$this->plugin_text_domain = $plugin_text_domain;
 		$this->disable_preview_images = false;
 		$this->plugin_db_tablename = 'legoeso_file_storage'; 	// specifiy the database tablename 
-
+		$this->utilities  = new Common\Utility_Functions();
 		parent::__construct(  array( 
 				'plural'	=>	'pdf_docs',		// Plural value used for labels and the objects being listed.
 				'singular'	=>	'pdf_doc',		// Singular label for an object being listed, e.g. 'post'.
@@ -496,7 +505,7 @@ class PDF_Doc_List_Table extends Libraries\WP_List_Table  {
 		
 		// check for individual row actions
 		$the_table_action = $this->current_action();
-		$this->pdf_DebugLog("Bulk ACTION Fired::", $the_table_action);
+		$this->pdf_DebugLog("Method: handle_table_actions(): Current Bulk Action::", $the_table_action);
 		
 		// specify the valid action types
 		$valid_actions = ['bulk-download', 'bulk-delete', 'bulk-email'];
@@ -517,15 +526,16 @@ class PDF_Doc_List_Table extends Libraries\WP_List_Table  {
 			}
 			$bulk_action = (isset($_REQUEST['bulk_action']) ? sanitize_text_field($_REQUEST['bulk_action']) : sanitize_text_field($_REQUEST['bulk_action2']));
 			
+
 			if(in_array($bulk_action, $valid_actions)) {
 				switch($bulk_action) {
 					case 'bulk-download':
 						//	get and pass the list of pdfs for processing
-						$this->pdf_bulk_download((sanitize_text_field($_REQUEST['checkedVals'])));
+						$this->pdf_bulk_download(($_REQUEST['checkedVals']));
 						$this->graceful_exit();
 					break;
 					case 'bulk-delete':
-						die( wp_json_encode($this->pdf_bulk_delete(sanitize_text_field($_REQUEST['checkedVals'])) ) );
+						die( wp_json_encode($this->pdf_bulk_delete($_REQUEST['checkedVals'])) );
 					break;
 					case 'bulk-email':
 						// not implemented!
@@ -585,7 +595,10 @@ class PDF_Doc_List_Table extends Libraries\WP_List_Table  {
 	 * @param array $bulk_pdf_ids
 	 */		
 	public function pdf_bulk_delete($bulk_pdf_ids){
-		print_r($bulk_pdf_ids);exit();
+		// sanitize ids to process
+		$bulk_pdf_ids = $this->utilities->sanitize_postdata_strong($bulk_pdf_ids);
+		$this->pdf_DebugLog("Method: pdf_bulk_delete(): IDs::", $bulk_pdf_ids);
+
 		function delete_pdf_files($files){
 			if(!isset($files) && !is_array($files))
 				return;
@@ -613,11 +626,11 @@ class PDF_Doc_List_Table extends Libraries\WP_List_Table  {
 
 		// list of pdf files that reside within the file directory
 		$_deleted = delete_pdf_files($this->pdf_has_url($wpdb, $bulk_pdf_ids));
-	
-		$sql_filter = (!empty($bulk_pdf_ids)) ? " WHERE ID IN (".implode(',',$bulk_pdf_ids).")" : '';
+		$sql_filter = (!empty($bulk_pdf_ids)) ? " WHERE ID IN (". implode(',',$bulk_pdf_ids) .")" : 'Empty ID Param';
 
 		// build an SQL query
 		$sql_query = "DELETE FROM `{$wpdb->prefix}".$this->get_database_tablename()."` {$sql_filter};";
+
 		$results = $wpdb->query($sql_query, ARRAY_A);
 
 
@@ -708,7 +721,8 @@ class PDF_Doc_List_Table extends Libraries\WP_List_Table  {
 	* @return void
 	*/   
 	public function get_bulk_pdf_data($pdf_doc_ids){
-
+		// sanitize ids to process
+		$pdf_doc_ids = $this->utilities->sanitize_postdata_strong($pdf_doc_ids);
 		function zip_pdf_docs($_this, $zip_filename, $sql_dataset){
 			// create new array to collect filenames
 			$pdf_docs = []; 		

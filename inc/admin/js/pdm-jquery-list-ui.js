@@ -157,7 +157,7 @@
                              }
                          break;	
                          case "bulk-email":
-                             alert("Not Implemented!");
+                             alert("Not Implemented! Email: support@legoeso.com");
                          break;
                          default:
                          break;
@@ -180,7 +180,7 @@
                              break;
  
                          case "email":
-                             alert("Not Implemented!");
+                            alert("Not Implemented! Email: support@legoeso.com");
                              break;	
  
                          default:
@@ -334,6 +334,7 @@
                      switch(bulk_type){
                          case 'bulk_download':
                              window.open(response.zip_url,'_self');
+                             legoeso_list.display();
                          break;
                          case 'bulk_delete':
                              legoeso_list.display();

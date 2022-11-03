@@ -408,23 +408,32 @@ class Utility_Functions {
     }
 
     /**
-     * Sanitize Input $_POST data, aggressive approach
+     * Sanitize Input $_POST data array, aggressive approach
      * 
      * @since 1.1.0
      * @return Array
      */
-    public function sanitize_postdata_strong(string $HTTP_RAW_POST_DATA): string {
-        return strip_tags(
-            stripslashes(
-                sanitize_text_field(
-                    filter_input(INPUT_POST, $HTTP_RAW_POST_DATA)
+    public function sanitize_postdata_strong($HTTP_RAW_POST_DATA) {
+        if(is_array($HTTP_RAW_POST_DATA)){
+            $v = [];
+            foreach($HTTP_RAW_POST_DATA as $key => $val){
+                $v[$key] = $this->sanitize_postdata($val);
+            }
+            return $v;
+        } 
+        else {
+            return strip_tags(
+                stripslashes(
+                    sanitize_text_field(
+                        filter_input(INPUT_POST, $HTTP_RAW_POST_DATA)
+                    )
                 )
-            )
-        );
+            );
+        }
     }
 
     /**
-     * Sanitize Input $_POST data
+     * Sanitize Input $_POST data single item
      * 
      * @since 1.1.0
      * @return Array
