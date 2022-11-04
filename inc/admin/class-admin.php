@@ -150,6 +150,7 @@ class Admin extends Common\Utility_Functions{
 	public function enqueue_styles() {
 		wp_enqueue_style('bootstrap_css', plugin_dir_url( __FILE__ ) .  'css/bootstrap.min.css' );
 		wp_enqueue_style( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'css/pdf-doc-manager-admin.css', array(), $this->version, 'all' );
+		wp_enqueue_style( 'jquery-ui-theme', plugin_dir_url( __FILE__ ) . 'css/jquery-ui.min.css', array(),'', 'all' );
 		wp_enqueue_style('dashicons');
 	}
 
@@ -205,7 +206,7 @@ class Admin extends Common\Utility_Functions{
 		
 		// enqueue function to handle jquery accordion ui
 		wp_enqueue_script('jquery-ui-accordion');
-		wp_enqueue_script( 'legoeso_ajax_accordion_ui', plugin_dir_url( __FILE__ ) . 'js/pdm-jquery-ui-accordion.js', array( 'jquery'), $this->version, true );
+		wp_enqueue_script( 'legoeso_ajax_accordion_ui', plugin_dir_url( __FILE__ ) . 'js/pdm-jquery-ui-accordion.js', array( 'jquery-ui-accordion'), $this->version, true );
 
 		// send/add local values to JavaScript to communicate with JavaScript handler
 		wp_localize_script( 'legoeso_ajax_ui', 'ajax_obj', $params );

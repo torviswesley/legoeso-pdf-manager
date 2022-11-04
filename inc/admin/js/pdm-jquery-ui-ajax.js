@@ -301,28 +301,25 @@
 			success: function (data) {
 				// build progress message 
 				let str_ajax_response = null;
-				str_ajax_response =		'Processing File: "' + data.filename + '"<br>';
-				str_ajax_response += 	data.file + ' of ' + data.total_files;
-
-				if(data.percent != 100){
-					// draw status bar
-					change_drag_area_text(str_ajax_response);				
-					update_progress_bar(data.percent, '('+ data.percent +'%)' );
-					
+				if(typeof(data) == "object") {
+					str_ajax_response =		'Processing File: "' + data.filename + '"<br>';
+					str_ajax_response += 	' <strong>' + data.file + '</strong> of ' + data.total_files;
+					if(data.percent != 100){
+						// draw status bar
+						change_drag_area_text(str_ajax_response);				
+						update_progress_bar(data.percent, '('+ data.percent +'%)' );
+						
+					} 
+					else if(data.percent == 100 && data.status == 'complete') 
+					{
+						// stop the timer
+						stopRefresh();
+						console.log('completed... refresh should stop')
+						// draw status bar
+						change_drag_area_text(str_ajax_response);
+						reset_upload_form();
+					}
 				} 
-				else if(data.percent == 100 && data.status == 'complete') 
-				{
-					// stop the timer
-					stopRefresh();
-					// draw status bar
-					change_drag_area_text(str_ajax_response);
-					reset_upload_form();
-				} else {
-					setdebug_log('clause: 3');
-					reset_upload_form();
-					// clear refresh interval
-					stopRefresh();
-				}
 				
 			},
 			error: function (e) {
@@ -356,7 +353,11 @@
 				setdebug_log(strText);
 				if (evt.lengthComputable) {
 					percentComplete = Math.round( (evt.loaded / evt.total  * 100).toFixed(2) );
-					update_progress_bar(percentComplete, percentComplete + '%' + ' ' +strText);
+					if(percentComplete) {
+						update_progress_bar(percentComplete, percentComplete + '%' + ' ' +strText);
+					} else {
+						update_progress_bar('Processing...');
+					}
 				}
 				change_drag_area_text(percentComplete + '% ' + strText  );
 			}, false
