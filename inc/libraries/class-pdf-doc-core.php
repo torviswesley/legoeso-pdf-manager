@@ -1003,7 +1003,7 @@ class PDF_Doc_Core extends Common\Utility_Functions {
                     // extract on the first page
                     $get_image->readImage($pdf_filename."[0]");
                     $get_image = $get_image->mergeImageLayers(Imagick::LAYERMETHOD_FLATTEN);
-                    $get_image->resizeImage( 350, 500, imagick::FILTER_LANCZOS, 0 );
+                    $get_image->resizeImage( 350, 500, imagick::FILTER_BOX, 0, 0);
                     $get_image->setImageFormat( 'jpg' );
                     $pdf_image = $get_image->getImageBlob();
                     $get_image->clear();
