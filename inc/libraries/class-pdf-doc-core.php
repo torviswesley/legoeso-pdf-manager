@@ -56,7 +56,7 @@ class PDF_Doc_Core extends Common\Utility_Functions {
 	 *
 	 * @since    1.0.0
 	 * @access   private
-	 * @var      array    $file_process_results Stores the results for each file 
+	 * @var      Array    $file_process_results Stores the results for each file 
      *                  processed.
 	 */
 	private $file_process_results = [];
@@ -94,7 +94,7 @@ class PDF_Doc_Core extends Common\Utility_Functions {
      * 
 	 * @since    1.0.1
 	 * @access   private
-	 * @var      boolean    $force_image_extraction - only images will be extracted
+	 * @var      Boolean    $force_image_extraction - only images will be extracted
 	 */
 	private $force_image_extraction;
 
@@ -136,7 +136,7 @@ class PDF_Doc_Core extends Common\Utility_Functions {
 	 * Sets the max_allowed_packet size in bytes, we'll use it as the limit before breaking the file into peices 
 	 * @since    1.0.2
 	 * @access   private
-	 * @var      integer   $pdm_max_filesize    used to stay below MySQL's allowed memory packet size
+	 * @var      Integer   $pdm_max_filesize    used to stay below MySQL's allowed memory packet size
 	 */
     private $pdm_max_filesize;
 
@@ -144,7 +144,7 @@ class PDF_Doc_Core extends Common\Utility_Functions {
 	 * specifies whether the file is a large file.
 	 * @since    1.0.2
 	 * @access   private
-	 * @var      boolean   $pdm_large_file - specifies wether the file uploaded is large.
+	 * @var      Boolean   $pdm_large_file - specifies wether the file uploaded is large.
 	 */
     private $pdm_large_file = false;
     
@@ -168,9 +168,9 @@ class PDF_Doc_Core extends Common\Utility_Functions {
 	 * stores extraction processing status counter 
 	 * @since    1.2.0
 	 * @access   private
-	 * @var      integer   $_post_data - stores global $_POST data. 
+	 * @var      Integer   $_post_data - stores global $_POST data. 
 	 */
-    private $_status_counter = 1;
+    protected $_status_counter = 1;
 
 	/**
 	 * Initializes class variables and set its properties.

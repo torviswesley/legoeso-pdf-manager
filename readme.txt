@@ -56,6 +56,10 @@ Upgrade notices describe the reason a user should upgrade.  No more than 300 cha
 = 0.5 =
 This version fixes a security related bug.  Upgrade immediately.
 
+Known Error/Issues with imagick - Segmentation fault for pdf input to pngalpha driver - https://bugs.ghostscript.com/show_bug.cgi?id=699815 
+PHP Fatal error Uncaught ImagickException: FailedToExecuteCommand `'gs'
+
+https://stackoverflow.com/questions/53560755/ghostscript-9-26-update-breaks-imagick-readimage-for-multipage-pdf
 == A brief Markdown Example ==
 
 Markdown is what the parser uses to process much of the readme file.
