@@ -35,7 +35,22 @@
 		$('#status_message').html(_message_txt).fadeOut(10000);
 		$('#status_message').addClass('col-auto ' + _msg_class);
 	}
-
+	/**
+	 * strips a string of the HTML tags
+	 * @param {*} str 
+	 * @returns str
+	 */
+	function removeTags(str) {
+		if ((str===null) || (str===''))
+			return false;
+		else
+			str = str.toString();
+			  
+		// Regular expression to identify HTML tags in 
+		// the input string. Replacing the identified 
+		// HTML tag with a null string.
+		return str.replace( /(<([^>]+)>)/ig, '');
+	}
 	/**
 	 * Displays a message to the user.
 	 * @param {string} strMsg
@@ -83,17 +98,21 @@
 
 		switch(_data_type){
 			case "string":
-				_response_text = _result_data.toString();
+				_response_text = removeTags(_result_data.toString());
 			break;
 			case "object":
 				if(typeof(_result_data.status) != "undefined"){
-					_response_text = _result_data.responseText;
-				} else {
+					_response_text = removeTags(_result_data.responseText);
+				} 
+				else if (_result_data.status == 500) {
+					response_text = removeTags(_result_data.responseText);
+				} 
+				else {
 					_response_text = JSON.stringify(_result_data, null, 2);
 				}
 			break;
 			default:
-				_response_text = _result_data.toString();
+				_response_text = removeTags(_result_data.toString());
 			break;
 		}
 
