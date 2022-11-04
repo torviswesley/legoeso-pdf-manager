@@ -52,7 +52,7 @@ function setupPDF_DocTables()
 
 	$data_force_image_enabled = array(
 		'option_name'		=>	'legoeso_force_image_enabled',
-		'option_value'		=>	'off',
+		'option_value'		=>	'on',
 		'autoload'			=>	'yes',
 	);
 

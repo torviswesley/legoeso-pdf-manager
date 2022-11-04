@@ -6,7 +6,8 @@
 
         <div id="pdm-pload-upload-ui" class="hide-if-no-js drag-drop">
             <div class="pdm-drag-drop-area" id="pdm-drag-drop-area" style="position: relative;">
-                <div class="drag-drop-category">
+                <div class="drag-drop-category"><strong>Generate PDF Preview</strong>
+                    <input type="checkbox" name="legoeso_force_image_enabled" id="force_image_enabled" <?php echo esc_attr($force_image_enabled);?>/> 
                     <label for="attachment-filter" class="screen-reader-text">Select Category</label>
                     <?php
                         $args = array(
@@ -21,8 +22,7 @@
                         //  Using WordPress function to create dropdown menu of categories
                         wp_dropdown_categories($args);
                     ?>
-                    <input type="checkbox" name="legoeso_force_image_enabled" id="force_image_enabled" <?php echo esc_html($force_image_enabled);?>/> 
-                    <strong>Force PDF Preview Only</strong>  
+                      
                 </div>
                 <div class="drag-drop-inside"  >
                     <p class="drag-drop-info" id="legoeso-drop-text">Drop files to upload</p>

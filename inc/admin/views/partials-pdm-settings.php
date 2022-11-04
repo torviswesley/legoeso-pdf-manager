@@ -1,17 +1,13 @@
-<div class="container pt-4"> </div>
-	<p class="h1"> Legoeso PDF | Enviroment Variables</p>
+<div class="container pt-4"><p class="h1"> Legoeso PDF | Enviroment Variables</p> 
+	
 	<?php 
 			wp_nonce_field( 'pdm-doc-settings-nonce', '_pdm_doc_settings_nonce' ); 
 			$sys_info = $this->check_dependencies();
 	?>
 	<div class="accordion" id="accordion">
 		<!-- Item #1 -->
-		<h3 class="accordion-header">
-			<button class="accordion-button" type="button" data-bs-toggle="collapse" 
-			data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
-				Operating System: <?php echo esc_html($sys_info['server']);?>
-			</button>
-		</h3>
+		<h3>Operating System: <?php echo esc_html($sys_info['server']);?></h3>
+
 		<div class="accordion-item accordion-body">
 			<strong>Current Operating System:</strong>  <?php echo esc_html($sys_info['server']);?><br>
 			<strong>Zip:  </strong><?php echo esc_html($sys_info['phpinfo']['Zip version']); ?>
@@ -20,12 +16,8 @@
 		</div>
 
 		<!-- Item #2 -->				
-		<h3 class="accordion-header">
-			<button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" >
-			Short Codes : Using short codes
-			</button>
-		</h3>
-		
+		<h3>Short Codes : Using Short Codes</h3>
+
 		<div class="accordion-item accordion-body">
 			<strong>PDF Document ListView Shortcodes</strong> - You can display your PDF documents on any page by using any 
 					of the two type of shortcodes.  Listview or Listview Preview <br>See examples below.
@@ -64,4 +56,6 @@
 			<strong>E-mail support request or suggestions to:</strong> <a href="mailto:support@legoeso.com">support@legoeso.com</a>
 		</p>   
 	</div>
+
+</div>
 
