@@ -3,7 +3,10 @@ License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
 ## Description
-A simple PDF document manager. Manage, display, and distribute PDF documents easily. Initially a custom solution designed for the purpose of extracting invoice and account information from scanned documents.  This plugin allows the storing, organizing, and archiving of PDF documents for distribution within a WordPress site. Features include uploading, searching, and viewing saved PDF documents.			  
+The Legoeso PDF Manager is a light weight, simple but powerful PDF document manager. It helps you to organize your PDF documents for easy display, and distribution within your WordPress site. It supports multiple file upload or bulk upload of files stored in a zip file.
+
+Features include unlimited file uploads. upload documents via drag and drop, bulk upload, bulk download, bulk delete, automatically generates documents previews for list display, and securely view PDF documents within WordPress. In addition, modify document names and categories, and perform keyword document searches. 
+		  
 
 ## Installation Manually
 1. Download the latest Legoeso PDF Manager archive from WordPress and extract to a folder or alternatively search the WordPress plugin repository for Legoeso PDF Manager
@@ -12,25 +15,19 @@ A simple PDF document manager. Manage, display, and distribute PDF documents eas
 
 
 ## This plugin requires the following dependencies.
-1. Python 3.6 or later
+1. Imagick 7.0 or later
 2. ZipArchive
-3. PDFMiner
 
-## Setup after activation
-## The following will need to be set within "Legoeso Settings" menu before the plugin can work correctly.
-1.  Path to the python executable 
-2.  Path to PDFMiner
 
 ## Features include:
 1. Bulk import of PDFs documents - easily drag and drop to upload a single document, a multiple documents or a zip file containing a multiple documents.  
 2. Single or bulk delete of PDFs.
 3. Single or bulk download of pdf documents.
 4. Sort by category, document name, upload by, or date uploaded.
-5. Perform key word search through for PDF documents.
+5. Perform key word search for PDF documents.
 6. Easily list or display all documents or a single category of documents within a WordPress page.
-7. Quick adjust the documents display name or category.
-8. All PDF documents have links to access document
-9. This plugin provides optional support for Google's Pytesseract to improve OCR accuracy.  Simply install Pytesseract on your server, supply the plugin with the Pytesseract installation executable and enable the feature.
+7. Quickly adjust the document display names or categories.
+8. All PDF documents are accessed via secure links.
 
 ## Usage
 ## To add new PDF Documents, select Legoeso PDFs 
@@ -52,6 +49,10 @@ A simple PDF document manager. Manage, display, and distribute PDF documents eas
 
 ## For Help, comments or request additional features.
 Email support@legoeso.com
+
+## Changes v1.2.0 
+1. Resolved WordPres security vulnerabilities
+2. Refactored PDF extraction code
 
 ## Changes v1.1.0 
 1. Added support for standalone PDF Parser see https://github.com/smalot/pdfparser
