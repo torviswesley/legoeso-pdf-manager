@@ -390,8 +390,8 @@ class PDF_Doc_List_Table extends Libraries\WP_List_Table  {
 		 */
 		
 		$admin_page_url =  admin_url( 'admin.php' );
-		$load_pdf_page_url =  site_url('index.php');
-	
+		//$load_pdf_page_url =  site_url('index.php');
+		$load_pdf_filename =  site_url($item['filename']);
 		/**
 		 * Row action: View 
 		 */
@@ -402,7 +402,7 @@ class PDF_Doc_List_Table extends Libraries\WP_List_Table  {
 			'_wpnonce'	=>	wp_create_nonce( 'view_pdf_file_nonce' ),
 		);
 		
-		$view_pdf_doc_meta_link = esc_url( add_query_arg( $query_args_view_pdfdoc, $load_pdf_page_url ) );
+		$view_pdf_doc_meta_link = esc_url( add_query_arg( $query_args_view_pdfdoc, $load_pdf_filename ) );
 		$actions['view_pdf_doc'] = '<a target="_blank" href="' .$view_pdf_doc_meta_link. '">'. __( 'View', $this->plugin_text_domain ) . '</a>';
 		 
 
