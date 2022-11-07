@@ -143,7 +143,7 @@
 								targets: 2,
 								render: function(data, type, row, meta){
 									
-									return '<a target="_blank" href="' + _doc_url() + '?action=view_document&pid=' + row[1] +'&_wpnonce='+ get_wpnonce() +'"> ' + data +'</a> ';
+									return '<a target="_blank" href="' + _doc_url() + '/' + row[2] + '?action=view_document&pid=' + row[1] +'&_wpnonce='+ get_wpnonce() +'"> ' + data +'</a> ';
 								}
 							},
 						],
@@ -163,7 +163,7 @@
 							{
 								targets: 1,
 								render: function(data, type, row, meta){
-									return '<a target="_blank" href="' + _doc_url() + '?action=view_document&pid=' + row[0] +'&_wpnonce='+ get_wpnonce() +'"> ' + data +'</a> ';
+									return '<a target="_blank" href="' + _doc_url() + '/' + row[1] + '?action=view_document&pid=' + row[0] +'&_wpnonce='+ get_wpnonce() +'"> ' + data +'</a> ';
 								}
 							},
 						],

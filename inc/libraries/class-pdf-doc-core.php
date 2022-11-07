@@ -186,7 +186,7 @@ class PDF_Doc_Core extends Common\Utility_Functions {
         $this->pdm_PdfMiner = NS\PDFMINER_DIR;
         $this->pdm_Python = NS\PYTHON_DIR;
         $this->pdm_max_filesize = 13010000;
-        $this->pdm_valid_file_types = array('application/pdf','application/x-zip-compressed');
+        $this->pdm_valid_file_types = ['application/pdf','application/x-zip-compressed'];
         
         parent::__construct();
 
@@ -806,8 +806,8 @@ class PDF_Doc_Core extends Common\Utility_Functions {
 
         if($this->pdm_large_file){
             $columnData['has_url'] = 1;
-            $columnData['pdf_url'] = $this->pdm_upload_dir_agrs['wp_upload_dir']['url'].'/pdm_data/'.$filename;
-            
+            $columnData['pdf_path'] = $this->pdm_upload_dir_agrs['wp_upload_dir']['path'].'/pdm_data/'.$filename;
+           
             $query_data = array_merge($columnData, $added_columns);
             // execute sql query
             $this->pdm_execute_query($wpdb, $tablename,  $query_data);

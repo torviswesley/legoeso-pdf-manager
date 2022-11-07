@@ -25,7 +25,7 @@ function setupPDF_DocTables()
 		`pdf_doc_num` varchar(75) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
 		`filename` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
 		`has_url` tinyint(1) NOT NULL DEFAULT 0,
-		`pdf_url` mediumtext COLLATE utf8mb4_unicode_ci NOT NULL,
+		`pdf_path` mediumtext COLLATE utf8mb4_unicode_ci NOT NULL,
 		`filetype` varchar(25) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
 		`pdf_type` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
 		`pdf_image` blob DEFAULT NULL,
