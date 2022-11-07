@@ -13,22 +13,21 @@ The Legoeso PDF Manager is a simple PDF document manager that allows for easy di
 
 == Description ==
 
-The Legoeso PDF Manager is a light weight, simple but powerful PDF document manager that allows you to organize your PDF documents for easy display, and distribution within your WordPress website. 
-Supports multiple file upload, bulk upload, or upload via multiple files stored in a zip file.
+The Legoeso PDF Manager is a light weight, simple but powerful PDF document manager. It helps you to organize your PDF documents for easy display, and distribution within your WordPress site. It supports multiple file upload or bulk upload of files stored in a zip file.
 
-Features include: unlimited file uploads. upload documents via drag and drop, bulk upload, bulk download, bulk delete, automatically generate PDF previews for display and securely view PDF documents.
-In addition, sort and perform keyword document searches, modify document names and categories.
+Features include unlimited file uploads. upload documents via drag and drop, bulk upload, bulk download, bulk delete, automatically generates documents previews for list display, and securely view PDF documents within WordPress. In addition, modify document names and categories, and perform keyword document searches. 
 
 
-This plugin uses [DataTables](https://datatables.net/) to display and list of your PDF documents within WordPress. Easily include a list of PDF documents into your posts by using one of the shortcodes. Users of your website will be able to view the documents you provide to your visitors.
 
-This plugin has much more to offer and can be used as an OCR text extraction tool for parsing the extracted text for the collection and storage of useful data. 
+This plugin uses [DataTables](https://datatables.net/) to display and list of your PDF documents within WordPress. Easily include a list of PDF documents into your posts by using one of the shortcodes. Users of your website will be able to securely view the documents you provide to your visitors.
+
+This plugin has much more to offer and can be used as an OCR text extraction tool for parsing the extracted text to collect and store useful data. 
 
 == Frequently Asked Questions ==
 
-= Where does Legoeso PDF Manager store it PDF documents? =
+= Where does Legoeso PDF Manager store its PDF documents? =
 
-The Legoeso PDF manager stores its PDF documents within a separate table within your WordPress database. This allows for easy backup of your files,as well as integration or migration for use on or within a different platform. 
+The Legoeso PDF manager stores its PDF documents within a separate table within your WordPress database. This allows for easy backup of your files, as well as integration or migration for use on or within a different platform. 
 
 = Is there a file size limit? =
 
@@ -41,20 +40,8 @@ The plugin has no filesize limitation, however, your web hosting provider may li
 
 == Changelog ==
 
-= 1.0 =
-* A change since the previous version.
-* Another change.
-
-= 0.5 =
-* List versions from most recent at top to oldest at bottom.
-
-== Upgrade Notice ==
-
-= 1.0 =
-Upgrade notices describe the reason a user should upgrade.  No more than 300 characters.
-
-= 0.5 =
-This version fixes a security related bug.  Upgrade immediately.
+= 1.2.0 =
+* A change since the original version. This is the latest version. Fixed security issues. 
 
 Known Error/Issues with imagick - Segmentation fault for pdf input to pngalpha driver - https://bugs.ghostscript.com/show_bug.cgi?id=699815 
 PHP Fatal error Uncaught ImagickException: FailedToExecuteCommand `'gs'
