@@ -119,7 +119,8 @@
 
 					//  add the new data to the table
 					$("#"+view_data.table_id).DataTable({
-						data:  oData.data,
+						ajax: data_url,
+						//data:  oData.data,
 						autowidth: true,
 						columnDefs:[
 							{

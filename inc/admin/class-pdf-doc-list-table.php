@@ -59,10 +59,10 @@ class PDF_Doc_List_Table extends Libraries\WP_List_Table  {
 	 * @since 1.0.0
 	 */
 	public function __construct( $plugin_text_domain ) {
-		
+		global $wpdb;
 		$this->plugin_text_domain = $plugin_text_domain;
 		$this->disable_preview_images = false;
-		$this->plugin_db_tablename = 'legoeso_file_storage'; 	// specifiy the database tablename 
+		$this->plugin_db_tablename = $wpdb->prefix.'legoeso_file_storage'; 	// specifiy the database tablename 
 		$this->utilities  = new Common\Utility_Functions();
 		parent::__construct(  array( 
 				'plural'	=>	'pdf_docs',		// Plural value used for labels and the objects being listed.
@@ -113,7 +113,7 @@ class PDF_Doc_List_Table extends Libraries\WP_List_Table  {
 		 * Query the database and fetch the table data
 		 */
 		$table_data = $this->fetch_table_data($pdf_search_key);	
-		
+
 		/**
 		 * Filter the data in case of a search.
 		 */
@@ -243,8 +243,8 @@ class PDF_Doc_List_Table extends Libraries\WP_List_Table  {
 	public function fetch_table_data($pdf_search_key) {
 
 		global $wpdb;
-		
-		$wpdb_table = $wpdb->prefix . $this->get_database_tablename();		
+		$pdf_search_key = sanitize_text_field($pdf_search_key);
+		$wpdb_table = $this->get_database_tablename();		
 		$orderby = ( isset( $_GET['orderby'] ) ) ? esc_sql( $_GET['orderby'] ) : 'insert_date';
 		$order = ( isset( $_GET['order'] ) ) ? esc_sql( $_GET['order'] ) : 'DESC';
 		
@@ -280,7 +280,7 @@ class PDF_Doc_List_Table extends Libraries\WP_List_Table  {
 	public function get_column_data($_column_id, $_column_name){
 
 		global $wpdb;
-		$wpdb_table = $wpdb->prefix . get_database_tablename();		
+		$wpdb_table = $this->get_database_tablename();		
 		$query = "SELECT $_column_name FROM {$wpdb_table} WHERE ID = {$_column_id} ";
 		return $wpdb->get_results( $query, ARRAY_A  );
 	}
@@ -428,6 +428,7 @@ class PDF_Doc_List_Table extends Libraries\WP_List_Table  {
 			'file_id'	=>	absint( $item['ID']),
 			'_wpnonce'	=>	wp_create_nonce( 'quick_edit_nonce' ),
 		);
+
 		$quick_edit_link = esc_url( add_query_arg( $query_args_quick_edit, $admin_page_url  ) );	
 				$actions['quick_edit_doc']	= '<button type="button" class="button-link editinline" aria-label="Quick edit inline" aria-expanded="false" name="pdm-quick_edit-'.$item['ID'].'-'.$item['pdf_doc_num'].'">'. __( 'Quick Edit', $this->plugin_text_domain ) . '</button>';
 		
@@ -444,7 +445,6 @@ class PDF_Doc_List_Table extends Libraries\WP_List_Table  {
 		$delete_pdf_doc_meta_link = esc_url( add_query_arg( $query_args_delete_pdfdoc, $admin_page_url  ) );		
 		$actions['delete_doc']	= '<a href="javascript:void(0);" class="delete_item" name="pdm-delete-'.$item['ID'].'-'.$item['pdf_doc_num'].'">'. __( 'Delete', $this->plugin_text_domain ) . '</a>';
 		
-
 		/**
 		 * Default row text
 		 */
@@ -578,12 +578,10 @@ class PDF_Doc_List_Table extends Libraries\WP_List_Table  {
 			$wp_dir_obj = wp_upload_dir();
 			$pdf_url_info = array('pdf_file_path'	=> $wp_dir_obj['path'].'/pdm_data');
 
-			$sql_query = "SELECT ID, filename FROM `{$wpdb->prefix}".$this->get_database_tablename()."` WHERE ID IN (".implode(',',$pdf_ids).") AND has_url = 1;" ;
+			$sql_query = "SELECT ID, filename FROM `".$this->get_database_tablename()."` WHERE ID IN (".implode(',',$pdf_ids).") AND has_url = 1;" ;
 			$_has_url = $wpdb->get_results($sql_query, ARRAY_A);
 			$pdf_url_info['files'] = $_has_url;
 
-			// $this->pdf_DebugLog("Query for Delete PDF Documents::", $sql_query);
-			// $this->pdf_DebugLog("IDs with a URL: Object::", json_encode($pdf_url_info));
 		return ( $pdf_url_info );
 	}  
 
@@ -629,7 +627,7 @@ class PDF_Doc_List_Table extends Libraries\WP_List_Table  {
 		$sql_filter = (!empty($bulk_pdf_ids)) ? " WHERE ID IN (". implode(',',$bulk_pdf_ids) .")" : 'Empty ID Param';
 
 		// build an SQL query
-		$sql_query = "DELETE FROM `{$wpdb->prefix}".$this->get_database_tablename()."` {$sql_filter};";
+		$sql_query = "DELETE FROM `".$this->get_database_tablename()."` {$sql_filter};";
 
 		$results = $wpdb->query($sql_query, ARRAY_A);
 
@@ -759,7 +757,9 @@ class PDF_Doc_List_Table extends Libraries\WP_List_Table  {
 			$zip->close();
 			return $pdf_docs;
 		}		
-
+		/**
+		 * used to get the pdf documents for bulk download
+		 */
 		function do_pdf_docs($_this, $sql_results){
 
 			//  get the WordPress upload directory
@@ -794,7 +794,7 @@ class PDF_Doc_List_Table extends Libraries\WP_List_Table  {
 		$sql_filter = (!empty($pdf_doc_ids)) ? " WHERE ID IN (".implode(',',$pdf_doc_ids).")" : '';
 
 		// build an SQL query
-		$sql_query = "SELECT `".implode("`,`", $columns)."` FROM `{$wpdb->prefix}".$this->get_database_tablename()."` {$sql_filter};";
+		$sql_query = "SELECT `".implode("`,`", $columns)."` FROM `".$this->get_database_tablename()."` {$sql_filter};";
 		$results = $wpdb->get_results($sql_query, ARRAY_A);
 		
 		$this->pdf_DebugLog("Query for Bulk Download::", $sql_query);

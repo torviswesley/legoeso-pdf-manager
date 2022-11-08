@@ -284,7 +284,7 @@ class Frontend extends Common\Utility_Functions {
 		//  columns to use in query
 		$columns = array('ID', 'filename', 'category', 'upload_userid', 'date_uploaded');
 		// build SQL query
-		$order_by = "ORDER BY date_uploaded DESC";
+		$order_by = " ORDER BY date_uploaded DESC";
 		$_limit = (! empty($limit) ) ? "LIMIT {$limit} " : "";
 		$sql_filter = (!empty($category) || $category != '') ? " WHERE category = '{$category}'" : '';
 		
@@ -317,12 +317,15 @@ class Frontend extends Common\Utility_Functions {
 			return $this->create_pdm_json_file($results, $json_filename, $num_of_rows);
 		} 
 		else {
-			$this->pdf_DebugLog("Error: No Records Found. See also Short Code SQL Query::", $sql_query);
+			$this->pdf_DebugLog("Error: No Records Found for category: '{$category}'. See also Short Code SQL Query::", $sql_query);
 			return $this->create_pdm_json_file($results, $json_filename, $num_of_rows);
 		}
 	}
 	
-
+	// add config setting to all users to choose where they want to store their pdf files
+	// on disk or the database
+	// ensure that plugin will work when wp-content, wp-upload directories are modified during custom settings
+	// 
 	private function get_query_results($query, $ResultArrayType = ARRAY_N){
 		if(!empty($query)){
 			/**
@@ -331,6 +334,7 @@ class Frontend extends Common\Utility_Functions {
 			global $wpdb;
 			$wpdb->show_errors;
 			$_result = $wpdb->get_results($query, $ResultArrayType);
+			$wpdb->flush();
 			return( ['db_results' => $_result, 'num_rows' => $wpdb->num_rows, 'error' => $wpdb->last_error,] ) ;
 		}
 	}
@@ -373,11 +377,12 @@ class Frontend extends Common\Utility_Functions {
 		}
 
 		//  attempt to write the contents of the data to the file location in JSON format
-		if( $f_bytes = file_put_contents($json_file_path , wp_json_encode($objDataset) ) ){
+		if( $f_bytes = file_put_contents($json_file_path , json_encode($objDataset) ) ){
+			
 			$this->pdf_json_file = $json_file;
 			$file_created = true;
 			$this->pdf_DebugLog("Json File Size: {$f_bytes}::", $json_file);
-			$file_created = true;
+
 		} else {
 			$this->pdf_DebugLog("Failed to write Json File Path::", $json_file_path);
 		}
@@ -389,6 +394,7 @@ class Frontend extends Common\Utility_Functions {
 		}
 		return $file_created;
 	}
+
 	/**
 	 * Register all shortcodes for this plugin.
 	 *

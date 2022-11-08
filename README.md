@@ -15,7 +15,7 @@ Features include unlimited file uploads. upload documents via drag and drop, bul
 
 
 ## This plugin requires the following dependencies.
-1. Imagick 7.0 or later
+1. Imagick
 2. ZipArchive
 
 

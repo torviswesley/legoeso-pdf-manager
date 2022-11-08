@@ -103,7 +103,7 @@ class PDF_Doc_Core extends Common\Utility_Functions {
 	 *
 	 * @since    1.0.0
 	 * @access   private
-	 * @var      String    $pdm_library    The directroy location to the class libraries for this plugin.
+	 * @var      String    $pdm_library    The directory location to the class libraries for this plugin.
 	 */
     public $pdm_library;
 
@@ -115,14 +115,6 @@ class PDF_Doc_Core extends Common\Utility_Functions {
 	 * @var      String    $pdm_plugin_dir    The directory path location for the plugin
 	 */
     public $pdm_plugin_dir;
-
-     /**
-	 * Path to poppler-utils executables, used to extract images from PDF files
-	 * @since    1.0.0
-	 * @access   private
-	 * @var      String    $pdm_PdfMiner    The directory location to PDF Miner for this plugin.
-	 */
-    private $pdm_PdfImages;
 
      /**
 	 * Property used to store the filename used to save upload status
@@ -172,6 +164,15 @@ class PDF_Doc_Core extends Common\Utility_Functions {
 	 */
     protected $_status_counter = 1;
 
+     /**
+	 * flag use to indicate if pdf files should be saved to disk.
+     * if false, files will be saved in database
+	 * @since    1.2.0
+	 * @access   private
+	 * @var      Integer   $save_files_to_disk -  indicates if pdf files should be saved to disk. 
+	 */
+    private $save_files_to_disk = false;
+
 	/**
 	 * Initializes class variables and set its properties.
 	 *
@@ -182,9 +183,6 @@ class PDF_Doc_Core extends Common\Utility_Functions {
 
         $this->pdm_plugin_dir = NS\PLUGIN_NAME_DIR;
         $this->pdm_library = NS\PLUGIN_NAME_DIR.'inc/libraries/';
-        $this->pdm_PdfImages = NS\PDFIMAGES_DIR;
-        $this->pdm_PdfMiner = NS\PDFMINER_DIR;
-        $this->pdm_Python = NS\PYTHON_DIR;
         $this->pdm_max_filesize = 13010000;
         $this->pdm_valid_file_types = ['application/pdf','application/x-zip-compressed'];
         
@@ -802,6 +800,7 @@ class PDF_Doc_Core extends Common\Utility_Functions {
         // if the filesize is less than or equal the maxfile size truncate file before insert, 
         // otherwise the file is too big save file to file system
         // store the size of the uploaded file
+        // find out which column is causing the error
         $upload_filesize = filesize($uploadFilename);
 
         if($this->pdm_large_file){

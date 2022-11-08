@@ -42,6 +42,7 @@ The plugin has no filesize limitation, however, your web hosting provider may li
 
 = 1.2.0 =
 * A change since the original version. This is the latest version. Fixed security issues. 
+Fatal error: Allowed memory size of 134217728 bytes exhausted (tried to allocate 31477760 bytes)
 
 Known Error/Issues with imagick - Segmentation fault for pdf input to pngalpha driver - https://bugs.ghostscript.com/show_bug.cgi?id=699815 
 PHP Fatal error Uncaught ImagickException: FailedToExecuteCommand `'gs'
@@ -76,3 +77,16 @@ Blockquotes are email style:
 And Backticks for code:
 
 `<?php code(); ?>`
+
+
+128 Memory Limit: 134217728
+before: 12742976
+after: 12742976
+peak usage: 12744168
+
+134217728
+12742976
+94409592
+94409680
+
+31477760
