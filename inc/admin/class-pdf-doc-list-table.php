@@ -528,11 +528,11 @@ class PDF_Doc_List_Table extends Libraries\WP_List_Table  {
 				switch($bulk_action) {
 					case 'bulk-download':
 						//	get and pass the list of pdfs for processing
-						$this->pdf_bulk_download(($_REQUEST['checkedVals']));
+						$this->pdf_bulk_download(($_POST['checkedVals']));
 						$this->graceful_exit();
 					break;
 					case 'bulk-delete':
-						die( wp_json_encode($this->pdf_bulk_delete($_REQUEST['checkedVals'])) );
+						die( wp_json_encode($this->pdf_bulk_delete($_POST['checkedVals'])) );
 					break;
 					case 'bulk-email':
 						// not implemented!
@@ -730,12 +730,12 @@ class PDF_Doc_List_Table extends Libraries\WP_List_Table  {
 		$pdf_doc_ids = $this->utilities->sanitize_postdata_strong($pdf_doc_ids);
 		function zip_pdf_docs($_this, $zip_filename, $sql_dataset){
 			// create new array to collect filenames
-			$pdf_docs = []; 		
+			$zipped_pdfs = []; 		
 			// create a new ZipArchive object
 			$zip = new ZipArchive();
 
 			// set a better name
-			if ($zip->open($zip_filename, ZipArchive::CREATE)!==TRUE) {
+			if ($zip->open($zip_filename, ZipArchive::CREATE) !==TRUE) {
 				$_this->pdf_DebugLog("*** Bulk download: Error::", "Could not create '{$zip_filename}'" );
 				return;
 			}
@@ -744,25 +744,25 @@ class PDF_Doc_List_Table extends Libraries\WP_List_Table  {
 			foreach($sql_dataset as $key => $data){	
 				// collect row  data/information
 				$sID = $data['ID'];
-				$pdf_data = $data['pdf_data'];
+				$pdf_data = $data['pdf_path'];
 				$sfilename = $data['filename'];
 
-				// if the filename has already been added to zip it will be
-				// skip not included in zip file.  resolve by checking for file if already exists
-				// within the stack append the files' ID
-				if(in_array($sfilename, $pdf_docs)){
+				// if the filename has already appears to have been already added to the zip,
+				// resolve duplicate by appending the files' ID to the filename
+				if(in_array($sfilename, $zipped_pdfs)){
 					$sf = explode('.',$sfilename);
 					$sfilename = $sf[0].'_'.$sID.'.'.$sf[1];
 				}
 				//	add each pdf file to the zip file
-
-				$zip->addFromString($sfilename, $pdf_data);
-				//	add filename to stack
-				$pdf_docs[] = $sfilename;
+				if(file_exists($pdf_data)){
+					$zip->addFromString($sfilename, file_get_contents($pdf_data));
+					//	add filename to stack
+					$zipped_pdfs[] = $sfilename;
+				}
 			}
 			// close zip file
 			$zip->close();
-			return $pdf_docs;
+			return $zipped_pdfs;
 		}		
 		/**
 		 * used to get the pdf documents for bulk download
@@ -773,7 +773,9 @@ class PDF_Doc_List_Table extends Libraries\WP_List_Table  {
 			$wp_upload_dir = wp_upload_dir();
 			$file_dir = $wp_upload_dir['path'];
 			
+			// directpry location and name of file where zip file will be saved
 			$zipfile_basedir = "{$file_dir}/pdm_data/pdf_download_".time().".zip";
+			// URL where zip file can be downloaded
 			$zipfile_url = $wp_upload_dir['url'] . "/pdm_data/pdf_download_".time().".zip";
 
 			// loop through the sql results and add each row of data to 
@@ -797,18 +799,19 @@ class PDF_Doc_List_Table extends Libraries\WP_List_Table  {
 		global $wpdb;
 		$wpdb->show_errors();
 		//  specify the columns to retreive
-		$columns = array('ID', 'pdf_data', 'filename');
-		$sql_filter = (!empty($pdf_doc_ids)) ? " WHERE ID IN (".implode(',',$pdf_doc_ids).")" : '';
+		$columns = array('ID', 'pdf_path', 'filename');
+		$sql_filter = (!empty($pdf_doc_ids)) ? " WHERE ID IN (".implode(',',$pdf_doc_ids).") AND has_path = 1" : '';
 
 		// build an SQL query
 		$sql_query = "SELECT `".implode("`,`", $columns)."` FROM `".$this->get_database_tablename()."` {$sql_filter};";
-		$results = $wpdb->get_results($sql_query, ARRAY_A);
+		$pdf_downloads = $wpdb->get_results($sql_query, ARRAY_A);
 		
 		$this->pdf_DebugLog("Query for Bulk Download::", $sql_query);
 
 		if ($wpdb->num_rows > 0){
+
 			$this->pdf_DebugLog("Bulk download: Query Succeeded::", "Begin Zipping '{$wpdb->num_rows}' PDF Documents ");
-			die( wp_json_encode(do_pdf_docs($this, $results)) );
+			die( wp_json_encode(do_pdf_docs($this, $pdf_downloads)) );
 		} else {
 			$this->pdf_DebugLog("Bulk download: Query Failed::", "{$wpdb->last_error}");
 		}

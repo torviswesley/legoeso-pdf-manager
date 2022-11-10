@@ -318,6 +318,7 @@
                      }, false);
                      return xhr;
                  },
+                 type: 'POST',
                  url: ajax_obj.ajax_url,
                  data: $.extend(
                      {

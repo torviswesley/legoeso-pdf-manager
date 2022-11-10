@@ -98,8 +98,8 @@ class Frontend extends Common\Utility_Functions {
 		$this->plugin_name = $plugin_name;
 		$this->version =  $version;
 		$this->plugin_text_domain = $plugin_text_domain;
-		$this->pdm_required_cap = 'read';		
-
+		$this->pdm_required_cap = 'read';
+				
 		// set tablename for database queries
 		$this->legoeso_db_tablename = "`{$wpdb->prefix}legoeso_file_storage`";
 	}
@@ -510,7 +510,6 @@ class Frontend extends Common\Utility_Functions {
 				$filename = $pdf_results[0]['filename'];
 				$has_path = $pdf_results[0]['has_path'];
 				$pdf_path = $pdf_results[0]['pdf_path'];
-				$img_url = $pdf_results[0]['image_url'];
 				// check the result if it has url data, and if sos does the file exist
 				if( ($has_path == 1 && strlen($pdf_path) > 2) && file_exists($pdf_path)){
 					// lets get the file and stream the results back to the browser

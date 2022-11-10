@@ -112,14 +112,15 @@ class Utility_Functions {
             if(!file_exists($pdm_upload_dir)){
                 mkdir( $pdm_upload_dir, 0755, true);
             }
-
+            // returns only the directory info
             if($return_dirinfo_only){
                 return $file_info;
-            }
-
-            if(file_put_contents($str_filepath, $file_contents)){      
-                $file_info['size'] = filesize($str_filepath);
-                return $file_info;
+            } else {
+                // move file to specified directory
+                if(file_put_contents($str_filepath, $file_contents)){      
+                    $file_info['size'] = filesize($str_filepath);
+                    return $file_info;
+                }
             }
         }
         return false;
@@ -390,7 +391,26 @@ class Utility_Functions {
         $num_conv = ($n[0] * $const_b);
         return ($num_conv);
     }
+
+    function return_bytes($val) {
+        $val = trim($val);
+        $last = strtolower($val[strlen($val)-1]);
+        $val = substr($val, 0, strlen($val)-1);
+        switch($last) {
+            // The 'G' modifier is available
+            case 'g':
+                $val *= 1024;
+            case 'm':
+                $val *= 1024;
+            case 'k':
+                $val *= 1024;
+        }
     
+        return $val;
+    }
+
+
+
     /**
     * toggle checkbox values
     *

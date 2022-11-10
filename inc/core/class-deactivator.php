@@ -29,7 +29,7 @@ class Deactivator {
 	* Table information
 	*/
 	$tablename = $wpdb->prefix.'legoeso_file_storage';
-	$wpdb->query( "DELETE FROM `{$tablename}` WHERE `option_name` LIKE '%Legoeso_%" );
+	$wpdb->query( "DELETE FROM `{$tablename}` WHERE `option_name` LIKE '%Legoeso_%'" );
 	}
 
 }

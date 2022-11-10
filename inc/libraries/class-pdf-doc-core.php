@@ -131,6 +131,7 @@ class PDF_Doc_Core extends Common\Utility_Functions {
 	 * @var      Integer   $pdm_max_filesize    used to stay below MySQL's allowed memory packet size
 	 */
     private $pdm_max_filesize;
+    private $pdm_mem_info = [];
 
      /**
 	 * specifies whether the file is a large file.
@@ -138,7 +139,7 @@ class PDF_Doc_Core extends Common\Utility_Functions {
 	 * @access   private
 	 * @var      Boolean   $pdm_large_file - specifies wether the file uploaded is large.
 	 */
-    private $pdm_large_file = true;
+    private $pdm_large_file = false;
     
      /**
 	 * specifies valid file types/ 
@@ -193,6 +194,14 @@ class PDF_Doc_Core extends Common\Utility_Functions {
         $this->pdm_plugin_dir = NS\PLUGIN_NAME_DIR;
         $this->pdm_library = NS\PLUGIN_NAME_DIR.'inc/libraries/';
         $this->pdm_max_filesize = 13010000;
+        
+        // log memory limit for debugging and file processing
+        $mem_limit = $this->return_bytes( ini_get('memory_limit') );
+
+        // set server mem info
+        $this->pdm_mem_info = ['mem_limit' => $mem_limit, 'max_filesize'  => abs($mem_limit / 2), ];
+        
+        // sets the valid mime type to process   
         $this->pdm_valid_file_types = ['application/pdf','application/x-zip-compressed'];
 
 	    // specfiy tablename for database queries
@@ -619,24 +628,21 @@ class PDF_Doc_Core extends Common\Utility_Functions {
           
             // if the uploaded filesize is double than the filesize limit lets store the file within the 
             // file system instead of the database
-            // if(filesize($tmpFilename) >  ($this->pdm_max_filesize * 2)){
-                // move the uploaded file for processing and get the directory information
-                $file_info_arr =  $this->uploadFileToWp($filename, $tmpFilename, true);
+            if(filesize($tmpFilename) >  $this->pdm_mem_info['max_filesize']){
                 // set the large file flag to true
-            //     $this->pdm_large_file = true;
+                $this->pdm_large_file = true;
+            }
 
-            // } 
-            // else {
-            //     // move the uploaded file for processing and get the directory information
-            //     $file_info_arr =  $this->uploadFileToWp($filename, $tmpFilename);
-            //     // reset the large file flag to the default
-            //     $this->pdm_large_file = false;
-            // }
+            // obsure the original filename for added security
+            $secure_filename = rand(2000001,9999999).'.pdf';
 
+            // move the uploaded file for processing and get the directory information
+            $file_info_arr =  $this->uploadFileToWp($secure_filename, $tmpFilename, true);
 
-            $this->pdf_DebugLog("Uploaded DIR Args: Object::", wp_json_encode($this->pdm_upload_dir_agrs));
-            $this->pdf_DebugLog("Uploaded File Information: Object::", wp_json_encode($file_info_arr));
-            // Get the file path that was uploaded
+            $this->pdf_DebugLog("Method: processPDFFile(): Uploaded DIR Args: Object::", wp_json_encode($this->pdm_upload_dir_agrs));
+            $this->pdf_DebugLog("Method: processPDFFile(): Uploaded File Information: Object::", wp_json_encode($file_info_arr));
+            
+            // Get the path to the file that was uploaded
             $fileUploaded = $file_info_arr['file'];
             
             if (is_wp_error($file_info_arr)) {
@@ -644,11 +650,11 @@ class PDF_Doc_Core extends Common\Utility_Functions {
                 $uploadErrorMsg = $file_info_arr->get_error_message();
                 $errorMsg = "Error uploading file: " . $uploadErrorMsg;
                 # Add to debug/log 
-                $this->pdf_DebugLog("Upload Status:: ", $errorMsg);
+                $this->pdf_DebugLog("Method: processPDFFile(): Upload Status:: ", $errorMsg);
             } 
             else {
                 # Add to debug/log 
-                $this->pdf_DebugLog("Upload Status::", "File successfully uploaded!");
+                $this->pdf_DebugLog("Method: processPDFFile(): Upload Status::", "File successfully uploaded!");
             }
            
             //  add file to database / returns an array
@@ -748,16 +754,20 @@ class PDF_Doc_Core extends Common\Utility_Functions {
      * @param String $filename
 	 * @return array
 	 */
-    private function addFileToDatabase($uploadFilename, $filename){
+    private function addFileToDatabase($pdf_filepath, $filename){
         /**
-        * Post the uploaded file to the WordPress database
+        * Insert the uploaded file to database
         */
-        // do two things.
-        // 1. get the raw contents of the PDF file 
-        // 2. Extract text from the pdf file so that it can be
-        // parsable and searched.
-        $this->pdf_DebugLog("Method: addFileToDatabase():", "Called...");
+       
+        // log the following stats for debugging
+        $mem_usage = memory_get_usage();
+        $mem_usage_peak = memory_get_peak_usage();
+      
+        $this->pdf_DebugLog("Method: addFileToDatabase(): Memory Usage", $mem_usage);
 
+        /**
+         * Initialize variables
+         */
         global $wpdb;
         $wpdb->show_errors(true);
 
@@ -773,7 +783,6 @@ class PDF_Doc_Core extends Common\Utility_Functions {
         // pdf file path
         $pdf_has_path = -1;
         $pdf_fileversion = -1;
-        $pdf_filepath = $this->pdm_upload_dir_agrs['wp_upload_dir']['path'].'/pdm_data/'.$filename;
        
         if(file_exists($pdf_filepath)){
             $pdf_has_path = 1;
@@ -792,37 +801,48 @@ class PDF_Doc_Core extends Common\Utility_Functions {
         $pdf_query_columns = array(
             'filename'           =>  sanitize_text_field($filename),
             'has_path'           =>  $pdf_has_path,
-            'pdf_path'          =>  $pdf_filepath,
-            'filetype'          =>  'application/pdf',
-            'pdf_version'       =>  $pdf_fileversion,
-            'category'          =>  $pdf_category,
+            'pdf_path'           =>  $pdf_filepath,
+            'filetype'           =>  'application/pdf',
+            'pdf_version'        =>  $pdf_fileversion,
+            'category'           =>  $pdf_category,
             'date_uploaded'      =>  $theDateFormat,
             'upload_userid'      =>  $current_user,
             'pdf_doc_num'        =>  rand(0000001,9999999),
         );
 
-        //  Extract the text from the PDF file and get the document properties
-        if($pdf_extract_properties = $this->extractTextFromPDF($uploadFilename)){
-            $extracted_textdata     = $pdf_extract_properties['extracted_data'];        // string
-            $image_extracted    = $pdf_extract_properties['extracted_image'];       // bool
-            $image_paths        = $pdf_extract_properties['image_paths'];  // string
-            $pdf_filesize       = $pdf_extract_properties['pdf_filesize'];  // bool
+        /**
+         * Begin processing file
+         */
 
-           $pdf_extracted_columns = [            
+        //  Extract the text from the PDF file and get the document properties
+        if($pdf_extract_properties = $this->extractTextFromPDF($pdf_filepath)){
+            $extracted_textdata     = $pdf_extract_properties['extracted_data'];  // string
+            $image_extracted    = $pdf_extract_properties['extracted_image'];  // bool
+           
+            $pdf_filesize       = $pdf_extract_properties['pdf_filesize'];  // int
+
+            // get image path info if image was extracted from pdf and merge with standard columns
+            if($image_extracted){
+                 $image_paths = $pdf_extract_properties['image_paths'];   // array
+                 $image_paths['has_img'] = 1;
+                $pdf_query_columns = array_merge($pdf_query_columns, $image_paths);
+            }
+            
+            // add text extraction data to columns array
+            $pdf_extracted_columns = [            
                 'text_data'         =>  $extracted_textdata,
                 'pdf_filesize'      =>  $pdf_filesize,
-                'has_img'           =>  ($image_extracted) ? 1 : 0,
-                'image_url'         =>  $image_paths['img_url'],
-                'image_path'        =>  $image_paths['img_path'],
             ];
 
             $pdf_query_columns = array_merge($pdf_query_columns, $pdf_extracted_columns);
         }
-
-        $this->pdf_DebugLog(" Data:: 1 for Table: {$tablename}", $pdf_query_columns);
-        // execute sql query
+        $this->pdf_DebugLog("Method: addFileToDatabase(): Memory Peak::", $mem_usage_peak);
+        $this->pdf_DebugLog("Method: addFileToDatabase(): Data:: 1 for Table: {$tablename}", $pdf_query_columns);
+       
+        // execute sql query to insert file data into the database
         $this->pdm_execute_query($wpdb, $tablename,  $pdf_query_columns);
 
+        // if successful obtain row id
         $insert_rowID = $wpdb->insert_id;
 
         //  if there was an error during the insert
@@ -831,12 +851,11 @@ class PDF_Doc_Core extends Common\Utility_Functions {
             $status_message = "failed to add '{$filename}' to database.";
         }
         else {
-
-            // $this->pdf_DebugLog("SQL Query result::{$filename}", "*** SQL insert sucessful. ***");
             $uploadStatus = "success";
             $status_message  = "{$filename} added successfully.";
         }
 
+        // package results
         $wpdb_response = array(
             'upload_status'     =>  $uploadStatus,
             'wpdb_errorText'    =>  $wpdb->last_error,
@@ -848,8 +867,7 @@ class PDF_Doc_Core extends Common\Utility_Functions {
         
         // collect /store the result of the process here
         $this->file_process_results[] = $wpdb_response;
-        $this->pdf_DebugLog(" Data:: 2", $wpdb_response);
-
+        $this->pdf_DebugLog("Method: addFileToDatabase(): Database results: Data:: 2", $wpdb_response);
         return $wpdb_response;
     }
 
@@ -905,17 +923,18 @@ class PDF_Doc_Core extends Common\Utility_Functions {
     public function extractTextFromPDF($input_filename)
     {
         if(file_exists($input_filename)){
-
+            // initialize variables
             $truncate_file      = false;
             $force_img_only     = $this->force_image_extraction;
             $extracted_image    = false;
             $extractedImagePath = null;
-            
+            $extractedImageInfo = null;
+
             $filesize = filesize($input_filename);
             // sets the maximum up filesize limit, if file size is greater set the $truncate_file
             // flag and we'll break the file into chunks when inserting into the db
             $max_filesize = $this->pdm_max_filesize; 
-            //$truncate_file = ($filesize > $max_filesize) ? true : false;
+            $truncate_file = ($filesize > $max_filesize) ? true : false;
           
             // create new instance of PdfParser
             $pdf_parser = new \Smalot\PdfParser\Parser();
@@ -925,7 +944,7 @@ class PDF_Doc_Core extends Common\Utility_Functions {
                 $_pdffile = $pdf_parser->parseFile($input_filename);
                 // attempt to extract the text from the file, only extract text from 1st page
                 $extractedData = trim( sanitize_text_field($_pdffile->getPages()[0]->getText()) );
-          
+                
                 // clear pdf_parser reference in attempt to free its resources
                 unset($pdf_parser);
 
@@ -934,10 +953,10 @@ class PDF_Doc_Core extends Common\Utility_Functions {
                     $extractedData = "* NO DATA *";
                 }
 
-                $this->pdf_DebugLog("ExtractED Data:: ", $extractedData);
-
+                $this->pdf_DebugLog("ExtracteD Data:: ", $extractedData);
+                
                 // try to extract image data from PDF file
-                if( $extractedImageInfo =  $this->extract_image_from_pdf($input_filename) ){
+                if(($force_img_only) &&  ($extractedImageInfo =  $this->extract_image_from_pdf($input_filename)) ){
                     $extracted_image = true;
                 }
                 
@@ -946,8 +965,9 @@ class PDF_Doc_Core extends Common\Utility_Functions {
                         'pdf_filesize'          =>  $filesize,
                         'image_paths'           =>  $extractedImageInfo,
                         'extracted_image'       =>  $extracted_image,
-                    ];
+                        ];
 
+            
             } catch(\Exception | \E_Error $e) { 
                 
                 // catch if error extracting the text from the pdf file
@@ -1015,7 +1035,8 @@ class PDF_Doc_Core extends Common\Utility_Functions {
                     try {
                         if(file_put_contents($legoeso_img_path, $pdf_image_data)){
                             if(file_exists($legoeso_img_path)) {
-                                return ['img_url' => $_image_url, 'img_path' => $legoeso_img_path];
+                                unset($pdf_image_data);
+                                return ['image_url' => $_image_url, 'image_path' => $legoeso_img_path];
                             }
                         }
                     } 
