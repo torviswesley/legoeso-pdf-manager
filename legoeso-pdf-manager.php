@@ -54,19 +54,6 @@ define( NS . 'JQUERY_UI_WP_PATH', plugin_dir_path( __FILE__ ) );
 define( NS . 'JQUERY_UI_WP_URL', plugin_dir_url( __FILE__ ) );
 
 
-
-/**
- * Define Constants for text extraction dependencies 
- */
-define( NS . 'PDFMINER_DIR', get_option("legoeso_pdfminer_dir") );
-
-define( NS . 'PDFIMAGES_DIR', get_option("legoeso_pdfimages_dir") );
-
-define( NS . 'PYTHON_DIR', get_option("legoeso_python_dir") );
-
-define( NS . 'PY_TESSERACT', get_option("legoeso_pytesseract_path") );
-
-
 /**
  * Autoload Classes
  */

@@ -330,7 +330,7 @@
                      isAjaxing = false;
                      var response = $.parseJSON(response);
  
-                     let bulk_type = response.type;
+                     let bulk_type = (response != null) ? (typeof(response.type) != 'undefine') ? response.type:'' : '';
                      switch(bulk_type){
                          case 'bulk_download':
                              window.open(response.zip_url,'_self');

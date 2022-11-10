@@ -94,7 +94,7 @@ class PDF_Doc_List_Table extends Libraries\WP_List_Table  {
 
 		// disables  the image preview
         if ($this->disable_preview_images){
-			$hidden = array_merge($hidden, array('pdf_image'));
+			$hidden = array_merge($hidden, array('image_url', 'has_img'));
 		}
 		
         $sortable = $this->get_sortable_columns();
@@ -257,10 +257,10 @@ class PDF_Doc_List_Table extends Libraries\WP_List_Table  {
 
 		if(!empty($pdf_search_key)){
 			$pdm_doc_query = "SELECT 
-			pdf_doc_num, filename, category, SUBSTRING(text_data,1,100), pdf_image, upload_userid, date_uploaded, ID FROM $wpdb_table 
+			pdf_doc_num, filename, category, SUBSTRING(text_data,1,100), has_img, image_url, upload_userid, date_uploaded, ID FROM $wpdb_table 
 			WHERE {$append_query} LIKE '%$pdf_search_key%' ORDER BY $orderby $order";
 		} else{
-			$pdm_doc_query = "SELECT pdf_doc_num, filename, category, SUBSTRING(text_data,1,100), pdf_image, upload_userid, date_uploaded, ID FROM $wpdb_table ORDER BY $orderby $order";
+			$pdm_doc_query = "SELECT pdf_doc_num, filename, category, SUBSTRING(text_data,1,100), has_img, image_url, upload_userid, date_uploaded, ID FROM $wpdb_table ORDER BY $orderby $order";
 		}
 
 		$this->pdf_DebugLog("Search Query ::", $pdm_doc_query);
@@ -363,14 +363,11 @@ class PDF_Doc_List_Table extends Libraries\WP_List_Table  {
 	 */
 	protected function column_pdf_image( $item ){
 
-		if(empty($item['pdf_image'])){
-			return sprintf( __(' See Text Preview ') );
+		if($item['has_img'] == 1){
+			return sprintf("<img height='150px' width='150px' src='".$item['image_url']."' />");
 		}
-		elseif($item['pdf_image'] == 'no_image_data' || $item['pdf_image'] == 'No Image Data') {
-			return sprintf(__('::No Image Data::') );
-		} 
-		else{
-			return sprintf("<img height='150px' width='150px' src='data:jpeg;base64,".base64_encode($item['pdf_image']) ."' />");
+		else {
+			return sprintf( __(' See Text Preview ') );
 		}
 	}
 	
@@ -571,18 +568,14 @@ class PDF_Doc_List_Table extends Libraries\WP_List_Table  {
 	 * @param object $wpdb - Global WP database object
 	 * @return array - list of files that have a URL
 	 */	
-	private function pdf_has_url($wpdb, $pdf_ids){
-		if(!isset($pdf_ids))
-			return false;
-
-			$wp_dir_obj = wp_upload_dir();
-			$pdf_url_info = array('pdf_file_path'	=> $wp_dir_obj['path'].'/pdm_data');
-
-			$sql_query = "SELECT ID, filename FROM `".$this->get_database_tablename()."` WHERE ID IN (".implode(',',$pdf_ids).") AND has_url = 1;" ;
-			$_has_url = $wpdb->get_results($sql_query, ARRAY_A);
-			$pdf_url_info['files'] = $_has_url;
-
-		return ( $pdf_url_info );
+	private function get_file_paths($wpdb, $ids){
+		if(isset($ids) && is_array($ids)){
+			$_paths = [];
+			$sql_query = "SELECT ID, filename, has_img, image_path, pdf_path FROM ".$this->get_database_tablename()." WHERE ID IN (".implode(',',$ids).") AND has_path = 1;" ;
+			$_paths = $wpdb->get_results($sql_query, ARRAY_A);
+			return $_paths;
+		}
+		return false;
 	}  
 
 	/**
@@ -593,65 +586,79 @@ class PDF_Doc_List_Table extends Libraries\WP_List_Table  {
 	 * @param array $bulk_pdf_ids
 	 */		
 	public function pdf_bulk_delete($bulk_pdf_ids){
-		// sanitize ids to process
-		$bulk_pdf_ids = $this->utilities->sanitize_postdata_strong($bulk_pdf_ids);
-		$this->pdf_DebugLog("Method: pdf_bulk_delete(): IDs::", $bulk_pdf_ids);
+		if( (isset($bulk_pdf_ids) && is_array($bulk_pdf_ids)) && count($bulk_pdf_ids) > 0){
 
-		function delete_pdf_files($files){
-			if(!isset($files) && !is_array($files))
-				return;
-			$deleted = [];	
-			$file_dir = $files['pdf_file_path'];
-			$_files = $files['files'];
-			if(!is_array($_files))
-				return;	
-			foreach($files['files'] as $file){
-				//  delete file form the directory
-				$_file = $file_dir.'/'.$file['filename'];
-				if(file_exists($_file)){
-					unlink($_file);
-					$deleted[] = $file['filename'];
-				}	
+			// sanitize ids to process
+			$bulk_pdf_ids = $this->utilities->sanitize_postdata_strong($bulk_pdf_ids);
+			$this->pdf_DebugLog("Method: pdf_bulk_delete(): IDs::", $bulk_pdf_ids);
+
+			$_status = 'failed';	// initialize variable
+
+			function delete_pdf_files($files){
+				/**
+				 * Remove files from directory
+				 */
+				if(isset($files) && is_array($files)){
+					$deleted = [];
+					foreach($files as $file){
+						$pdf_file = $file['pdf_path'];
+						$img_file = $file['image_path'];
+
+						//  remove file form the directory
+						if(file_exists($pdf_file)){
+							unlink($pdf_file);
+							$deleted[]['file'] = $pdf_file;
+
+							if(file_exists($img_file)){
+								unlink($img_file);
+								$deleted[]['image'] = $img_file;
+							} 
+						} 
+
+					}
+					return $deleted;
+				}
+				return false;
 			}
-			return($deleted);
-		}
 
-		if(!isset($bulk_pdf_ids) && !is_array($bulk_pdf_ids) && count($bulk_pdf_ids) > 1)
-			return; // there's an error'
-					// set the WordPress database global object
-		global $wpdb;
-		$wpdb->show_errors();
+			// there's an error'
+			// set the WordPress database global object
+			global $wpdb;
+			$wpdb->show_errors();
 
-		// list of pdf files that reside within the file directory
-		$_deleted = delete_pdf_files($this->pdf_has_url($wpdb, $bulk_pdf_ids));
-		$sql_filter = (!empty($bulk_pdf_ids)) ? " WHERE ID IN (". implode(',',$bulk_pdf_ids) .")" : 'Empty ID Param';
+			// delete files from directory
+			$files_deleted = delete_pdf_files($this->get_file_paths($wpdb, $bulk_pdf_ids));
 
-		// build an SQL query
-		$sql_query = "DELETE FROM `".$this->get_database_tablename()."` {$sql_filter};";
-
-		$results = $wpdb->query($sql_query, ARRAY_A);
+			// build an SQL query to remove rows from database
+			$sql_filter = (!empty($bulk_pdf_ids)) ? " WHERE ID IN (". implode(',',$bulk_pdf_ids) .")" : 'Empty ID Param';
+			$sql_query = "DELETE FROM ".$this->get_database_tablename()." {$sql_filter};";
+			$result = $wpdb->query($sql_query, ARRAY_A);
 
 
-		$this->pdf_DebugLog("Deleted PDF Documents From File Sytem::", wp_json_encode($_deleted));
-		$this->pdf_DebugLog("Query for Delete PDF Documents::", $sql_query);
+			$this->pdf_DebugLog("File(s) Deleted::", $files_deleted);
+			$this->pdf_DebugLog("Query to Delete PDF Documents::", $sql_query);
 
-		if ($results !== false){
-			$this->pdf_DebugLog("Bulk Delete: Query Succeeded::", "--");
-			//	return a response to the caller
+			// if rows were deleted successfully lets remove the files from the directory
+			if($result){
+				$this->pdf_DebugLog("Deleted PDF Documents From File Sytem::", wp_json_encode($files_deleted));
+				
+				$this->pdf_DebugLog("Bulk Delete: Query Succeeded::", "--");
+
+				// set the status to compelte
+				$_status = 'complete';
+	
+			} else {
+				$this->pdf_DebugLog("Bulk Delete: Query Failed::", "{$wpdb->last_error}");
+			}
+
 			return 	array(
-					'status'	=> 'complete',
+					'status'	=> $_status,
 					'type'		=>	'bulk_delete',
 					'pdf_docs'	=>	$bulk_pdf_ids,
 					'total'		=>	count($bulk_pdf_ids),
+
 			);
-		} else {
-			$this->pdf_DebugLog("Bulk Delete: Query Failed::", "{$wpdb->last_error}");
 		}
-		
-		return array(
-			'status'	=> 'complete',
-			'type'		=>	'bulk_delete',
-		);
 	}
 
 	/**

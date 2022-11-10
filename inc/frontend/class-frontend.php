@@ -100,7 +100,7 @@ class Frontend extends Common\Utility_Functions {
 		$this->plugin_text_domain = $plugin_text_domain;
 		$this->pdm_required_cap = 'read';		
 
-		// specfiy tablename for database queries
+		// set tablename for database queries
 		$this->legoeso_db_tablename = "`{$wpdb->prefix}legoeso_file_storage`";
 	}
 
@@ -221,7 +221,15 @@ class Frontend extends Common\Utility_Functions {
 		
 			return include  plugin_dir_path( __FILE__). 'views/partials-pdf-frontend-listview.php';
 	}
-
+	/**
+	 * gets the plugin database tablename used by WP
+	 * @since 1.2.0
+	 * @return string
+	 */
+	private function get_db_tablename(){
+		return $this->legoeso_db_tablename;
+	}
+	
 	/**
 	 * Generates an unordered list using the document ids passing as a param
 	 * 
@@ -246,7 +254,7 @@ class Frontend extends Common\Utility_Functions {
 
 			// build an SQL query
 			$sql_query = "SELECT `".implode("`,`", $columns)."` ";
-			$sql_query .= "FROM  {$this->legoeso_db_tablename} WHERE pdf_doc_num IN ({$doc_ids})";
+			$sql_query .= "FROM  ".$this->get_db_tablename()." WHERE pdf_doc_num IN ({$doc_ids})";
 
 			$_results = $this->get_query_results($sql_query, OBJECT);
 			$db_results = $_results['db_results'];
@@ -275,38 +283,29 @@ class Frontend extends Common\Utility_Functions {
 	 * @param	$category
 	 * @return	boolean
 	 */
-	public function get_document_data($category, $limit, $get_pdf_image = false){
+	public function get_document_data($category = '', $limit = 2000, $get_pdf_image = false){
 
 		// initialize array values
 		$json_columns = [];
 		$results = [];
 
 		//  columns to use in query
-		$columns = array('ID', 'filename', 'category', 'upload_userid', 'date_uploaded');
+		$columns = array('ID', 'image_url', 'filename', 'category', 'upload_userid', 'date_uploaded');
+		
 		// build SQL query
 		$order_by = " ORDER BY date_uploaded DESC";
 		$_limit = (! empty($limit) ) ? "LIMIT {$limit} " : "";
 		$sql_filter = (!empty($category) || $category != '') ? " WHERE category = '{$category}'" : '';
-		
-		// copy columns array
-		$json_columns = $columns;
-		
-		$sql_query = "SELECT ";
-		// Base64 encode image data column
-		if($get_pdf_image) { 
-			$sql_query .= " TO_BASE64(`pdf_image`), "; 
-			$json_columns = array_merge(array('pdf_image'), $columns );
-		} 
 
-		$sql_query .= "`".implode("`,`", $columns)."` ";
-		$sql_query .= "FROM {$this->legoeso_db_tablename} {$sql_filter}{$order_by} $_limit;";
+		$sql_query  = "SELECT `".implode("`,`", $columns)."` ";
+		$sql_query .= "FROM ".$this->get_db_tablename()." {$sql_filter}{$order_by} $_limit;";
 
 		// get query results from database
 		$_results = $this->get_query_results($sql_query);
 		
 		// add
 		$results['data'] = $_results['db_results'];
-		$results['columns'] = $json_columns; // Adds pdf_image column to list of column names for json file
+		$results['columns'] = $columns; // Adds pdf_image column to list of column names for json file
 
 		$num_of_rows = $_results['num_rows'];
 		$json_filename = (empty($category)) ? 'default' : $category;
@@ -371,7 +370,7 @@ class Frontend extends Common\Utility_Functions {
 			}
 		}
 		
-		// if file exists delete and create the file
+		// if file exists delete and recreate the file
 		if (file_exists( $json_file_path )){
 			unlink( $json_file_path );
 		}
@@ -466,7 +465,7 @@ class Frontend extends Common\Utility_Functions {
 			$charset_collate = $wpdb->get_charset_collate();
 
 			$pdm_doc_query = "SELECT 
-							pdf_data, filename, has_url, pdf_path
+							pdf_path, filename, has_path 
 							FROM $wpdb_table WHERE ID = '$doc_id'";
 		
 			// query output_type will be an associative array with ARRAY_A.
@@ -508,33 +507,27 @@ class Frontend extends Common\Utility_Functions {
 			$pdf_results = $this->db_get_pdf_data($pdf_file_id); 
 
 			if(is_array($pdf_results)){
-				$pdfContent = $pdf_results[0]['pdf_data'];
 				$filename = $pdf_results[0]['filename'];
-				$has_url = $pdf_results[0]['has_url'];
+				$has_path = $pdf_results[0]['has_path'];
 				$pdf_path = $pdf_results[0]['pdf_path'];
-
-				if(!empty($pdfContent)){
-					// display pdf content
-					die(generate_pdf_document($pdfContent)); 
-				} 
-				else {
-					// check the result if it has url data, and if sos does the file exist
-					if( ($has_url == 1 && strlen($pdf_path) > 2) && file_exists($pdf_path)){
-						// lets get the file and stream the results back to the browser
-						if($pdf_contents = file_get_contents($pdf_path)){
-							die(generate_pdf_document($pdf_contents));
-						}
-
-						// if document not found, nothing to show redirect 
-						wp_safe_redirect(home_url("index.php/404"), 302, "WP Legoeso PDF Manager");
-						die();
+				$img_url = $pdf_results[0]['image_url'];
+				// check the result if it has url data, and if sos does the file exist
+				if( ($has_path == 1 && strlen($pdf_path) > 2) && file_exists($pdf_path)){
+					// lets get the file and stream the results back to the browser
+					if($pdf_contents = file_get_contents($pdf_path)){
+						die(generate_pdf_document($pdf_contents));
 					}
-					else{
-						// if document not found, nothing to show redirect 
-						wp_safe_redirect(home_url("index.php/404"), 302, "WP Legoeso PDF Manager");
-						die();
-					}
+
+					// if document not found, nothing to show redirect 
+					wp_safe_redirect(home_url("index.php/404"), 302, "WP Legoeso PDF Manager");
+					die();
 				}
+				else{
+					// if document not found, nothing to show redirect 
+					wp_safe_redirect(home_url("index.php/404"), 302, "WP Legoeso PDF Manager");
+					die();
+				}
+				
 
 			}
 			else {

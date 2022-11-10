@@ -123,28 +123,29 @@
 						//data:  oData.data,
 						autowidth: true,
 						columnDefs:[
+
 							{
 								targets: 0,
+								visible: false,
+
+							},
+							{
+								targets: 1,
 								render: function(data, type, row, meta){
 
 									if(data){
-										return 	"<img height='150px' width='150px' src='data:jpeg;base64," + btoa(atob(data)) + "' />";
+										return 	"<img height='150px' width='150px' src='"+row[1] +"' />";
 									} else {
-										return " :: NO IMAGE DATA ::";
+										return "* NO IMAGE *";
 									}
 
 								}			
 							},
 							{
-								targets: 1,
-								visible: false,
-
-							},
-							{
 								targets: 2,
 								render: function(data, type, row, meta){
 									
-									return '<a target="_blank" href="' + _doc_url() + '/' + row[2] + '?action=view_document&pid=' + row[1] +'&_wpnonce='+ get_wpnonce() +'"> ' + data +'</a> ';
+									return '<a target="_blank" href="' + _doc_url() + '/' + row[2] + '?action=view_document&pid=' + row[0] +'&_wpnonce='+ get_wpnonce() +'"> ' + data +'</a> ';
 								}
 							},
 						],
@@ -163,8 +164,13 @@
 							},
 							{
 								targets: 1,
+								visible: false,
+
+							},
+							{
+								targets: 2,
 								render: function(data, type, row, meta){
-									return '<a target="_blank" href="' + _doc_url() + '/' + row[1] + '?action=view_document&pid=' + row[0] +'&_wpnonce='+ get_wpnonce() +'"> ' + data +'</a> ';
+									return '<a target="_blank" href="' + _doc_url() + '/' + row[2] + '?action=view_document&pid=' + row[0] +'&_wpnonce='+ get_wpnonce() +'"> ' + data +'</a> ';
 								}
 							},
 						],

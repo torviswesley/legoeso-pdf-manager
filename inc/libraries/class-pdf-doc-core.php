@@ -138,7 +138,7 @@ class PDF_Doc_Core extends Common\Utility_Functions {
 	 * @access   private
 	 * @var      Boolean   $pdm_large_file - specifies wether the file uploaded is large.
 	 */
-    private $pdm_large_file = false;
+    private $pdm_large_file = true;
     
      /**
 	 * specifies valid file types/ 
@@ -174,22 +174,34 @@ class PDF_Doc_Core extends Common\Utility_Functions {
     private $save_files_to_disk = false;
 
 	/**
+	 * Specifies the tablename to be used with db queries and operations
+	 *
+	 * @since    1.2.0
+	 * @access   private
+	 * @var      String    $legoeso_db_tablename
+	 */
+	private $legoeso_db_tablename;
+
+	/**
 	 * Initializes class variables and set its properties.
 	 *
 	 * @since   1.0.0
      * @return  none
 	 */
     public function __construct(){
-
+        global $wpdb;
         $this->pdm_plugin_dir = NS\PLUGIN_NAME_DIR;
         $this->pdm_library = NS\PLUGIN_NAME_DIR.'inc/libraries/';
         $this->pdm_max_filesize = 13010000;
         $this->pdm_valid_file_types = ['application/pdf','application/x-zip-compressed'];
-        
-        parent::__construct();
+
+	    // specfiy tablename for database queries
+		$this->legoeso_db_tablename = "{$wpdb->prefix}legoeso_file_storage";
 
         // Get current options set for force_image_extraction
         $this->force_image_extraction = (get_option("legoeso_force_image_enabled") == 'on') ? 1: 0;
+
+        parent::__construct();
     }
 
     
@@ -202,6 +214,15 @@ class PDF_Doc_Core extends Common\Utility_Functions {
     private function get_post_data(string $what, bool $raw = false) {
         return ($raw) ? $this->_post_data[$what] : $this->sanitize_postdata($this->_post_data[$what]);
     }
+
+	/**
+	 * gets the plugin database tablename used by WP
+	 * @since 1.2.0
+	 * @return string
+	 */
+	private function get_db_tablename(){
+		return $this->legoeso_db_tablename;
+	}
 
     /**
 	 * sets the value of $_post_data field
@@ -595,21 +616,24 @@ class PDF_Doc_Core extends Common\Utility_Functions {
     private function processPDFFile($filename, $tmpFilename){
         // verify there is a filename 
         if(isset($filename) && isset($tmpFilename)){
+          
             // if the uploaded filesize is double than the filesize limit lets store the file within the 
             // file system instead of the database
-            if(filesize($tmpFilename) >  ($this->pdm_max_filesize * 2)){
+            // if(filesize($tmpFilename) >  ($this->pdm_max_filesize * 2)){
                 // move the uploaded file for processing and get the directory information
                 $file_info_arr =  $this->uploadFileToWp($filename, $tmpFilename, true);
                 // set the large file flag to true
-                $this->pdm_large_file = true;
+            //     $this->pdm_large_file = true;
 
-            } 
-            else {
-                // move the uploaded file for processing and get the directory information
-                $file_info_arr =  $this->uploadFileToWp($filename, $tmpFilename);
-                // reset the large file flag to the default
-                $this->pdm_large_file = false;
-            }
+            // } 
+            // else {
+            //     // move the uploaded file for processing and get the directory information
+            //     $file_info_arr =  $this->uploadFileToWp($filename, $tmpFilename);
+            //     // reset the large file flag to the default
+            //     $this->pdm_large_file = false;
+            // }
+
+
             $this->pdf_DebugLog("Uploaded DIR Args: Object::", wp_json_encode($this->pdm_upload_dir_agrs));
             $this->pdf_DebugLog("Uploaded File Information: Object::", wp_json_encode($file_info_arr));
             // Get the file path that was uploaded
@@ -738,7 +762,7 @@ class PDF_Doc_Core extends Common\Utility_Functions {
         $wpdb->show_errors(true);
 
         //  set the tablename document will be inserted
-        $tablename = $wpdb->prefix. 'legoeso_file_storage';
+        $tablename = $this->get_db_tablename();
 
         //  get the category the document will be associated with
         $pdf_category = ( $this->get_post_data('pdf_category') == -1 ) ? 'General' : $this->get_post_data('pdf_category');
@@ -746,14 +770,16 @@ class PDF_Doc_Core extends Common\Utility_Functions {
         // initialize the rowID, will be used later to update the table data
         $insert_rowID = null;
 
-        //  Extract the text from the PDF file and get the document properties
-        $objDocumentProperties = $this->extractTextFromPDF($uploadFilename);
+        // pdf file path
+        $pdf_has_path = -1;
+        $pdf_fileversion = -1;
+        $pdf_filepath = $this->pdm_upload_dir_agrs['wp_upload_dir']['path'].'/pdm_data/'.$filename;
+       
+        if(file_exists($pdf_filepath)){
+            $pdf_has_path = 1;
+            $pdf_fileversion = $this->get_pdfversion($pdf_filepath);
+        }
 
-        $extracted_data = $objDocumentProperties['extracted_data'];
-        $image_extracted = $objDocumentProperties['extracted_image']; // bool
-
-        $extraction_outputType = $objDocumentProperties['output_type'];
-        
         // create the date object to use in the query
         $theDate = date_create();
         $theDateFormat = date_format($theDate, 'Y-m-d');
@@ -762,80 +788,47 @@ class PDF_Doc_Core extends Common\Utility_Functions {
         $logged_in_user = wp_get_current_user();
         $current_user = $logged_in_user->data->user_login;
 
-        // $this->pdf_DebugLog("Extraction Output Object::", wp_json_encode($objDocumentProperties));
-
-        // Add additional field data to the database
-        switch ($extraction_outputType) 
-        {
-            case 'image_data':
-                //  Get pdf image/data contents - Reads entire file into a string
-
-                if(empty($extracted_data)){
-                    $this->pdf_DebugLog(":: Missing Image Data ::", "Image File/Path Name Missing!");
-                    $extracted_data = "no_image_data";
-                }
-                // add pdf_image column to sql query
-                $added_columns = array( 
-                    'pdf_image'     =>  $extracted_data, 
-                    );
-            break;
-            default:
-            // add text_data column to sql query
-                $added_columns = array( 
-                    'text_data'     =>  $extracted_data, 
-                    );
-            break;
-        }           
-     
-        // coluns to insert data into database 
-        $columnData = array(
-            'filename'                  =>      $filename,
-            'filetype'                  =>      'application/pdf',
-            'category'                  =>      $pdf_category,
-            'date_uploaded'             =>      $theDateFormat,
-            'upload_userid'             =>      $current_user,
-            'pdf_doc_num'               =>      rand(0000001,9999999)
+        // columns we will insert data into database 
+        $pdf_query_columns = array(
+            'filename'           =>  sanitize_text_field($filename),
+            'has_path'           =>  $pdf_has_path,
+            'pdf_path'          =>  $pdf_filepath,
+            'filetype'          =>  'application/pdf',
+            'pdf_version'       =>  $pdf_fileversion,
+            'category'          =>  $pdf_category,
+            'date_uploaded'      =>  $theDateFormat,
+            'upload_userid'      =>  $current_user,
+            'pdf_doc_num'        =>  rand(0000001,9999999),
         );
 
-        // if the filesize is less than or equal the maxfile size truncate file before insert, 
-        // otherwise the file is too big save file to file system
-        // store the size of the uploaded file
-        // find out which column is causing the error
-        $upload_filesize = filesize($uploadFilename);
+        //  Extract the text from the PDF file and get the document properties
+        if($pdf_extract_properties = $this->extractTextFromPDF($uploadFilename)){
+            $extracted_textdata     = $pdf_extract_properties['extracted_data'];        // string
+            $image_extracted    = $pdf_extract_properties['extracted_image'];       // bool
+            $image_paths        = $pdf_extract_properties['image_paths'];  // string
+            $pdf_filesize       = $pdf_extract_properties['pdf_filesize'];  // bool
 
-        if($this->pdm_large_file){
-            $columnData['has_url'] = 1;
-            $columnData['pdf_path'] = $this->pdm_upload_dir_agrs['wp_upload_dir']['path'].'/pdm_data/'.$filename;
-           
-            $query_data = array_merge($columnData, $added_columns);
-            // execute sql query
-            $this->pdm_execute_query($wpdb, $tablename,  $query_data);
+           $pdf_extracted_columns = [            
+                'text_data'         =>  $extracted_textdata,
+                'pdf_filesize'      =>  $pdf_filesize,
+                'has_img'           =>  ($image_extracted) ? 1 : 0,
+                'image_url'         =>  $image_paths['img_url'],
+                'image_path'        =>  $image_paths['img_path'],
+            ];
 
-        } else {
-            // merege all the added columns into one array
-            $query_data = array_merge($columnData, $added_columns);
-
-            if($upload_filesize > $this->pdm_max_filesize){
-                $this->pdm_split_execute_query($wpdb, $tablename, $uploadFilename, $query_data); 
-             } else {
-                $wpdb->show_errors();
-                //  Get pdf file/data contents -  Reads entire file into a string
-                // add the file contents to the column data array
-                $query_data['pdf_data'] = (file_exists($uploadFilename)) ? file_get_contents($uploadFilename) : '';
-                // execute query
-                $this->pdm_execute_query($wpdb, $tablename, $query_data);
-            }
+            $pdf_query_columns = array_merge($pdf_query_columns, $pdf_extracted_columns);
         }
-        
+
+        $this->pdf_DebugLog(" Data:: 1 for Table: {$tablename}", $pdf_query_columns);
+        // execute sql query
+        $this->pdm_execute_query($wpdb, $tablename,  $pdf_query_columns);
+
         $insert_rowID = $wpdb->insert_id;
 
         //  if there was an error during the insert
         if($insert_rowID < 1){
-            // $this->pdf_DebugLog("SQL Query result::{$filename}", $wpdb->last_error);
-            // $this->pdf_DebugLog("SQL Query result:: Text ", $extracted_data);
             $uploadStatus = "failed";
             $status_message = "failed to add '{$filename}' to database.";
-            
         }
         else {
 
@@ -849,13 +842,14 @@ class PDF_Doc_Core extends Common\Utility_Functions {
             'wpdb_errorText'    =>  $wpdb->last_error,
             'status_message'    =>  $status_message,
             'filename'          =>  $filename,
-            'pdf_version'        =>  $objDocumentProperties['pdf_version'],
+            'pdf_version'       =>  $pdf_fileversion,
             'percent'           =>  100
         );
         
         // collect /store the result of the process here
         $this->file_process_results[] = $wpdb_response;
- 
+        $this->pdf_DebugLog(" Data:: 2", $wpdb_response);
+
         return $wpdb_response;
     }
 
@@ -915,73 +909,64 @@ class PDF_Doc_Core extends Common\Utility_Functions {
             $truncate_file      = false;
             $force_img_only     = $this->force_image_extraction;
             $extracted_image    = false;
-
-            $file_size = filesize($input_filename);
+            $extractedImagePath = null;
+            
+            $filesize = filesize($input_filename);
             // sets the maximum up filesize limit, if file size is greater set the $truncate_file
             // flag and we'll break the file into chunks when inserting into the db
             $max_filesize = $this->pdm_max_filesize; 
-            $truncate_file = ($file_size > $max_filesize) ? true : false;
+            //$truncate_file = ($filesize > $max_filesize) ? true : false;
+          
+            // create new instance of PdfParser
+            $pdf_parser = new \Smalot\PdfParser\Parser();
 
-            // obtain the version of PDF
-            $pdf_v = $this->get_pdfversion($input_filename);
+            try {
+                // parse the pdf file
+                $_pdffile = $pdf_parser->parseFile($input_filename);
+                // attempt to extract the text from the file, only extract text from 1st page
+                $extractedData = trim( sanitize_text_field($_pdffile->getPages()[0]->getText()) );
+          
+                // clear pdf_parser reference in attempt to free its resources
+                unset($pdf_parser);
 
-            $this->pdf_DebugLog("Python Version:: ", $pdf_v);
+                // if no data was extracted from file extract image
+                if (strlen($extractedData) < 1){
+                    $extractedData = "* NO DATA *";
+                }
 
-            if($force_img_only == 1 || $truncate_file){
-                // set output type
-                $outputType = 'image_data';
-                // extract image data from PDF file
-                $extractedData =  $this->extract_image_from_pdf($input_filename);
-                $extracted_image = true;
-            } else {
-                // set output type
-                $outputType = 'text_data';
-                
-                // create new instance of PdfParser
-                $pdf_parser = new \Smalot\PdfParser\Parser();
+                $this->pdf_DebugLog("ExtractED Data:: ", $extractedData);
 
-                try{
-                    // parse the pdf file
-                    $_pdffile = $pdf_parser->parseFile($input_filename);
-
-                    // attempt to extract the text from the file, only extract text from 1st page
-                    $extractedData = trim( $_pdffile->getPages()[1]->getText() );
-
-                    // clear pdf_parser reference in attempt to free its resources
-                    unset($pdf_parser);
-
-                    // if no data was extracted from file extract image
-                    if (strlen($extractedData) < 1){
-                        $outputType = 'image_data';
-                        // try to extract image data from PDF file
-                        $extractedData =  $this->extract_image_from_pdf($input_filename);
-                        $extracted_image = true;
-                    }
-
-                } catch(\Exception | \Error $e) { 
-                    
-                    // catch if error extracting the text from the pdf file
-                    // extract an image instead
-                    if(preg_match('/[Invalid object reference for $obj.]+/', $e->getMessage()) ){
-                        $outputType = 'image_data';
-                        // try to extract image data from PDF file
-                        $extractedData =  $this->extract_image_from_pdf($input_filename);
-                        $extracted_image = true;
-                    }
-                    else {
-                        throw new Exception("Error extracting image from PDF ".$e->getMessage());
-                    }
+                // try to extract image data from PDF file
+                if( $extractedImageInfo =  $this->extract_image_from_pdf($input_filename) ){
+                    $extracted_image = true;
                 }
                 
-            }
+                return [
+                        'extracted_data'        =>  $extractedData,
+                        'pdf_filesize'          =>  $filesize,
+                        'image_paths'           =>  $extractedImageInfo,
+                        'extracted_image'       =>  $extracted_image,
+                    ];
 
-            return array(
-                'extracted_data'    =>  $extractedData,
-                'extracted_image'   =>  $extracted_image,
-                'output_type'       =>  $outputType,
-                'pdf_version'       =>  $pdf_v,
-            );
+            } catch(\Exception | \E_Error $e) { 
+                
+                // catch if error extracting the text from the pdf file
+                // extract an image instead
+                if(preg_match('/[Invalid object reference for $obj.]+/', $e->getMessage()) ){
+
+                    if(empty($extractedData)){
+                        $this->pdf_DebugLog("Text extraction failed for file '{$input_filename}'::", $e->getMessage());
+                    }
+                    else{
+                        $this->pdf_DebugLog("An error occurred while processing the pdf file::", $e->getMessage());
+                    }
+                    //throw new Common\PDM_Exception_Error("Text extraction failed for file '{$input_filename}' ".$e->getMessage());
+                }
+ 
+            }
+                
         }
+        return false;
     }
 
     /**
@@ -995,20 +980,52 @@ class PDF_Doc_Core extends Common\Utility_Functions {
 
         if ( file_exists($pdf_filename) ){
             $_ftype = mime_content_type($pdf_filename);
+            $wp_upload_dir = $this->pdm_upload_dir_agrs['wp_upload_dir']['path'];
+            $legoeso_img_dir = '/pdm_data/images/';
 
+            // local path to image directory
+            $legoeso_local_img_dir = $wp_upload_dir.$legoeso_img_dir;
+            // image filename
+            $legoeso_img_filename = rand(01,999).(time()+strlen($pdf_filename)).'.jpg';
+            
+            // local image path
+            $legoeso_img_path = $wp_upload_dir.$legoeso_img_dir.$legoeso_img_filename;
+
+            // pdf preview image url path
+            $_image_url = $this->pdm_upload_dir_agrs['wp_upload_dir']['url'].$legoeso_img_dir.$legoeso_img_filename;
+            
             // attempt to extract image only if the file is pdf
             if ($_ftype == 'application/pdf'){                
-                    $get_image = new \Imagick();
-                    // extract on the first page
-                    $get_image->readImage($pdf_filename."[0]");
-                    $get_image = $get_image->mergeImageLayers(Imagick::LAYERMETHOD_FLATTEN);
-                    $get_image->resizeImage( 350, 500, imagick::FILTER_BOX, 0, 0);
-                    $get_image->setImageFormat( 'jpg' );
-                    $pdf_image = $get_image->getImageBlob();
-                    $get_image->clear();
-                return( $pdf_image );
+                $get_image = new \Imagick();
+                // extract on the first page
+                $get_image->readImage($pdf_filename."[0]");
+                $get_image = $get_image->mergeImageLayers(Imagick::LAYERMETHOD_FLATTEN);
+                $get_image->resizeImage( 350, 500, imagick::FILTER_BOX, 0, 0);
+                $get_image->setImageFormat( 'jpg' );
+                $pdf_image_data = $get_image->getImageBlob();
+                $get_image->clear();
+               
+                // lets check to see if the directory exists if not create it
+                if (!file_exists($legoeso_local_img_dir)) {
+                    mkdir($legoeso_local_img_dir, 0755, true);
+                }
+
+                // lets check to see if the directory was created, if so attempt add
+                if(file_exists($legoeso_local_img_dir)){
+                    try {
+                        if(file_put_contents($legoeso_img_path, $pdf_image_data)){
+                            if(file_exists($legoeso_img_path)) {
+                                return ['img_url' => $_image_url, 'img_path' => $legoeso_img_path];
+                            }
+                        }
+                    } 
+                    catch (Exeception $e){
+                        throw new Exception("Error creating image directory {$legoeso_local_img_dir}".$e->getMessage());
+                    }
+                }
             }
         }
+        return false; 
     }
 
     /**

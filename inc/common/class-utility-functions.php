@@ -133,7 +133,7 @@ class Utility_Functions {
      */
     public function get_pdfversion($pdf_file_path){
         if(file_exists($pdf_file_path)){
-            return substr(file_get_contents($pdf_file_path), 0, 15);
+            return sanitize_text_field(substr(file_get_contents($pdf_file_path), 0, 10));
         }
     }
 
