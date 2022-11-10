@@ -125,12 +125,12 @@ class PDF_Doc_Core extends Common\Utility_Functions {
     private $pdm_status_filename;
 
      /**
-	 * Sets the max_allowed_packet size in bytes, we'll use it as the limit before breaking the file into peices 
+	 * Stores the current scripts memory info, used to help process the current script 
 	 * @since    1.0.2
 	 * @access   private
-	 * @var      Integer   $pdm_max_filesize    used to stay below MySQL's allowed memory packet size
+	 * @var      Array   $pdm_mem_info    used to stay below PhP's allowed memory limit
 	 */
-    private $pdm_max_filesize;
+    private $pdm_filesize = null;
     private $pdm_mem_info = [];
 
      /**
@@ -193,7 +193,7 @@ class PDF_Doc_Core extends Common\Utility_Functions {
         global $wpdb;
         $this->pdm_plugin_dir = NS\PLUGIN_NAME_DIR;
         $this->pdm_library = NS\PLUGIN_NAME_DIR.'inc/libraries/';
-        $this->pdm_max_filesize = 13010000;
+        //$this->pdm_max_filesize = 13010000;
         
         // log memory limit for debugging and file processing
         $mem_limit = $this->return_bytes( ini_get('memory_limit') );
@@ -389,7 +389,8 @@ class PDF_Doc_Core extends Common\Utility_Functions {
 
         // do cleanup.  Remove files after files have been added to the database
         $this->clean_dir($this->pdm_upload_dir);
-
+        $this->pdm_filesize = null;
+        
         //  send upload results back to ajax caller
         die( wp_json_encode(
             array(
@@ -625,13 +626,14 @@ class PDF_Doc_Core extends Common\Utility_Functions {
     private function processPDFFile($filename, $tmpFilename){
         // verify there is a filename 
         if(isset($filename) && isset($tmpFilename)){
-          
-            // if the uploaded filesize is double than the filesize limit lets store the file within the 
-            // file system instead of the database
-            if(filesize($tmpFilename) >  $this->pdm_mem_info['max_filesize']){
+            // stores current files' filesize for later use
+            $this->pdm_filesize = $filesize = filesize($tmpFilename);
+            // the filesize is larger than the memory limit/max filesize, flag as large file
+            if($filesize >  $this->pdm_mem_info['max_filesize']){
                 // set the large file flag to true
                 $this->pdm_large_file = true;
             }
+            $this->pdf_DebugLog("Method: processPDFFile(): Mem Info::", wp_json_encode($this->pdm_mem_info));
 
             // obsure the original filename for added security
             $secure_filename = rand(2000001,9999999).'.pdf';
@@ -757,17 +759,8 @@ class PDF_Doc_Core extends Common\Utility_Functions {
     private function addFileToDatabase($pdf_filepath, $filename){
         /**
         * Insert the uploaded file to database
+        * Initialize variables
         */
-       
-        // log the following stats for debugging
-        $mem_usage = memory_get_usage();
-        $mem_usage_peak = memory_get_peak_usage();
-      
-        $this->pdf_DebugLog("Method: addFileToDatabase(): Memory Usage", $mem_usage);
-
-        /**
-         * Initialize variables
-         */
         global $wpdb;
         $wpdb->show_errors(true);
 
@@ -827,7 +820,7 @@ class PDF_Doc_Core extends Common\Utility_Functions {
                  $image_paths['has_img'] = 1;
                 $pdf_query_columns = array_merge($pdf_query_columns, $image_paths);
             }
-            
+
             // add text extraction data to columns array
             $pdf_extracted_columns = [            
                 'text_data'         =>  $extracted_textdata,
@@ -836,7 +829,7 @@ class PDF_Doc_Core extends Common\Utility_Functions {
 
             $pdf_query_columns = array_merge($pdf_query_columns, $pdf_extracted_columns);
         }
-        $this->pdf_DebugLog("Method: addFileToDatabase(): Memory Peak::", $mem_usage_peak);
+
         $this->pdf_DebugLog("Method: addFileToDatabase(): Data:: 1 for Table: {$tablename}", $pdf_query_columns);
        
         // execute sql query to insert file data into the database
@@ -922,6 +915,12 @@ class PDF_Doc_Core extends Common\Utility_Functions {
      */
     public function extractTextFromPDF($input_filename)
     {
+        // log the following stats for debugging
+        $mem_usage = memory_get_usage();
+        
+
+        $this->pdf_DebugLog("Method: extractTextFromPDF(): Memory Usage", $mem_usage);
+
         if(file_exists($input_filename)){
             // initialize variables
             $truncate_file      = false;
@@ -930,23 +929,32 @@ class PDF_Doc_Core extends Common\Utility_Functions {
             $extractedImagePath = null;
             $extractedImageInfo = null;
 
-            $filesize = filesize($input_filename);
+            $filesize = $this->pdm_filesize;
             // sets the maximum up filesize limit, if file size is greater set the $truncate_file
             // flag and we'll break the file into chunks when inserting into the db
-            $max_filesize = $this->pdm_max_filesize; 
-            $truncate_file = ($filesize > $max_filesize) ? true : false;
-          
+            // $max_filesize = $this->pdm_max_filesize; 
+            // $truncate_file = ($filesize > $max_filesize) ? true : false;
+            /*
+             * 1. get the current memeory usage and the peak usage, and after creating an
+             *    instance of the parser
+             * 2. if the difference is less than the filesize, force image only
+             */
             // create new instance of PdfParser
             $pdf_parser = new \Smalot\PdfParser\Parser();
 
+
+            $this->pdf_DebugLog("Method: extractTextFromPDF(): Peak Memory Usage Before Text Extraction",  memory_get_usage());
             try {
                 // parse the pdf file
                 $_pdffile = $pdf_parser->parseFile($input_filename);
                 // attempt to extract the text from the file, only extract text from 1st page
-                $extractedData = trim( sanitize_text_field($_pdffile->getPages()[0]->getText()) );
-                
+                $extractedData = trim( sanitize_text_field($_pdffile->getText()) );
+                $this->pdf_DebugLog("Method: extractTextFromPDF(): Peak Memory Usage After Text Extraction",  memory_get_usage());
+
                 // clear pdf_parser reference in attempt to free its resources
                 unset($pdf_parser);
+           
+                $this->pdf_DebugLog("Method: extractTextFromPDF(): Peak Memory Usage After [Unset] Text Extraction", memory_get_usage());
 
                 // if no data was extracted from file extract image
                 if (strlen($extractedData) < 1){
@@ -1066,7 +1074,7 @@ class PDF_Doc_Core extends Common\Utility_Functions {
             return;
         }
 
-        $buffer = $this->pdm_max_filesize;
+        $buffer = $this->pdm_filesize;
 
         // get file size
         $file_size = filesize($filename);
