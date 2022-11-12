@@ -98,8 +98,10 @@ class Frontend extends Common\Utility_Functions {
 		$this->plugin_name = $plugin_name;
 		$this->version =  $version;
 		$this->plugin_text_domain = $plugin_text_domain;
-		$this->pdm_required_cap = 'read';
-				
+		$this->pdm_required_cap = 'read'; // minimum default WP user capability
+		/**
+		 * @todo add config file for default search results etc.
+		 */
 		// set tablename for database queries
 		$this->legoeso_db_tablename = "`{$wpdb->prefix}legoeso_file_storage`";
 	}

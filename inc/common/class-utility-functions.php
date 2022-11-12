@@ -392,6 +392,15 @@ class Utility_Functions {
         return ($num_conv);
     }
 
+    /**
+    * convert MB to bytes, preforms simple conversion
+    *
+    * @since 1.2.1
+    *
+    * @num int expects number represented as i.e. 256M (megabytes)
+    *
+    * @return int 
+    */
     function return_bytes($val) {
         $val = trim($val);
         $last = strtolower($val[strlen($val)-1]);
@@ -408,8 +417,6 @@ class Utility_Functions {
     
         return $val;
     }
-
-
 
     /**
     * toggle checkbox values

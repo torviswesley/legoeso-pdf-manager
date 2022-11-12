@@ -8,7 +8,13 @@ use \Imagick;
 
 /**
  * Adding support for PDF Parser Library see
- * @since       1.1.0
+ * @author  Konrad Abicht <k.abicht@gmail.com>
+ * @date    2021-02-09
+ *
+ * @license LGPLv3
+ * @url     <https://github.com/smalot/pdfparser>
+ * 
+ * @since       1.1.0 - Legoeso PDF Manager
  */
 include __DIR__.'/class-parser.php';
 
@@ -130,8 +136,33 @@ class PDF_Doc_Core extends Common\Utility_Functions {
 	 * @access   private
 	 * @var      Array   $pdm_mem_info    used to stay below PhP's allowed memory limit
 	 */
-    private $pdm_filesize = null;
     private $pdm_mem_info = [];
+
+     /**
+	 * Stores the current filesize for the file being processed 
+	 * @since    1.0.2
+	 * @access   private
+	 * @var      Int   $pdm_filesize  store filesize in bytes
+	 */
+    private $pdm_filesize = 0;
+
+    /**
+	 * Sets the filesize the script considers a large file
+	 * @since    1.0.2
+	 * @access   private
+	 * @var      Int   $pdm_max_filesize    used to stay below PhP's allowed memory limit
+	 */
+    private $pdm_max_filesize;
+
+    /**
+	 * Sets maximum pages document can have for text extraction, documents with pages > 
+     * than max pages will skip text extraction
+     * 
+	 * @since    1.0.2
+	 * @access   private
+	 * @var      Int   $max_pages_extract    don't extract documents with pages > than max
+	 */
+    private $max_pages_extract;
 
      /**
 	 * specifies whether the file is a large file.
@@ -193,8 +224,13 @@ class PDF_Doc_Core extends Common\Utility_Functions {
         global $wpdb;
         $this->pdm_plugin_dir = NS\PLUGIN_NAME_DIR;
         $this->pdm_library = NS\PLUGIN_NAME_DIR.'inc/libraries/';
-        //$this->pdm_max_filesize = 13010000;
         
+        // set the max filesize
+        $this->pdm_max_filesize = 20010000;
+        
+        // set the max number of pages to extract text
+        $this->max_pages_extract = 25;
+
         // log memory limit for debugging and file processing
         $mem_limit = $this->return_bytes( ini_get('memory_limit') );
 
@@ -213,25 +249,14 @@ class PDF_Doc_Core extends Common\Utility_Functions {
         parent::__construct();
     }
 
-    
     /**
-	 * Gets the value of $_post_data field and returns sanitized values
-	 *
-	 * @since 1.2.0
-	 * @return Array
-	 */
-    private function get_post_data(string $what, bool $raw = false) {
-        return ($raw) ? $this->_post_data[$what] : $this->sanitize_postdata($this->_post_data[$what]);
-    }
-
-	/**
-	 * gets the plugin database tablename used by WP
-	 * @since 1.2.0
-	 * @return string
-	 */
-	private function get_db_tablename(){
-		return $this->legoeso_db_tablename;
-	}
+     * sets the filesize for the file being processed
+     * @since 1.2.1
+     * 
+     */
+    private function set_working_filesize(int $filesize ){
+        $this->pdm_filesize = abs($filesize);
+    } 
 
     /**
 	 * sets the value of $_post_data field
@@ -242,6 +267,51 @@ class PDF_Doc_Core extends Common\Utility_Functions {
     private function set_post_data($_post){
         $this->_post_data =  $_post;
     }
+    /**
+	 * Returns the value of $_post_data field and returns sanitized values
+	 *
+	 * @since 1.2.0
+	 * @return Array
+	 */
+    private function get_post_data(string $what, bool $raw = false) {
+        return ($raw) ? $this->_post_data[$what] : $this->sanitize_postdata($this->_post_data[$what]);
+    }
+
+    /**
+     * returns true if large file is being processed
+     * 
+     * @since 1.2.1
+     * @return Boolean
+     */
+    private function is_large_file(): bool {
+        return $this->pdm_large_file;
+    }
+    /**
+     * return the filesize for the current filesize
+     * @since 1.2.1
+     * @return Int
+     */
+    public function get_working_filesize(){
+        return $this->pdm_filesize;
+    }
+	/**
+	 * returns plugin database tablename used by WP
+	 * @since 1.2.0
+	 * @return String
+	 */
+	private function get_db_tablename(){
+		return $this->legoeso_db_tablename;
+	}
+
+    /**
+     * returns max filesize to parse/extract text
+     * @since 1.2.1
+     * @return Int
+     */
+    private function get_max_filesize(){
+        return $this->pdm_max_filesize;
+    }
+
 
     /**
 	 * Handles and processes the uploaded file
@@ -389,7 +459,6 @@ class PDF_Doc_Core extends Common\Utility_Functions {
 
         // do cleanup.  Remove files after files have been added to the database
         $this->clean_dir($this->pdm_upload_dir);
-        $this->pdm_filesize = null;
         
         //  send upload results back to ajax caller
         die( wp_json_encode(
@@ -462,19 +531,20 @@ class PDF_Doc_Core extends Common\Utility_Functions {
 
         // get the total number of files
         $_num_of_files = $_files['file_count'];
+
         $this->pdf_DebugLog("Method: processFileUploads(): ({$_num_of_files }) File(s) to be processed: [Object]::", $_files);
+        $this->pdf_DebugLog("Method: processFileUploads(): Upload Directory Info: [Object]::", wp_json_encode($this->pdm_upload_dir_agrs));
 
         // loop over the row of  files
         for($i=0; $i < $_num_of_files;$i++){
             // get the file information for each file
-            $filename      = sanitize_file_name($_files['name'][$i]);
+            $filename       = sanitize_file_name($_files['name'][$i]);
             $_file_type     = sanitize_file_name($_files['type'][$i]);
             $_tmp_filename  = $_files['tmp_name'][$i];
             
             //  save the curent progress for the progress bar. 
             $this->save_progress($i+1, $_num_of_files, $filename, $this->processPDFFile($filename, $_tmp_filename));
         }
-        
     }
 
     /**
@@ -595,10 +665,13 @@ class PDF_Doc_Core extends Common\Utility_Functions {
         // unzip and filter the files
         if (unzip_file($zip_tmp_name, $folder) === True) {
             $filepaths = $this->dir_tree($folder);
+            $_file_type = '';
             foreach ($filepaths as $k => $filepath) {
-                // Get the file type
-                $_file_type =  mime_content_type($filepath);
                 
+                if(file_exists($filepath)){
+                    // Get the file type
+                    $_file_type =  mime_content_type($filepath);
+                }
                 // if the file type is unsupported skip it
                 if(!in_array($_file_type, $this->pdm_valid_file_types)){
                     continue;      
@@ -621,50 +694,42 @@ class PDF_Doc_Core extends Common\Utility_Functions {
 	 * @since 1.0.0
 	 * @param String $filename
      * @param String $tmpFilename
-	 * @return array
+	 * @return Array
 	 */
     private function processPDFFile($filename, $tmpFilename){
-        // verify there is a filename 
-        if(isset($filename) && isset($tmpFilename)){
-            // stores current files' filesize for later use
-            $this->pdm_filesize = $filesize = filesize($tmpFilename);
-            // the filesize is larger than the memory limit/max filesize, flag as large file
-            if($filesize >  $this->pdm_mem_info['max_filesize']){
+
+        // verify if we have a valid file i.e. if file can be located 
+        if( (isset($filename) && isset($tmpFilename)) && file_exists($tmpFilename)){
+
+            // set current working filesize for later use
+            $this->set_working_filesize( filesize($tmpFilename) );
+
+            // used to obsure the original filename for added security
+            $secure_filename = rand(2000001,9999999).'.pdf';
+
+            // move the uploaded file for processing, specify new filename and get the directory information
+            $file_info_arr =  $this->uploadFileToWp($secure_filename, $tmpFilename, true);
+
+            // if the filesize is larger than the limit/max filesize, flag as large file
+            if($this->get_working_filesize() >  $this->get_max_filesize()){
                 // set the large file flag to true
                 $this->pdm_large_file = true;
             }
-            $this->pdf_DebugLog("Method: processPDFFile(): Mem Info::", wp_json_encode($this->pdm_mem_info));
 
-            // obsure the original filename for added security
-            $secure_filename = rand(2000001,9999999).'.pdf';
-
-            // move the uploaded file for processing and get the directory information
-            $file_info_arr =  $this->uploadFileToWp($secure_filename, $tmpFilename, true);
-
-            $this->pdf_DebugLog("Method: processPDFFile(): Uploaded DIR Args: Object::", wp_json_encode($this->pdm_upload_dir_agrs));
             $this->pdf_DebugLog("Method: processPDFFile(): Uploaded File Information: Object::", wp_json_encode($file_info_arr));
             
             // Get the path to the file that was uploaded
             $fileUploaded = $file_info_arr['file'];
             
-            if (is_wp_error($file_info_arr)) {
-
-                $uploadErrorMsg = $file_info_arr->get_error_message();
-                $errorMsg = "Error uploading file: " . $uploadErrorMsg;
-                # Add to debug/log 
-                $this->pdf_DebugLog("Method: processPDFFile(): Upload Status:: ", $errorMsg);
-            } 
-            else {
-                # Add to debug/log 
-                $this->pdf_DebugLog("Method: processPDFFile(): Upload Status::", "File successfully uploaded!");
+            if(!is_wp_error($file_info_arr)){
+                $this->pdf_DebugLog("Method: processPDFFile(): Upload Status: File successfully uploaded!::", "Adding file to database");
+                // add file to database / return an array results
+                return $this->addFileToDatabase($fileUploaded, $filename);
             }
-           
-            //  add file to database / returns an array
-            //  return result to the caller
-            return $this->addFileToDatabase($fileUploaded, $filename);
         }
 
-       
+        $this->pdf_DebugLog("Method: processPDFFile(): Upload Status: File NOT uploaded!::", "Failed Upload.");
+        return ['upload_status' => 'failed', 'status_message' => 'File NOT uploaded!', 'filename'  =>  $filename, 'percent' => 100];
     }
     
     /** 
@@ -758,7 +823,6 @@ class PDF_Doc_Core extends Common\Utility_Functions {
 	 */
     private function addFileToDatabase($pdf_filepath, $filename){
         /**
-        * Insert the uploaded file to database
         * Initialize variables
         */
         global $wpdb;
@@ -766,86 +830,149 @@ class PDF_Doc_Core extends Common\Utility_Functions {
 
         //  set the tablename document will be inserted
         $tablename = $this->get_db_tablename();
-
         //  get the category the document will be associated with
         $pdf_category = ( $this->get_post_data('pdf_category') == -1 ) ? 'General' : $this->get_post_data('pdf_category');
-
-        // initialize the rowID, will be used later to update the table data
+        // initialize default row values, will be used later to update the table data
         $insert_rowID = null;
-
-        // pdf file path
-        $pdf_has_path = -1;
+        $pdf_has_path = -1; // pdf file path
         $pdf_fileversion = -1;
-       
-        if(file_exists($pdf_filepath)){
-            $pdf_has_path = 1;
-            $pdf_fileversion = $this->get_pdfversion($pdf_filepath);
-        }
 
         // create the date object to use in the query
         $theDate = date_create();
         $theDateFormat = date_format($theDate, 'Y-m-d');
-        
+
         // get the current userid
         $logged_in_user = wp_get_current_user();
         $current_user = $logged_in_user->data->user_login;
 
-        // columns we will insert data into database 
-        $pdf_query_columns = array(
-            'filename'           =>  sanitize_text_field($filename),
-            'has_path'           =>  $pdf_has_path,
-            'pdf_path'           =>  $pdf_filepath,
-            'filetype'           =>  'application/pdf',
-            'pdf_version'        =>  $pdf_fileversion,
-            'category'           =>  $pdf_category,
-            'date_uploaded'      =>  $theDateFormat,
-            'upload_userid'      =>  $current_user,
-            'pdf_doc_num'        =>  rand(0000001,9999999),
-        );
+        // initialize image properties
+        $force_img_only     = $this->force_image_extraction;
 
-        /**
-         * Begin processing file
-         */
+        $extracted_image    = false;
+        $uploadStatus = 'failed';
+        $status_message = 'incomplete';
+        $pdf_fileversion = '0';
 
-        //  Extract the text from the PDF file and get the document properties
-        if($pdf_extract_properties = $this->extractTextFromPDF($pdf_filepath)){
-            $extracted_textdata     = $pdf_extract_properties['extracted_data'];  // string
-            $image_extracted    = $pdf_extract_properties['extracted_image'];  // bool
-           
-            $pdf_filesize       = $pdf_extract_properties['pdf_filesize'];  // int
+        if(file_exists($pdf_filepath)){
+       
+            // get the pdf version
+            $pdf_has_path = 1;
+            $pdf_fileversion = $this->get_pdfversion($pdf_filepath);
 
-            // get image path info if image was extracted from pdf and merge with standard columns
-            if($image_extracted){
-                 $image_paths = $pdf_extract_properties['image_paths'];   // array
-                 $image_paths['has_img'] = 1;
-                $pdf_query_columns = array_merge($pdf_query_columns, $image_paths);
+            // default columns to insert data into database 
+            $pdf_query_columns = array(
+                'filename'           =>  sanitize_text_field($filename),
+                'has_path'           =>  $pdf_has_path,
+                'pdf_path'           =>  $pdf_filepath,
+                'filetype'           =>  'application/pdf',
+                'pdf_version'        =>  $pdf_fileversion,
+                'category'           =>  $pdf_category,
+                'date_uploaded'      =>  $theDateFormat,
+                'upload_userid'      =>  $current_user,
+                'pdf_doc_num'        =>  rand(0000001,9999999),
+            );
+
+            /**
+             * Begin processing file
+            */
+            // attempt text extraction only, no preview image will be added to database for document
+            if(!$force_img_only){
+
+                //  Extract the text from the PDF file and get the document properties
+                if($pdf_extract_properties = $this->extractTextFromPDF($pdf_filepath)){
+
+                    $extracted_textdata     = $pdf_extract_properties['extracted_data'];  // string
+
+                    // add text extraction data to columns array
+                    $pdf_extracted_columns = [            
+                        'text_data'         =>  $extracted_textdata,
+                        'pdf_filesize'      =>  $this->get_working_filesize(),
+                    ]; 
+
+                    $metadata = $pdf_extract_properties['pdf_metadata'];
+                    if(is_array($metadata)){
+                        $pdf_query_columns = array_merge($pdf_query_columns, $metadata);
+                    }
+
+                    $pdf_query_columns = array_merge($pdf_query_columns, $pdf_extracted_columns);
+                    $pdf_extract_properties = null;
+                }
+            } 
+            else {
+                //  Extract the text from the PDF file and get the document properties
+                if($pdf_extract_properties = $this->extractTextFromPDF($pdf_filepath)){
+                    
+                    $extracted_textdata    = $pdf_extract_properties['extracted_data'];  // string
+
+                    if(!isset($pdf_extract_properties['error_message'])){
+                        // try to extract image data from PDF file
+                        if($extractedImageInfo =  $this->extract_image_from_pdf($pdf_filepath)){
+                            $extracted_image = true;
+                        }
+
+                        // if image extraction successful, get path info to image
+                        // and merge with standard columns
+                        if($extracted_image){
+                            $image_paths = $extractedImageInfo;   // array
+                            $image_paths['has_img'] = 1;
+                            $pdf_query_columns = array_merge($pdf_query_columns, $image_paths);
+                        }
+                    }
+
+                    // add text extraction data to columns array
+                    $pdf_extracted_columns = [            
+                        'text_data'         =>  $extracted_textdata,
+                        'pdf_filesize'      =>  $this->get_working_filesize(),
+                    ];
+
+                    $metadata = $pdf_extract_properties['pdf_metadata'];
+                    if(is_array($metadata)){
+                        $pdf_query_columns = array_merge($pdf_query_columns, $metadata);
+                    }
+
+                    $pdf_query_columns = array_merge($pdf_query_columns, $pdf_extracted_columns);
+
+                }
+                else {
+                    // try to extract image data from PDF file
+                    if($extractedImageInfo =  $this->extract_image_from_pdf($pdf_filepath)){
+                        $extracted_image = true;
+                    }
+                    // if image extraction successful, get path info to image
+                    // and merge with standard columns
+                    if($extracted_image){
+                        $image_paths = $extractedImageInfo;   // array
+                        $image_paths['has_img'] = 1;
+                        $pdf_query_columns = array_merge($pdf_query_columns, $image_paths);
+                    }
+                 
+                    // add text extraction data to columns array
+                    $pdf_extracted_columns = [            
+                        'text_data'         =>  '* NO DATA *',
+                        'pdf_filesize'      =>  $this->get_working_filesize(),
+                    ];
+
+                    $pdf_query_columns = array_merge($pdf_query_columns, $pdf_extracted_columns);
+                }
             }
 
-            // add text extraction data to columns array
-            $pdf_extracted_columns = [            
-                'text_data'         =>  $extracted_textdata,
-                'pdf_filesize'      =>  $pdf_filesize,
-            ];
+            //$this->pdf_DebugLog("Method: addFileToDatabase(): Data:: 1 for Table: {$tablename}", $pdf_query_columns);
+        
+            // execute sql query to insert file data into the database
+            $this->pdm_execute_query($wpdb, $tablename,  $pdf_query_columns);
 
-            $pdf_query_columns = array_merge($pdf_query_columns, $pdf_extracted_columns);
-        }
+            // if successful obtain row id
+            $insert_rowID = $wpdb->insert_id;
 
-        $this->pdf_DebugLog("Method: addFileToDatabase(): Data:: 1 for Table: {$tablename}", $pdf_query_columns);
-       
-        // execute sql query to insert file data into the database
-        $this->pdm_execute_query($wpdb, $tablename,  $pdf_query_columns);
-
-        // if successful obtain row id
-        $insert_rowID = $wpdb->insert_id;
-
-        //  if there was an error during the insert
-        if($insert_rowID < 1){
-            $uploadStatus = "failed";
-            $status_message = "failed to add '{$filename}' to database.";
-        }
-        else {
-            $uploadStatus = "success";
-            $status_message  = "{$filename} added successfully.";
+            //  if there was an error during the insert
+            if($insert_rowID < 1){
+                $uploadStatus = "failed";
+                $status_message = "failed to add '{$filename}' to database.";
+            }
+            else {
+                $uploadStatus = "success";
+                $status_message  = "{$filename} added successfully.";
+            }
         }
 
         // package results
@@ -858,7 +985,7 @@ class PDF_Doc_Core extends Common\Utility_Functions {
             'percent'           =>  100
         );
         
-        // collect /store the result of the process here
+        // collect/store the result of the process here
         $this->file_process_results[] = $wpdb_response;
         $this->pdf_DebugLog("Method: addFileToDatabase(): Database results: Data:: 2", $wpdb_response);
         return $wpdb_response;
@@ -916,79 +1043,100 @@ class PDF_Doc_Core extends Common\Utility_Functions {
     public function extractTextFromPDF($input_filename)
     {
         // log the following stats for debugging
-        $mem_usage = memory_get_usage();
+        $mem_usage = memory_get_usage(true);
         
-
         $this->pdf_DebugLog("Method: extractTextFromPDF(): Memory Usage", $mem_usage);
+        $filesize = $this->get_working_filesize();
 
-        if(file_exists($input_filename)){
+        if( ( file_exists($input_filename)) && ($filesize < $this->get_max_filesize()) ){
             // initialize variables
-            $truncate_file      = false;
-            $force_img_only     = $this->force_image_extraction;
-            $extracted_image    = false;
             $extractedImagePath = null;
             $extractedImageInfo = null;
+            $extractedData = '';
 
-            $filesize = $this->pdm_filesize;
-            // sets the maximum up filesize limit, if file size is greater set the $truncate_file
-            // flag and we'll break the file into chunks when inserting into the db
-            // $max_filesize = $this->pdm_max_filesize; 
-            // $truncate_file = ($filesize > $max_filesize) ? true : false;
-            /*
-             * 1. get the current memeory usage and the peak usage, and after creating an
-             *    instance of the parser
-             * 2. if the difference is less than the filesize, force image only
-             */
-            // create new instance of PdfParser
-            $pdf_parser = new \Smalot\PdfParser\Parser();
+            $_mem_info = $this->pdm_mem_info;
+            $_mem_peak_usage = memory_get_peak_usage(true);
 
-
-            $this->pdf_DebugLog("Method: extractTextFromPDF(): Peak Memory Usage Before Text Extraction",  memory_get_usage());
             try {
-                // parse the pdf file
-                $_pdffile = $pdf_parser->parseFile($input_filename);
-                // attempt to extract the text from the file, only extract text from 1st page
-                $extractedData = trim( sanitize_text_field($_pdffile->getText()) );
-                $this->pdf_DebugLog("Method: extractTextFromPDF(): Peak Memory Usage After Text Extraction",  memory_get_usage());
+                // if the process is going to need more memory than currently available try extracting image only
+                $this->pdf_DebugLog("Method: extractTextFromPDF(): Current Memory Usage: ".memory_get_usage(true).", Filesize {$filesize}, ",  "Peak Usage: ".$_mem_peak_usage);
 
-                // clear pdf_parser reference in attempt to free its resources
-                unset($pdf_parser);
-           
-                $this->pdf_DebugLog("Method: extractTextFromPDF(): Peak Memory Usage After [Unset] Text Extraction", memory_get_usage());
-
-                // if no data was extracted from file extract image
-                if (strlen($extractedData) < 1){
-                    $extractedData = "* NO DATA *";
+                // if the current peak memory usage is greater than min peak, temporarily raise limit
+                if($_mem_peak_usage >= $this->get_min_peak_limit() ){
+                    // temporarly increases memory_limit
+                    $this->raise_memory_limit();
+                    $this->pdf_DebugLog("Method: extractTextFromPDF(): ", "Raising memory limit.");
                 }
 
-                $this->pdf_DebugLog("ExtracteD Data:: ", $extractedData);
-                
-                // try to extract image data from PDF file
-                if(($force_img_only) &&  ($extractedImageInfo =  $this->extract_image_from_pdf($input_filename)) ){
-                    $extracted_image = true;
-                }
-                
-                return [
-                        'extracted_data'        =>  $extractedData,
-                        'pdf_filesize'          =>  $filesize,
-                        'image_paths'           =>  $extractedImageInfo,
-                        'extracted_image'       =>  $extracted_image,
-                        ];
+                    // create new instance of PdfParser
+                    $this->pdf_DebugLog("Method: extractTextFromPDF(): Min Limit".  $this->get_min_peak_limit() ." Peak Memory Usage Before Text Extraction:",  $_mem_peak_usage);
+                    
+                    $_config = new \Smalot\PdfParser\Config();
+                    $_config->setFontSpaceLimit(-60);
+                    $_config->setDecodeMemoryLimit(102400000);
+                    $_config->setRetainImageContent(false);
 
-            
-            } catch(\Exception | \E_Error $e) { 
+                    // create new pdfParser object
+                    $pdf_parser = new \Smalot\PdfParser\Parser([], $_config);
+
+                    // parse the pdf file and obtain data
+                    $_pdffile = $pdf_parser->parseFile($input_filename);
+
+                    // get pdf metadata
+                    $pdf_metadata = $_pdffile->getDetails();
+
+                    // get the number pages document contains
+                    $number_pages = count($_pdffile->getPages());
+
+                    $this->pdf_DebugLog("Method: extractTextFromPDF(): Meta Data:",  json_encode($pdf_metadata));
+
+                    // only attempt to extract text if the file contains < the max pages allowed
+                    if($number_pages <= $this->max_pages_extract){
+                        // attempt to extract the text from the file, only extract text from 1st page
+                        //$extractedData = trim( sanitize_text_field($_pdffile->getText()) );
+                        //$extractedData = trim( sanitize_text_field($_pdffile->getPages()[0]->getText()) );
+                        $extractedData = $_pdffile->getText();
+                        $this->pdf_DebugLog("Method: extractTextFromPDF(): Memory Usage After Text Extraction",  memory_get_usage(true));
+                    } 
+
+                    // if no data was extracted from file extract image
+                    if (  strlen($extractedData) < 1 ){
+                        $extractedData = "* NO DATA *";
+                    }
+
+                    // clear pdf_parser reference in attempt to free its resources
+                    $pdf_parser = null;
+                   
+                    $this->pdf_DebugLog("Method: extractTextFromPDF(): Peak Memory Usage After [Unset] Text Extraction", memory_get_usage(true));
+
+                    return [
+                            'extracted_data'        =>  $extractedData,
+                            'pdf_metadata'          =>  ['metadata' => wp_json_encode($pdf_metadata),],
+                            'pdf_filesize'          =>  $filesize,
+                            'status'                =>  'compelte',
+                            ];
+
+            } 
+            catch(\Exception | \E_Error $e) { 
                 
                 // catch if error extracting the text from the pdf file
                 // extract an image instead
                 if(preg_match('/[Invalid object reference for $obj.]+/', $e->getMessage()) ){
 
                     if(empty($extractedData)){
-                        $this->pdf_DebugLog("Text extraction failed for file '{$input_filename}'::", $e->getMessage());
+                        $this->pdf_DebugLog("Text extraction failed for file '{$input_filename}'::", $e->getMessage().", Line:".$e->getLine());
+                        $this->pdf_DebugLog("Method: extractTextFromPDF(): Memory Usage After Failing Text Extraction", memory_get_usage(true));
                     }
                     else{
                         $this->pdf_DebugLog("An error occurred while processing the pdf file::", $e->getMessage());
                     }
-                    //throw new Common\PDM_Exception_Error("Text extraction failed for file '{$input_filename}' ".$e->getMessage());
+                    return [
+                        'extracted_data'        =>  "* NO DATA *",
+                        'pdf_filesize'          =>  $filesize,
+                        'pdf_metadata'          =>  '',
+                        'status'                =>  'failed',
+                        'error_message'         =>  $e->getMessage(),
+                        ];
                 }
  
             }
@@ -1024,37 +1172,68 @@ class PDF_Doc_Core extends Common\Utility_Functions {
             
             // attempt to extract image only if the file is pdf
             if ($_ftype == 'application/pdf'){                
-                $get_image = new \Imagick();
-                // extract on the first page
-                $get_image->readImage($pdf_filename."[0]");
-                $get_image = $get_image->mergeImageLayers(Imagick::LAYERMETHOD_FLATTEN);
-                $get_image->resizeImage( 350, 500, imagick::FILTER_BOX, 0, 0);
-                $get_image->setImageFormat( 'jpg' );
-                $pdf_image_data = $get_image->getImageBlob();
-                $get_image->clear();
-               
-                // lets check to see if the directory exists if not create it
-                if (!file_exists($legoeso_local_img_dir)) {
-                    mkdir($legoeso_local_img_dir, 0755, true);
-                }
+                try{
+                    $get_image = new \Imagick();
+                    // extract on the first page
+                    $get_image->readImage($pdf_filename."[0]");
+                    $get_image = $get_image->mergeImageLayers(Imagick::LAYERMETHOD_FLATTEN);
+                    $get_image->resizeImage( 350, 500, imagick::FILTER_BOX, 0, 0);
+                    $get_image->setImageFormat( 'jpg' );
+                    $pdf_image_data = $get_image->getImageBlob();
+                    $get_image->clear();
+                
+                    // lets check to see if the directory exists if not create it
+                    if (!file_exists($legoeso_local_img_dir)) {
+                        mkdir($legoeso_local_img_dir, 0755, true);
+                    }
 
-                // lets check to see if the directory was created, if so attempt add
-                if(file_exists($legoeso_local_img_dir)){
-                    try {
+                    // lets check to see if the directory was created, if so attempt add
+                    if(file_exists($legoeso_local_img_dir)){
                         if(file_put_contents($legoeso_img_path, $pdf_image_data)){
                             if(file_exists($legoeso_img_path)) {
-                                unset($pdf_image_data);
+                                $pdf_image_data = null;
                                 return ['image_url' => $_image_url, 'image_path' => $legoeso_img_path];
                             }
                         }
-                    } 
-                    catch (Exeception $e){
-                        throw new Exception("Error creating image directory {$legoeso_local_img_dir}".$e->getMessage());
+                        else {
+                            throw new Common\PDM_Exception_Error("Error image {$legoeso_local_img_dir}: - ".$e->getMessage());
+                        }
                     }
+                }
+                catch(\Exception | \E_Error $e) {
+                    throw new Common\PDM_Exception_Error("Error creating image for file {$pdf_filename}: - ".$e->getMessage());
                 }
             }
         }
         return false; 
+    }
+    /**
+     * temporary sets the memory limit for the script
+     * 
+     * @since 1.2.1
+     */
+    private function raise_memory_limit(){
+        ini_set('memory_limit', '768M');
+    }
+
+    /**
+     * restores the original memory limit
+     * 
+     * @since 1.2.1
+     */
+    private function reset_memory_limit(){
+        ini_restore('memory_limit');
+    }
+
+    /**
+     * returns min memory limit to use before raising memory limit
+     * 
+     * @since 1.2.1
+     */
+    private function get_min_peak_limit(){
+        $mem = ini_get('memory_limit');
+        $mem = $this->return_bytes($mem);
+        return ( ceil( $mem / 2) );
     }
 
     /**
@@ -1074,7 +1253,7 @@ class PDF_Doc_Core extends Common\Utility_Functions {
             return;
         }
 
-        $buffer = $this->pdm_filesize;
+        $buffer = $this->get_working_filesize();
 
         // get file size
         $file_size = filesize($filename);

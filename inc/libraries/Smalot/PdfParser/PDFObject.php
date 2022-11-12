@@ -5,11 +5,9 @@
  *          This file is part of the PdfParser library.
  *
  * @author  Sébastien MALOT <sebastien@malot.fr>
- *
  * @date    2017-01-03
  *
  * @license LGPLv3
- *
  * @url     <https://github.com/smalot/pdfparser>
  *
  *  PdfParser is a pdf library written in PHP, extraction oriented.
@@ -40,11 +38,11 @@ use Smalot\PdfParser\XObject\Image;
  */
 class PDFObject
 {
-    public const TYPE = 't';
+    const TYPE = 't';
 
-    public const OPERATOR = 'o';
+    const OPERATOR = 'o';
 
-    public const COMMAND = 'c';
+    const COMMAND = 'c';
 
     /**
      * The recursion stack.
@@ -274,29 +272,30 @@ class PDFObject
                         }
                         break;
 
-                        // set character spacing
+                    // set character spacing
                     case 'Tc':
                         break;
 
-                        // move text current point
+                    // move text current point
                     case 'Td':
                         $args = preg_split('/\s/s', $command[self::COMMAND]);
                         $y = array_pop($args);
                         $x = array_pop($args);
                         if (((float) $x <= 0) ||
-                            (false !== $current_position_td['y'] && (float) $y < (float) $current_position_td['y'])
+                            (false !== $current_position_td['y'] && (float) $y < (float) ($current_position_td['y']))
                         ) {
                             // vertical offset
                             $text .= "\n";
-                        } elseif (false !== $current_position_td['x'] && (float) $x > (float)
-                            $current_position_td['x']
+                        } elseif (false !== $current_position_td['x'] && (float) $x > (float) (
+                                $current_position_td['x']
+                            )
                         ) {
                             $text .= $this->config->getHorizontalOffset();
                         }
                         $current_position_td = ['x' => $x, 'y' => $y];
                         break;
 
-                        // move text current point and set leading
+                    // move text current point and set leading
                     case 'TD':
                         $args = preg_split('/\s/s', $command[self::COMMAND]);
                         $y = array_pop($args);
@@ -343,7 +342,7 @@ class PDFObject
                         $text .= $sub_text;
                         break;
 
-                        // set leading
+                    // set leading
                     case 'TL':
                         $text .= ' ';
                         break;
@@ -353,13 +352,13 @@ class PDFObject
                         $y = array_pop($args);
                         $x = array_pop($args);
                         if (false !== $current_position_tm['x']) {
-                            $delta = abs((float) $x - (float) $current_position_tm['x']);
+                            $delta = abs((float) $x - (float) ($current_position_tm['x']));
                             if ($delta > 10) {
                                 $text .= "\t";
                             }
                         }
                         if (false !== $current_position_tm['y']) {
-                            $delta = abs((float) $y - (float) $current_position_tm['y']);
+                            $delta = abs((float) $y - (float) ($current_position_tm['y']));
                             if ($delta > 10) {
                                 $text .= "\n";
                             }
@@ -367,20 +366,20 @@ class PDFObject
                         $current_position_tm = ['x' => $x, 'y' => $y];
                         break;
 
-                        // set super/subscripting text rise
+                    // set super/subscripting text rise
                     case 'Ts':
                         break;
 
-                        // set word spacing
+                    // set word spacing
                     case 'Tw':
                         break;
 
-                        // set horizontal scaling
+                    // set horizontal scaling
                     case 'Tz':
                         $text .= "\n";
                         break;
 
-                        // move to start of next line
+                    // move to start of next line
                     case 'T*':
                         $text .= "\n";
                         break;
@@ -471,11 +470,11 @@ class PDFObject
                     case 'Tc':
                         break;
 
-                        // move text current point
+                    // move text current point
                     case 'Td':
                         break;
 
-                        // move text current point and set leading
+                    // move text current point and set leading
                     case 'TD':
                         break;
 
@@ -496,29 +495,29 @@ class PDFObject
                         $text[] = $sub_text;
                         break;
 
-                        // set leading
+                    // set leading
                     case 'TL':
                         break;
 
                     case 'Tm':
                         break;
 
-                        // set super/subscripting text rise
+                    // set super/subscripting text rise
                     case 'Ts':
                         break;
 
-                        // set word spacing
+                    // set word spacing
                     case 'Tw':
                         break;
 
-                        // set horizontal scaling
+                    // set horizontal scaling
                     case 'Tz':
-                        // $text .= "\n";
+                        //$text .= "\n";
                         break;
 
-                        // move to start of next line
+                    // move to start of next line
                     case 'T*':
-                        // $text .= "\n";
+                        //$text .= "\n";
                         break;
 
                     case 'Da':
@@ -638,7 +637,7 @@ class PDFObject
                     ++$offset;
                     if ('<' == $char) {
                         $strpos = strpos($text_part, '>', $offset);
-                        $command = substr($text_part, $offset, $strpos - $offset);
+                        $command = substr($text_part, $offset, ($strpos - $offset));
                         $offset = $strpos + 1;
                     }
 
@@ -662,24 +661,24 @@ class PDFObject
                             $ch = $text_part[$strpos];
                             switch ($ch) {
                                 case '\\':
-                                    // REVERSE SOLIDUS (5Ch) (Backslash)
+                                 // REVERSE SOLIDUS (5Ch) (Backslash)
                                     // skip next character
                                     ++$strpos;
                                     break;
 
                                 case '(':
-                                    // LEFT PARENHESIS (28h)
+                                 // LEFT PARENHESIS (28h)
                                     ++$open_bracket;
                                     break;
 
                                 case ')':
-                                    // RIGHT PARENTHESIS (29h)
+                                 // RIGHT PARENTHESIS (29h)
                                     --$open_bracket;
                                     break;
                             }
                             ++$strpos;
                         }
-                        $command = substr($text_part, $offset, $strpos - $offset - 1);
+                        $command = substr($text_part, $offset, ($strpos - $offset - 1));
                         $offset = $strpos;
 
                         if (preg_match('/^\s*([A-Z\']{1,2})\s*/si', substr($text_part, $offset), $matches)) {

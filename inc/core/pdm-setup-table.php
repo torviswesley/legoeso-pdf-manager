@@ -30,6 +30,7 @@ function setupPDF_DocTables()
 		`pdf_path` mediumtext COLLATE utf8mb4_unicode_ci NOT NULL,
 		`image_path` mediumtext COLLATE utf8mb4_unicode_ci NOT NULL,
 		`image_url` mediumtext COLLATE utf8mb4_unicode_ci NOT NULL,
+		`metadata` mediumtext COLLATE utf8mb4_unicode_ci NOT NULL,
 		`filetype` varchar(25) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
 		`pdf_version` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
 		`pdf_image` blob DEFAULT NULL,

@@ -4,11 +4,9 @@
  * @file This file is part of the PdfParser library.
  *
  * @author  Dāvis Mosāns <davis.mosans@intelligentsystems.lv>
- *
  * @date    2019-09-17
  *
  * @license LGPLv3
- *
  * @url     <https://github.com/smalot/pdfparser>
  *
  *  PdfParser is a pdf library written in PHP, extraction oriented.

@@ -27,7 +27,11 @@ This plugin has much more to offer and can be used as an OCR text extraction too
 
 = Where does Legoeso PDF Manager store its PDF documents? =
 
-The Legoeso PDF manager stores its PDF documents within a separate table within your WordPress database. This allows for easy backup of your files, as well as integration or migration for use on or within a different platform. 
+The Legoeso PDF manager stores PDF document information within a separate table within your WordPress database. It also stores the files within the WordPress upload directory. 
+This allows for easy backup of your files, as well as integration or migration for use on or within a different platform. 
+
+Text will not be extracted from files larger than a certain size, we will attempt to extract an
+ image or take a snapshot of the documentstext will not be extracted fom document that have more than a certain number of pages
 
 = Is there a file size limit? =
 

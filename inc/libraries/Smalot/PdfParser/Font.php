@@ -5,11 +5,9 @@
  *          This file is part of the PdfParser library.
  *
  * @author  Sébastien MALOT <sebastien@malot.fr>
- *
  * @date    2017-01-03
  *
  * @license LGPLv3
- *
  * @url     <https://github.com/smalot/pdfparser>
  *
  *  PdfParser is a pdf library written in PHP, extraction oriented.
@@ -34,13 +32,14 @@ namespace Smalot\PdfParser;
 
 use Smalot\PdfParser\Encoding\WinAnsiEncoding;
 use Smalot\PdfParser\Exception\EncodingNotFoundException;
+use Legoeso_PDF_Manager\Inc\Common as Common;
 
 /**
  * Class Font
  */
 class Font extends PDFObject
 {
-    public const MISSING = '?';
+    const MISSING = '?';
 
     /**
      * @var array
@@ -140,7 +139,14 @@ class Font extends PDFObject
         if (!isset(self::$uchrCache[$code])) {
             // html_entity_decode() will not work with UTF-16 or UTF-32 char entities,
             // therefore, we use mb_convert_encoding() instead
-            self::$uchrCache[$code] = mb_convert_encoding("&#{$code};", 'UTF-8', 'HTML-ENTITIES');
+           
+            try{
+                self::$uchrCache[$code] = mb_convert_encoding("&#{$code};", 'UTF-8', 'HTML-ENTITIES');
+            }
+            catch(\Exception | \Error $e){
+
+            }
+            
         }
 
         return self::$uchrCache[$code];
@@ -218,7 +224,7 @@ class Font extends PDFObject
                         $char_from = hexdec($from);
                         $char_to = hexdec($matches['to'][$key]);
                         $offset = hexdec($matches['offset'][$key]);
-                        
+
                         for ($char = $char_from; $char <= $char_to; ++$char) {
                             $this->table[$char] = self::uchr($char - $char_from + $offset);
                         }
@@ -389,7 +395,6 @@ class Font extends PDFObject
             $decode = substr($text, 2);
             $text = '';
             $length = \strlen($decode);
-
             for ($i = 0; $i < $length; $i += 2) {
                 $text .= self::uchr(hexdec(bin2hex(substr($decode, $i, 2))));
             }
@@ -418,7 +423,7 @@ class Font extends PDFObject
         foreach ($commands as $command) {
             switch ($command[PDFObject::TYPE]) {
                 case 'n':
-                    if ((float) trim($command[PDFObject::COMMAND]) < $font_space) {
+                    if ((float) (trim($command[PDFObject::COMMAND])) < $font_space) {
                         $word_position = \count($words);
                     }
                     continue 2;
@@ -551,7 +556,7 @@ class Font extends PDFObject
         }
 
         // When Encoding is just string (/Encoding /WinAnsiEncoding)
-        if ($encoding instanceof Element) { // todo: ElementString class must by used?
+        if ($encoding instanceof Element) { //todo: ElementString class must by used?
             return $this->decodeContentByEncodingElement($text, $encoding);
         }
 
@@ -635,7 +640,7 @@ class Font extends PDFObject
         }
 
         return mb_convert_encoding($text, 'UTF-8', 'Windows-1252');
-        // todo: Why exactly `Windows-1252` used?
+        //todo: Why exactly `Windows-1252` used?
     }
 
     /**
