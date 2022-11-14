@@ -3,9 +3,10 @@ License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
 ## Description
-The Legoeso PDF Manager is a light weight, simple but powerful PDF document manager. It helps you to organize your PDF documents for easy display, and distribution within your WordPress site. It supports multiple file upload or bulk upload of files stored in a zip file.
+The Legoeso PDF Manager is a light weight, simple but powerful PDF document manager. It helps you organize your PDF documents for easy display, and distribution within your WordPress site. It supports multiple file upload or bulk upload of files stored in a zip file.
 
-Features include unlimited file uploads. upload documents via drag and drop, bulk upload, bulk download, bulk delete, automatically generates documents previews for list display, and securely view PDF documents within WordPress. In addition, modify document names and categories, and perform keyword document searches. 
+Features include unlimited file uploads. Upload documents via drag and drop, bulk upload, bulk download, bulk delete, automatically generates snapshot images for document previews, 
+and securely view PDF documents within WordPress. In addition, perform keyword search for documents, and if needed you can modify document names and categories. Track uploads by date, upload user, or category.
 		  
 
 ## Installation Manually
@@ -24,10 +25,10 @@ Features include unlimited file uploads. upload documents via drag and drop, bul
 2. Single or bulk delete of PDFs.
 3. Single or bulk download of pdf documents.
 4. Sort by category, document name, upload by, or date uploaded.
-5. Perform key word search for PDF documents.
-6. Easily list or display all documents or a single category of documents within a WordPress page.
-7. Quickly adjust the document display names or categories.
-8. All PDF documents are accessed via secure links.
+5. Perform key word search on PDF documents.
+6. Easily list or display some or all documents by document id or category within a WordPress page.
+7. Quickly rename the document or its category.
+8. Secure access to all PDF documents, users must be logged in to access your documents.
 
 ## Usage
 ## To add new PDF Documents, select Legoeso PDFs 
@@ -43,16 +44,16 @@ Features include unlimited file uploads. upload documents via drag and drop, bul
 2. Save your page. A list of documents or link shall appear on the page.
 
 ## Other Usages:
-1. E-mail PDF 
-2. Restrict documents by user groups
-3. Extract and collect data from pdf documents that can be stored in the database
+1. E-mail PDF - @ request
+2. Restrict documents by user groups - @ request
+3. Extract and collect data from pdf documents that can be stored - @ request
 
 ## For Help, comments or request additional features.
 Email support@legoeso.com
 
-## Changes v1.2.0 
-1. Resolved WordPres security vulnerabilities
-2. Refactored PDF extraction code
+## Changes v1.2.1 
+1. Resolved WordPress security vulnerabilities
+2. Refactored PDF extraction code for better performance
 
 ## Changes v1.1.0 
 1. Added support for standalone PDF Parser see https://github.com/smalot/pdfparser
