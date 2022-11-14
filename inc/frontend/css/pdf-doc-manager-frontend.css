@@ -21,8 +21,8 @@
 	background-color:#6B6B6B;
 	border: 1px solid #484848;
 }
-.convertion_result_button a {
-	color:white;
+.custom_test {
+	color:rgb(27, 24, 24);
 }
 .pdm_docs_preview_container {
 	display:flex;

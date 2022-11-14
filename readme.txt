@@ -9,33 +9,31 @@ Requires PHP: 7.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-The Legoeso PDF Manager is a simple PDF document manager that allows for easy display, and distribution of PDF's within your WordPress site. 
+The Legoeso PDF Manager is a simple PDF document manager that allows for easy display, and distribution of PDF documents within your WordPress site. 
 
 == Description ==
 
-The Legoeso PDF Manager is a light weight, simple but powerful PDF document manager. It helps you to organize your PDF documents for easy display, and distribution within your WordPress site. It supports multiple file upload or bulk upload of files stored in a zip file.
+The Legoeso PDF Manager is a light weight, simple but powerful PDF document manager. It helps you organize your PDF documents for easy display, and distribution within your WordPress site. It supports multiple file upload or bulk upload of files stored in a zip file.
 
-Features include unlimited file uploads. upload documents via drag and drop, bulk upload, bulk download, bulk delete, automatically generates documents previews for list display, and securely view PDF documents within WordPress. In addition, modify document names and categories, and perform keyword document searches. 
+Features include unlimited file uploads. Upload documents via drag and drop, bulk upload, bulk download, bulk delete, automatically generates snapshot images for document previews, 
+and securely view PDF documents within WordPress. In addition, perform keyword search for documents, and if needed you can modify document names and categories. Track uploads by date, upload user, or category.
 
 
+This plugin uses [DataTables](https://datatables.net/) to display and list of your PDF documents within WordPress. Easily include a list of PDF documents into your posts by using one of the shortcodes. Secure access to your documents, only logged in user are able to view the documents you provide to your visitors.
 
-This plugin uses [DataTables](https://datatables.net/) to display and list of your PDF documents within WordPress. Easily include a list of PDF documents into your posts by using one of the shortcodes. Users of your website will be able to securely view the documents you provide to your visitors.
-
-This plugin has much more to offer and can be used as an OCR text extraction tool for parsing the extracted text to collect and store useful data. 
+This plugin has much more to offer and can be used to parse the extracted text to collect and store useful data from the documents you submit. 
 
 == Frequently Asked Questions ==
 
 = Where does Legoeso PDF Manager store its PDF documents? =
 
-The Legoeso PDF manager stores PDF document information within a separate table within your WordPress database. It also stores the files within the WordPress upload directory. 
-This allows for easy backup of your files, as well as integration or migration for use on or within a different platform. 
-
-Text will not be extracted from files larger than a certain size, we will attempt to extract an
- image or take a snapshot of the documentstext will not be extracted fom document that have more than a certain number of pages
+= How do I include my PDF documents in my post = 
+Simple. Just include the shortcode [legoeso_display_documents] within your page. You can display your PDF documents on any page by using any of the shortcodes listed in the Legoeso Settings admin menu. There are three (3) "types" of views that can be used.
 
 = Is there a file size limit? =
 
-The plugin has no filesize limitation, however, your web hosting provider may limit the maximum upload filesize. In cases of very large PDF files, they are not stored within the database, but rather within WP upload directory.
+The plugin has no filesize limitation, however, your web hosting provider may limit the maximum upload filesize. In cases of large document, only a preview image will be generated no text will not be extracted from teh document, therefore the document will not be include when performing keyword searches.
+ image or take a snapshot of the documentstext will not be extracted fom document that have more than a certain number of pages
 
 == Screenshots ==
 

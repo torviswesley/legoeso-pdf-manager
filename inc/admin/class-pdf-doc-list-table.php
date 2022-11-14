@@ -395,7 +395,7 @@ class PDF_Doc_List_Table extends Libraries\WP_List_Table  {
 		$query_args_view_pdfdoc = array(
 			//'page'		=>	wp_unslash( isset($_REQUEST['page']) ?$_REQUEST['page'] : ''  ),
 			'action'	=>	'view_document',
-			'pid'	=>	absint( $item['ID']),
+			'pid'		=>	 base64_encode(serialize($item)),
 			'_wpnonce'	=>	wp_create_nonce( 'view_pdf_file_nonce' ),
 		);
 		

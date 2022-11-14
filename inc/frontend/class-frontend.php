@@ -86,6 +86,15 @@ class Frontend extends Common\Utility_Functions {
 	private $legoeso_db_tablename;
 
 	/**
+	 * sets maximum records to return from query 
+	 *
+	 * @since    1.2.0
+	 * @access   private
+	 * @var      String    $max_records_limit
+	 */
+	private $max_records_limit;
+	
+	/**
 	 * Initialize the class and set its properties.
 	 *
 	 * @since		1.0.0
@@ -99,9 +108,8 @@ class Frontend extends Common\Utility_Functions {
 		$this->version =  $version;
 		$this->plugin_text_domain = $plugin_text_domain;
 		$this->pdm_required_cap = 'read'; // minimum default WP user capability
-		/**
-		 * @todo add config file for default search results etc.
-		 */
+		$this->max_records_limit = 2000;
+
 		// set tablename for database queries
 		$this->legoeso_db_tablename = "`{$wpdb->prefix}legoeso_file_storage`";
 	}
@@ -116,7 +124,7 @@ class Frontend extends Common\Utility_Functions {
 		// load stylesheets
 		wp_enqueue_style( 'legoeso-frontend-styles', plugin_dir_url( __FILE__ ) . 'css/pdf-doc-manager-frontend.css', array(), $this->version, 'all' );
         wp_enqueue_style( 'legoeso-frontend-styles-datatable', plugin_dir_url( __FILE__ ) .'css/dataTables.jqueryui.min.css');
-		//wp_enqueue_style( 'legoeso-frontend-styles-datatables', plugin_dir_url( __FILE__ ) .'css/datatables.min.css');
+		// wp_enqueue_style( 'legoeso-frontend-styles-datatables', plugin_dir_url( __FILE__ ) .'css/datatables.min.css');
 	}
 
 	/**
@@ -127,19 +135,18 @@ class Frontend extends Common\Utility_Functions {
 	public function enqueue_scripts() {
 
 		//	enque frontend ui scripts
-		wp_enqueue_script( 'legoeso-frontend-js-datatables',  plugin_dir_url( __DIR__) . 'frontend/js/datatables.min.js', array('jquery'), $this->version, true);
+		wp_enqueue_script( 'legoeso-frontend-js-datatables',  plugin_dir_url( __DIR__) . 'frontend/js/datatables.js', array('jquery'), '', true);
 		wp_enqueue_script( 'legoeso-frontend-js', plugin_dir_url( __DIR__) . 'frontend/js/legoeso-frontend.js', array( 'jquery' ), $this->version, true);
 	
 		// when everything goes well with the json file, pass it to javascript
 		$this->set_localize_json_file();
 	}
 
-
 	/** *******************************************************************
 	 * Begin Methods for Shorcodes
 	 * @uses legoeso_shortcode()
 	 * @uses get_tableview()
-	 * @uses generate_shortcode_ulist()
+	 * @uses generate_shortcode_listview()
 	 * @uses get_document_data()
 	 * @uses load_legoeso_shortcodes()
 	 **********************************************************************/
@@ -160,7 +167,7 @@ class Frontend extends Common\Utility_Functions {
 		// get the specified category or use default
 		$category = sanitize_text_field($sc_atts['category']);
 		$type = sanitize_text_field($sc_atts['type']);
-		$docids = $sc_atts['pdf_id'];
+		$docids = $sc_atts['pdf_id']; // document ids are sanitized later on
 
 		// obtain a count of datatable views to be generated
 		$_view_count = absint(count($this->get_datatable_views())) + 1;
@@ -169,7 +176,7 @@ class Frontend extends Common\Utility_Functions {
 		if($type ==  "preview_table")
 		{		
 			//	generate json data to be displayed in DataTable 
-			$this->get_document_data($category, '1000', true);
+			$this->get_document_data($category, $this->get_record_limit(), true);
 
 			// generate datatable object id
 			$datatable_array = array(
@@ -186,7 +193,7 @@ class Frontend extends Common\Utility_Functions {
 		}
 		elseif($type  ==  "tableview") {
 			//	generate json data to be displayed in DataTable 
-			$this->get_document_data($category, '');
+			$this->get_document_data($category, $this->get_record_limit());
 			
 			// generate datatable object id
 			$datatable_array = array(
@@ -201,9 +208,9 @@ class Frontend extends Common\Utility_Functions {
 				$this->get_tableview($datatable_array, $category);
 			return ob_get_clean();
 		} 
-		elseif($type == "ulistview"){
+		elseif($type == "listview"){
 			// get the list of documents
-			return $this->generate_shortcode_ulist($docids);
+			return $this->generate_shortcode_listview( $docids, $this->get_listview_type($attributes) );
 		}
 		
     }
@@ -223,6 +230,7 @@ class Frontend extends Common\Utility_Functions {
 		
 			return include  plugin_dir_path( __FILE__). 'views/partials-pdf-frontend-listview.php';
 	}
+
 	/**
 	 * gets the plugin database tablename used by WP
 	 * @since 1.2.0
@@ -239,7 +247,7 @@ class Frontend extends Common\Utility_Functions {
 	 * @since 1.2.0
 	 * @return string
 	 */
-	 public function generate_shortcode_ulist($doc_ids){
+	 public function generate_shortcode_listview($doc_ids, $type = 'unordered'){
 		if(!empty($doc_ids)){
 			// parse document ids submitted by user
 			$docs = explode(',', $doc_ids);
@@ -249,31 +257,40 @@ class Frontend extends Common\Utility_Functions {
 				$ids = sanitize_text_field(trim($ids));
 			});
 			
+			// specify valid list types.
+			$valid_types = ['unordered' => 'u', 'ordered' => 'o'];
+
+			$type_ = (array_key_exists($type, $valid_types)) ? $valid_types[$type] : $valid_types['unordered'];
+
+			// get a list of document ids
 			$doc_ids = (count($docs) > 1) ? implode(", ", $docs) : $doc_ids;
 
 			//  specify the columns
-			$columns = array('ID', 'pdf_doc_num', 'filename', 'category', 'upload_userid', 'date_uploaded');
+			$columns = array('ID', 'pdf_doc_num', 'filename', 'category', 'upload_userid', 'date_uploaded',);
 
 			// build an SQL query
 			$sql_query = "SELECT `".implode("`,`", $columns)."` ";
 			$sql_query .= "FROM  ".$this->get_db_tablename()." WHERE pdf_doc_num IN ({$doc_ids})";
 
-			$_results = $this->get_query_results($sql_query, OBJECT);
+			$_results = $this->get_query_results($sql_query, ARRAY_A);
 			$db_results = $_results['db_results'];
 
-			$ulist_html =  wp_kses_post('<ul id="" name="" class="pdm-document-view">');
+			/**
+			 * @todo Add list type option to shortcode i.e type="A", or type="I"
+			 */
+			$html_list =  wp_kses_post('<'.$type_.'l id="" name="legoeso_list" class="pdm-document-view">');
 			foreach($db_results as $data){
 				$query_args_view_pdfdoc = array(
 					'action'	=>	'view_document',
-					'pid'	=>	absint( $data->ID),
+					'pid'		=>	base64_encode(serialize($data)),
 					'_wpnonce'	=>	wp_create_nonce( 'view_pdf_file_nonce' ),
 				);
-			
-				$pdf_link = esc_url( add_query_arg( $query_args_view_pdfdoc, home_url($data->filename) ) );
-				$ulist_html .= wp_kses_post('<li><a target="_blank" href="' . $pdf_link . '">'. __($data->filename , $this->plugin_text_domain ) . '</a> <br></li>');
+
+				$pdf_link = esc_url( add_query_arg( $query_args_view_pdfdoc, home_url($data['filename']) ) );
+				$html_list .= wp_kses_post('<li><a target="_blank" href="' . $pdf_link . '">'. __($data['filename'] , $this->plugin_text_domain ) . '</a> <br></li>');
 			}
-			$ulist_html .= wp_kses_post('</ul>') ;
-			return $ulist_html;
+			$html_list .= wp_kses_post('</'.$type_.'l>') ;
+			return $html_list;
 		}
 
     }
@@ -285,14 +302,14 @@ class Frontend extends Common\Utility_Functions {
 	 * @param	$category
 	 * @return	boolean
 	 */
-	public function get_document_data($category = '', $limit = 2000, $get_pdf_image = false){
+	public function get_document_data($category = '', $limit = '', $get_pdf_image = false){
 
 		// initialize array values
 		$json_columns = [];
 		$results = [];
 
 		//  columns to use in query
-		$columns = array('ID', 'image_url', 'filename', 'category', 'upload_userid', 'date_uploaded');
+		$columns = array('ID', 'image_url', 'filename', 'category', 'upload_userid', 'date_uploaded', 'text_data');
 		
 		// build SQL query
 		$order_by = " ORDER BY date_uploaded DESC";
@@ -388,7 +405,6 @@ class Frontend extends Common\Utility_Functions {
 			$this->pdf_DebugLog("Failed to write Json File Path::", $json_file_path);
 		}
 
-		//
 		// if there was an error encoding json file add message to debug
 		if ((json_last_error() !== JSON_ERROR_NONE)){
 			$this->pdf_DebugLog("Json last Error::", json_last_error().' Message:'.json_last_error_msg());
@@ -409,6 +425,18 @@ class Frontend extends Common\Utility_Functions {
 	}
 
 	/**
+	 * Returns the type to use with listview shortcode
+	 *
+	 * @since   1.2.1
+	 * @return	String
+	 */
+	private function get_listview_type($atts){
+		$valid_types = ['ordered', 'unordered'];
+		$re = array_intersect($atts, $valid_types);
+		// return first match
+		if(isset($re[0])){ return $re[0];}
+	}
+	/**
 	 * returns the json_file property.
 	 *
 	 * @since   1.0.2
@@ -427,6 +455,9 @@ class Frontend extends Common\Utility_Functions {
 		return self::$datatable_views;
 	}
 
+	private function get_record_limit(){
+		return $this->max_records_limit;
+	}
 	/**
 	 * passess the json_file name to JavaScript / localizes filename
 	 *
@@ -463,7 +494,7 @@ class Frontend extends Common\Utility_Functions {
     {
 		if($doc_id){
 			global $wpdb;
-			$wpdb_table = $wpdb->prefix. 'legoeso_file_storage';
+			$wpdb_table = $this->get_db_tablename();
 			$charset_collate = $wpdb->get_charset_collate();
 
 			$pdm_doc_query = "SELECT 
@@ -489,10 +520,10 @@ class Frontend extends Common\Utility_Functions {
 	 */
     function display_pdf_document( $pdf_file_id = null ){
 		/**
-		 * writes out the headers used to display the pdf content
+		 * generates and returns document headers to display the pdf content
 		 * 
 		 * @since 1.2.0
-		 * @return $df_contents
+		 * @return $pdf_contents
 		 */
 		function generate_pdf_document($pdf_contents){
 			header('Content-type: application/pdf');
@@ -504,6 +535,7 @@ class Frontend extends Common\Utility_Functions {
 			flush();
 			return $pdf_contents;
 		}
+
         if($pdf_file_id){
 			// get the data for the document using the ID
 			$pdf_results = $this->db_get_pdf_data($pdf_file_id); 
@@ -528,8 +560,6 @@ class Frontend extends Common\Utility_Functions {
 					wp_safe_redirect(home_url("index.php/404"), 302, "WP Legoeso PDF Manager");
 					die();
 				}
-				
-
 			}
 			else {
 				// if document not found, nothing to show redirect 
@@ -554,8 +584,10 @@ class Frontend extends Common\Utility_Functions {
 
 			// if user is not logged in redirect to login page
 			if(is_user_logged_in()) {	
-				$pid = absint($_GET['pid']);
-				if(is_numeric($pid)){
+
+				$pid = $this->get_doc_id($_GET['pid']);
+				
+				if( isset($pid) && is_numeric($pid) ){
 					$dt = $this->display_pdf_document($pid);
 				}
 				else {
@@ -571,6 +603,34 @@ class Frontend extends Common\Utility_Functions {
 				die();
 			}
 		} 
+	}
+	private function get_doc_id($query_uri){
+		if(isset($query_uri)){
+			try{
+				if($doc_data = unserialize( base64_decode($query_uri)) ){
+
+					$doc_key = sanitize_key(abs($doc_data['ID']) );
+				} else {
+					
+					$doc_data = base64_decode($query_uri);
+					$doc_data = json_decode($doc_data);
+					if(json_last_error() < 1){
+						$doc_key = isset($doc_data[0]) ? sanitize_key($doc_data[0]) : '';
+					}
+					else {
+						// report error
+						$this->pdf_DebugLog("Method: get_doc_id(): Get document id faild", json_last_error());
+					}
+				}
+
+				return $doc_key;
+			}
+			catch(\E_NOTICE | \ERROR $e){
+
+				return false;
+			}
+		}
+		return false;
 	} 
 	/**
 	 * @since 1.2.0	redirects users to previous page after login

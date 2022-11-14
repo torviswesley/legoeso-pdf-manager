@@ -345,7 +345,7 @@ class Utility_Functions {
             $tablename = $wpdb->prefix.'legoeso_file_storage';
             // columns to update
             $columns_update = array(
-                'filename'		=>	sanitize_text_field($doc_data['edit-document_filename']),
+                'filename'		=>	sanitize_title_with_dashes($doc_data['edit-document_filename']),
                 'category'		=>	sanitize_text_field($doc_data['edit-document_category']),
             );
 

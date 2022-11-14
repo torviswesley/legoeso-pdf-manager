@@ -69,6 +69,7 @@
 		});
 		return oHeadings;
 	}
+
 	/**
 	 * loads the json data file and passes it to the datatable object
 	 * @param {*} objDataTable HTML Table Object
@@ -144,9 +145,14 @@
 							{
 								targets: 2,
 								render: function(data, type, row, meta){
-									
-									return '<a target="_blank" href="' + _doc_url() + '/' + row[2] + '?action=view_document&pid=' + row[0] +'&_wpnonce='+ get_wpnonce() +'"> ' + data +'</a> ';
+									let pid = btoa(JSON.stringify(row.slice(0, row.length-1)));
+									return '<a target="_blank" href="' + _doc_url() + '/' + row[2] + '?action=view_document&pid=' + pid +'&_wpnonce='+ get_wpnonce() +'"> ' + data +'</a> ';
 								}
+							},
+							{
+								targets: 6,
+								visible: false,
+
 							},
 						],
 						columns: doHeadings,
@@ -170,9 +176,15 @@
 							{
 								targets: 2,
 								render: function(data, type, row, meta){
-									return '<a target="_blank" href="' + _doc_url() + '/' + row[2] + '?action=view_document&pid=' + row[0] +'&_wpnonce='+ get_wpnonce() +'"> ' + data +'</a> ';
+									let pid = btoa(JSON.stringify(row.slice(0, row.length-1)));
+									return '<a target="_blank" href="' + _doc_url() + '/' + row[2] + '?action=view_document&pid=' + pid +'&_wpnonce='+ get_wpnonce() +'"> ' + data +'</a> ';
 								}
 							},
+							{
+								targets: 6,
+								visible: false,
+							},
+							
 						],
 						columns: doHeadings,
 					});
@@ -206,8 +218,5 @@
 			loadTableData(_dt_viewdata, _json_data_url, legoesodata._wpnonce);
 		}
 	}
-	window.addEventListener('resize', function(){
-		console.log('resized!');
-	})
 
 })(jQuery );

@@ -861,7 +861,7 @@ class PDF_Doc_Core extends Common\Utility_Functions {
 
             // default columns to insert data into database 
             $pdf_query_columns = array(
-                'filename'           =>  sanitize_text_field($filename),
+                'filename'           =>  sanitize_title_with_dashes($filename),
                 'has_path'           =>  $pdf_has_path,
                 'pdf_path'           =>  $pdf_filepath,
                 'filetype'           =>  'application/pdf',
@@ -955,8 +955,6 @@ class PDF_Doc_Core extends Common\Utility_Functions {
                     $pdf_query_columns = array_merge($pdf_query_columns, $pdf_extracted_columns);
                 }
             }
-
-            //$this->pdf_DebugLog("Method: addFileToDatabase(): Data:: 1 for Table: {$tablename}", $pdf_query_columns);
         
             // execute sql query to insert file data into the database
             $this->pdm_execute_query($wpdb, $tablename,  $pdf_query_columns);
@@ -1095,7 +1093,7 @@ class PDF_Doc_Core extends Common\Utility_Functions {
                         // attempt to extract the text from the file, only extract text from 1st page
                         //$extractedData = trim( sanitize_text_field($_pdffile->getText()) );
                         //$extractedData = trim( sanitize_text_field($_pdffile->getPages()[0]->getText()) );
-                        $extractedData = $_pdffile->getText();
+                        $extractedData = sanitize_text_field($_pdffile->getText());
                         $this->pdf_DebugLog("Method: extractTextFromPDF(): Memory Usage After Text Extraction",  memory_get_usage(true));
                     } 
 
@@ -1201,11 +1199,11 @@ class PDF_Doc_Core extends Common\Utility_Functions {
                     }
                 }
                 catch(\Exception | \E_Error $e) {
-                    throw new Common\PDM_Exception_Error("Error creating image for file {$pdf_filename}: - ".$e->getMessage());
+                    return ['image_url' => plugins_url('assets/',__FILE__).'no_image.png', 'image_path' => plugin_dir_path( __FILE__ ).'assets/no_image.png'];
                 }
             }
         }
-        return false; 
+        return false;
     }
     /**
      * temporary sets the memory limit for the script

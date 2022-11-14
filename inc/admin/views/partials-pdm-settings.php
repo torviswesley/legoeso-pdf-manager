@@ -45,10 +45,11 @@
 							<li> <strong>[legoeso_display_documents type="preview_table" category="Saved Documents"]</strong> - This shortcode will generate a table with all documents assigned to the "Saved Documents" category and will included an image preview of the document if one is available.</li> 
 						</ul>
 					</li>
-					<li> Ulistview [ulistview] - Document ID's can be obtained within the Legoeso PDF's admin menu. Locate the "PDF ID" column to locate the documnet id you wish to use.  
+					<li> Ulistview [listview] - This shortcode accepts a comma delimited list of document ID's.  Document IDs can be obtained within the Legoeso PDF's admin menu. Locate the "PDF ID" column to locate the documnets id you wish to display.  
 						<ul style="list-style-type:square;">
-							<li> <strong>[legoeso_display_documents type="ulistview" pdf_id="954647"]</strong> - This shortcode will list a single document as an unordered list within your page.</li> 
-							<li> <strong>[legoeso_display_documents type="ulistview" pdf_id="6183770, 221932, 744517, 683331"]</strong> - This shortcode will list multiple documents as an unordered list within your page. (Notice the document ids are separated by commas.)</li> 
+							<li> <strong>[legoeso_display_documents type="listview" pdf_id="954647"]</strong> - This shortcode will list a single document as an unordered list within your page.</li> 
+							<li> <strong>[legoeso_display_documents type="listview" pdf_id="6183770, 221932, 744517, 683331"]</strong> - This shortcode will list multiple documents as an "<strong>unordered</strong>" list within your page. (Notice the pfd_ids are separated by commas.)</li>
+							<li> <strong>[legoeso_display_documents type="listview" pdf_id="183770, 744517, 683331" ordered]</strong> - This shortcode will list multiple documents as an "<strong>ordered</strong>" list within your page. (Notice the pdf_ids are separated by commas.)</li>  
 						</ul>
 					</li>
 				</ul>
@@ -66,7 +67,7 @@
 	<div>
 		<p>
 			This plugin uses DataTables to display a list of PDF documents on your Wordpress pages - for more information see 
-			<a href="https://datatables.net/"> DataTables</a>
+			<a href="https://datatables.net/" target="_blank"> DataTables</a>
 			<br>
 			<strong>Your php Server Settings </strong> - <a href="<?php echo esc_attr(plugin_dir_url( __FILE__ )); ?>partials-view-phpinfo.php" target="_blank">PHP version and settings</a>
 			<br>
