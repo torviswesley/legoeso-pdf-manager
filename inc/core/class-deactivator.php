@@ -22,14 +22,18 @@ class Deactivator {
 	 *
 	 * @since    1.0.0
 	 */
+
+
 	public static function deactivate() {
 		
-	global $wpdb;
-	/**
-	* Table information
-	*/
-	$tablename = $wpdb->prefix.'legoeso_file_storage';
-	$wpdb->query( "DELETE FROM `{$tablename}` WHERE `option_name` LIKE '%Legoeso_%'" );
+		global $wpdb;
+		/**
+		* Table information
+		*/
+		// $tablename = $wpdb->prefix.'options';
+		// $wpdb->query( "DELETE FROM `{$tablename}` WHERE `option_name` LIKE 'legoeso_%' " );
 	}
+	
 
+	
 }

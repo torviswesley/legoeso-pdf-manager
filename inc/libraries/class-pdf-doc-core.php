@@ -244,7 +244,7 @@ class PDF_Doc_Core extends Common\Utility_Functions {
 		$this->legoeso_db_tablename = "{$wpdb->prefix}legoeso_file_storage";
 
         // Get current options set for force_image_extraction
-        $this->force_image_extraction = (get_option("legoeso_force_image_enabled") == 'on') ? 1: 0;
+        $this->force_image_extraction = 1;
 
         parent::__construct();
     }
@@ -348,7 +348,7 @@ class PDF_Doc_Core extends Common\Utility_Functions {
         $this->pdm_status_filename = $this->pdm_upload_dir_agrs['pdm_upload_status_filename'];
 
         //  override the current option for legoeso_force_image_enabled 
-        $this->force_image_extraction = ($this->get_post_data('legoeso_force_image_enabled') == 'on') ? 1: 0;
+        $this->set_force_image_extraction( ($this->get_post_data('legoeso_force_image_enabled') == 'on') ? 1: 0) ;
        
         /**
         * Step 2:
@@ -846,7 +846,7 @@ class PDF_Doc_Core extends Common\Utility_Functions {
         $current_user = $logged_in_user->data->user_login;
 
         // initialize image properties
-        $force_img_only     = $this->force_image_extraction;
+        $force_img_only     = $this->get_force_image_extraction();
 
         $extracted_image    = false;
         $uploadStatus = 'failed';
@@ -1234,6 +1234,20 @@ class PDF_Doc_Core extends Common\Utility_Functions {
         return ( ceil( $mem / 2) );
     }
 
+     /* returns current value option 'force_image_extraction' aka generate pdf preview 
+     * 
+     * @since 1.2.1
+     */
+    private function get_force_image_extraction(){
+        return $this->force_image_extraction;
+    }
+    /* sets the current value option for 'force_image_extraction' aka generate pdf preview 
+     * 
+     * @since 1.2.1
+     */
+    private function set_force_image_extraction($option){
+        $this->force_image_extraction = $option;
+    }   
     /**
      *
 	 * @since 1.0.2

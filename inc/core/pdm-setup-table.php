@@ -17,8 +17,8 @@ function setupPDF_DocTables()
 	$tablename = $wpdb->prefix.'legoeso_file_storage';
 	$charset_collate = $wpdb->get_charset_collate();
  	
-	$sql_query = "DROP TABLE IF EXISTS `{$tablename}`;";
-	$wpdb->query( $sql_query );
+	// $sql_query = "DROP TABLE IF EXISTS `{$tablename}`;";
+	// $wpdb->query( $sql_query );
 
 	$sql_query = "CREATE TABLE `{$tablename}` (
 		`ID` int(11) NOT NULL,
@@ -55,14 +55,14 @@ function setupPDF_DocTables()
 
 	//	Initial values/ defaults for 
 
-	$data_force_image_enabled = array(
-		'option_name'		=>	'legoeso_force_image_enabled',
-		'option_value'		=>	'on',
-		'autoload'			=>	'yes',
-	);
+	// $data_force_image_enabled = array(
+	// 	'option_name'		=>	'legoeso_force_image_enabled',
+	// 	'option_value'		=>	'on',
+	// 	'autoload'			=>	'yes',
+	// );
 
-	//	Insert values into the WP_Options TABLE
-	$wpdb->insert($wpdb->prefix.'options', $data_force_image_enabled);
+	// //	Insert values into the WP_Options TABLE
+	// $wpdb->insert($wpdb->prefix.'options', $data_force_image_enabled);
 
 }
 

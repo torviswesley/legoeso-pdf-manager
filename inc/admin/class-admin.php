@@ -236,7 +236,7 @@ class Admin extends Common\Utility_Functions{
 				__( 'Legoeso Settings', $this->plugin_text_domain ),		// menu title
 				$this->pdm_required_cap,										// capability
 				$this->plugin_name.'_settings',								// menu slug
-				array($this, 'load_pdf_doc_settings'),						// cal back
+				array($this, 'legoeso_settings'),						// cal back
 		);
 		// only include if user has manage_categories
 		//	add submenu 
@@ -423,29 +423,29 @@ class Admin extends Common\Utility_Functions{
 	 * @since	1.0.1
 	 * @return	none
 	 */
-	public function load_pdf_doc_settings(){
+	public function legoeso_settings(){
 		if(is_user_logged_in() && current_user_can($this->pdm_required_cap)){
-			if($_POST){	
-				//	manaully add checkbox element/value if not present
-				if(!array_key_exists('legoeso_pytesseract_enabled', $_POST)){
-					$_POST['legoeso_pytesseract_enabled'] = 'off';
-				}
-				if(!array_key_exists('legoeso_force_image_enabled', $_POST)){
-					$_POST['legoeso_force_image_enabled'] = 'off';
-				}
+			// if($_POST){	
+			// 	//	manaully add checkbox element/value if not present
+			// 	if(!array_key_exists('legoeso_pytesseract_enabled', $_POST)){
+			// 		$_POST['legoeso_pytesseract_enabled'] = 'off';
+			// 	}
+			// 	if(!array_key_exists('legoeso_force_image_enabled', $_POST)){
+			// 		$_POST['legoeso_force_image_enabled'] = 'off';
+			// 	}
 				
-				//	update setting upon saving changes.
-				$this->updateSettings($_POST);
-			}
+			// 	//	update setting upon saving changes.
+			// 	$this->updateSettings($_POST);
+			// }
 			
 			/** *******************************************************************
 			 * Begin collection of dependency variables
 			 **********************************************************************/
 
 			// toggle force image only
-			$cb_force_img = $this->toggle_checkbox(get_option("legoeso_force_image_enabled"));
-			$force_image_enabled_value = $cb_force_img[0];
-			$force_image_enabled = $cb_force_img[1];
+			// $cb_force_img = $this->toggle_checkbox(get_option("legoeso_force_image_enabled"));
+			// $force_image_enabled_value = $cb_force_img[0];
+			// $force_image_enabled = $cb_force_img[1];
 
 
 			// render and displays the Seettngs tabs
@@ -472,4 +472,6 @@ class Admin extends Common\Utility_Functions{
 			die( $this->save_changes_pdf_quick_edit($_REQUEST) ) ;
 		}
 	}
+
+
 }
