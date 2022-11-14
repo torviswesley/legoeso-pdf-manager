@@ -171,7 +171,7 @@ class Frontend extends Common\Utility_Functions {
 
 		// obtain a count of datatable views to be generated
 		$_view_count = absint(count($this->get_datatable_views())) + 1;
-		
+
 		// determines type of table to display to the user.  Default view is partials-pdf-frontend-listview.php
 		if($type ==  "preview_table")
 		{		

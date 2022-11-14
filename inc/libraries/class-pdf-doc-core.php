@@ -1199,7 +1199,8 @@ class PDF_Doc_Core extends Common\Utility_Functions {
                     }
                 }
                 catch(\Exception | \E_Error $e) {
-                    return ['image_url' => plugins_url('assets/',__FILE__).'no_image.png', 'image_path' => plugin_dir_path( __FILE__ ).'assets/no_image.png'];
+                    //plugin_basename()
+                    return ['image_url' => plugins_url($this->plugin_text_domain.'/assets/').'no_image.png', 'image_path' => plugin_dir_path( __DIR__ ).'assets/no_image.png'];
                 }
             }
         }
