@@ -52,6 +52,12 @@ Features include unlimited file uploads. upload documents via drag and drop, bul
 Email support@legoeso.com
 
 ## Changes v1.2.1 
+1. Implemented new DataTable widgit child rows to show document metadata
+2. Removed support Bootstrap v5.2.0-beta1 
+3. Add support for jQuery Ui widgets
+4. Implemented jQuery Ui progressbar
+
+## Changes v1.2.1 
 1. Resolved WordPress security vulnerabilities
 2. Refactored PDF extraction code for better performance
 
