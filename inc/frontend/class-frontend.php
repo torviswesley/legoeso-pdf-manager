@@ -150,6 +150,17 @@ class Frontend extends Common\Utility_Functions {
 	 * @uses get_document_data()
 	 * @uses load_legoeso_shortcodes()
 	 **********************************************************************/
+
+	/**
+	 * Register all shortcodes for this plugin.
+	 *
+	 * @since   1.0.2
+	 * @return	none
+	 */
+	public function load_legoeso_shortcodes(){
+		// add shortcode to display the list of PDF documents
+		add_shortcode('legoeso_display_documents', [$this,'legoeso_shortcode'] );
+	}
 	/**
 	 * Callback for shortcode - processes the user specified shortcode and displays a list of documents 
 	 * within the calling page
@@ -308,8 +319,8 @@ class Frontend extends Common\Utility_Functions {
 		$json_columns = [];
 		$results = [];
 
-		//  columns to use in query
-		$columns = array('ID', 'image_url', 'filename', 'category', 'upload_userid', 'date_uploaded', 'text_data');
+		//  columns to include in query
+		$columns = array('ID', 'image_url', 'filename', 'category', 'upload_userid', 'date_uploaded', 'text_data', 'metadata');
 		
 		// build SQL query
 		$order_by = " ORDER BY date_uploaded DESC";
@@ -413,18 +424,6 @@ class Frontend extends Common\Utility_Functions {
 	}
 
 	/**
-	 * Register all shortcodes for this plugin.
-	 *
-	 * @since   1.0.2
-	 * @return	none
-	 */
-	public function load_legoeso_shortcodes(){
-		// add shortcode to display the list of PDF documents
-		add_shortcode('legoeso_display_documents', [$this,'legoeso_shortcode'] );
-
-	}
-
-	/**
 	 * Returns the type to use with listview shortcode
 	 *
 	 * @since   1.2.1
@@ -447,13 +446,20 @@ class Frontend extends Common\Utility_Functions {
 	}
 
 	/**
-	 * Returns total count of listview object created by class 
+	 * Returns number of listview objects generated from shortcodes by the class 
 	 * 
 	 * @since	1.0.4
 	 */
 	private function get_datatable_views(){
 		return self::$datatable_views;
 	}
+
+	/**
+	 * returns the current mysql query result limit for shortcode queries
+	 * 
+	 * @since	1.2.1
+	 * @return Int
+	 */
 
 	private function get_record_limit(){
 		return $this->max_records_limit;
@@ -596,7 +602,7 @@ class Frontend extends Common\Utility_Functions {
 				}
 			}
 			else {
-				
+				$_redirect_referer = '';
 				// build redirect query string
 				$redirect_to = add_query_arg(array('login' => urlencode('1'), 'redirect_to' => urlencode($_SERVER['HTTP_REFERER']), ), home_url("wp-login.php") );
 				wp_safe_redirect( $redirect_to, 302, "WP Legoeso PDF Manager");
@@ -604,6 +610,13 @@ class Frontend extends Common\Utility_Functions {
 			}
 		} 
 	}
+
+	/**
+	 * returns the document id for the givem query string
+	 * 
+	 * @since 1.2.1
+	 * @param String query_uri query string containing document information 
+	 */
 	private function get_doc_id($query_uri){
 		if(isset($query_uri)){
 			try{
@@ -632,8 +645,10 @@ class Frontend extends Common\Utility_Functions {
 		}
 		return false;
 	} 
+
 	/**
 	 * @since 1.2.0	redirects users to previous page after login
+	 * @todo resolve blank rediret when no reffer is present
 	 */
 	public function legoeso_redirect($redirect_to, $request, $user){
 		return $redirect_to;

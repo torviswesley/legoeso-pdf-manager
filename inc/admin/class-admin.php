@@ -99,6 +99,15 @@ class Admin extends Common\Utility_Functions{
 	 * @var      string    $pdm_required_cap
 	 */
 	private $pdm_required_cap;
+
+	/**
+	 * Check file status call count
+	 * @since	1.2.2
+	 * @access	private	
+	 * @var		String	$pdm_call_count
+	 */
+	private static $pdm_call_count = 0;
+
 	/**
 	 * Initialize the class and set its properties.
 	 *
@@ -148,7 +157,7 @@ class Admin extends Common\Utility_Functions{
 	 * @return	none
 	 */
 	public function enqueue_styles() {
-		wp_enqueue_style('bootstrap_css', plugin_dir_url( __FILE__ ) .  'css/bootstrap.min.css' );
+		//wp_enqueue_style('bootstrap_css', plugin_dir_url( __FILE__ ) .  'css/bootstrap.min.css' );
 		wp_enqueue_style( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'css/pdf-doc-manager-admin.css', array(), $this->version, 'all' );
 		wp_enqueue_style( 'jquery-ui-theme', plugin_dir_url( __FILE__ ) . 'css/jquery-ui.min.css', array(),'', 'all' );
 		wp_enqueue_style('dashicons');
@@ -199,14 +208,19 @@ class Admin extends Common\Utility_Functions{
 		);
 
 		//	enqueue the ajax handler for the file uploading process
-		wp_enqueue_script( 'legoeso_ajax_ui', plugin_dir_url( __FILE__ ) . 'js/pdm-jquery-ui-ajax.js', array( 'jquery' ), $this->version, true );
+		wp_enqueue_script( 'legoeso_ajax_ui', plugin_dir_url( __FILE__ ) . 'js/pdm-jquery-ui-ajax-footer.js', array( 'jquery' ), $this->version, true );
 
 		//	enqueue the ajax handler for the file uploading process
 		wp_enqueue_script( 'legoeso_ajax_list_ui', plugin_dir_url( __FILE__ ) . 'js/pdm-jquery-list-ui.js', array( 'jquery' ), $this->version, true );
 		
 		// enqueue function to handle jquery accordion ui
+		wp_enqueue_script( 'legoeso_ajax_accordion_ui', plugin_dir_url( __FILE__ ) . 'js/pdm-jquery-ui-accordion-footer.js', array( 'jquery-ui-accordion'), $this->version, true );
+		
+		// enqueue function to handle jquery accordion ui
 		wp_enqueue_script('jquery-ui-accordion');
-		wp_enqueue_script( 'legoeso_ajax_accordion_ui', plugin_dir_url( __FILE__ ) . 'js/pdm-jquery-ui-accordion.js', array( 'jquery-ui-accordion'), $this->version, true );
+
+		// enqueue jquery-ui-progressbar
+		wp_enqueue_script('jquery-ui-progressbar');
 
 		// send/add local values to JavaScript to communicate with JavaScript handler
 		wp_localize_script( 'legoeso_ajax_ui', 'ajax_obj', $params );
@@ -349,9 +363,12 @@ class Admin extends Common\Utility_Functions{
 				$status_text = file_get_contents($status_filename);
 				// send the json object back the client-side JavaScript
 				
+				$this->pdf_DebugLog(" Refresh Called::", "Time: ".time());
 				//	convert to JSON to read the status of the process
 				$obj = json_decode($status_text);
 				if($status_text){
+					// finished
+					$this->pdf_DebugLog(" Sent Reponse::", "Time: ".time());
 					die($status_text);
 				} else {
 					// send Ajax response JSON encoded

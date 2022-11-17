@@ -43,16 +43,14 @@
                 <div id=server-response-head class="server-response-head">
 
                 </div> 
-				<textarea class="server-message" id="server-response-messages"></textarea>  
+				<textarea class="server-message" id="server-response-messages" readonly></textarea>  
             </div>
 
-			<div class="progress display">
-				<div id="progress_bar" 
-					class="progress-bar bg-success" 
-					role="progressbar" aria-valuenow="0" aria-valuemin="0" 
-					aria-valuemax="100" style="width: 0%">
-				</div>
-			</div>
+            <div id="progressbar">
+                <div class="progress-label">
+                </div>
+            </div>
+			
 			<div class="status_messages" id="status_message"></div>
 		</div>
 

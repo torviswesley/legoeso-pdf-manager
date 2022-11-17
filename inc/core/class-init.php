@@ -105,8 +105,6 @@ class Init extends Common\Utility_Functions {
 	 * @access    private
 	 */
 	private function define_admin_hooks() {
-		// sets the error_reporting to hide notices to aviod AJAX errors. 
-		error_reporting( ~E_NOTICE );
 
 		$plugin_admin = new Admin\Admin( 
 			$this->get_plugin_name(), 

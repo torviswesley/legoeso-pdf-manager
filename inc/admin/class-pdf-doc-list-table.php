@@ -84,7 +84,7 @@ class PDF_Doc_List_Table extends Libraries\WP_List_Table  {
 		/** 
 		 * Check if a search was performed.
 		*/
-		$pdf_search_key = isset( $_REQUEST['s'] ) ? wp_unslash( trim( $_REQUEST['s'] ) ) : '';
+		$pdf_search_key = isset( $_REQUEST['s'] ) ? sanitize_text_field( trim( $_REQUEST['s'] ) ) : '';
 	
         /**
 		 * Define the column headers. This includes a complete
@@ -250,8 +250,10 @@ class PDF_Doc_List_Table extends Libraries\WP_List_Table  {
 		
 		// select which columns to exclude in search
 		$xluded_columns = array_flip( array('cb', 'insert_date', 'pdf_image', ) );
+
 		// get the current list columns
 		$pdm_columns = $this->get_columns();
+		
 		// build search parameters for columns to be searched
 		$append_query = implode(" LIKE '%{$pdf_search_key}%' OR ", array_flip( array_diff_key($pdm_columns, $xluded_columns) ) );
 

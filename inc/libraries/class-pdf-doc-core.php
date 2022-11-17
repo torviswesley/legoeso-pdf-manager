@@ -746,7 +746,6 @@ class PDF_Doc_Core extends Common\Utility_Functions {
     */
     function save_progress($idx, $total_files, $_filename, $arr_status){
         
-
         if( !is_array($arr_status)){
             return;
         }
@@ -1061,7 +1060,7 @@ class PDF_Doc_Core extends Common\Utility_Functions {
 
                 // if the current peak memory usage is greater than min peak, temporarily raise limit
                 if($_mem_peak_usage >= $this->get_min_peak_limit() ){
-                    // temporarly increases memory_limit
+                    // temporarily increases memory_limit
                     $this->raise_memory_limit();
                     $this->pdf_DebugLog("Method: extractTextFromPDF(): ", "Raising memory limit.");
                 }
@@ -1136,9 +1135,25 @@ class PDF_Doc_Core extends Common\Utility_Functions {
                         'error_message'         =>  $e->getMessage(),
                         ];
                 }
- 
-            }
-                
+            }  
+        }
+        else {
+            $_config = new \Smalot\PdfParser\Config();
+            $_config->setFontSpaceLimit(-60);
+            $_config->setDecodeMemoryLimit(102400000);
+            $_config->setRetainImageContent(false);
+            $this->raise_memory_limit();
+
+            // create new pdfParser object
+            $pdf_parser = new \Smalot\PdfParser\Parser([], $_config);
+
+            // parse the pdf file and obtain data
+            $_pdffile = $pdf_parser->parseFile($input_filename);
+
+            // get pdf metadata
+            $pdf_metadata = $_pdffile->getDetails();
+            
+            $this->reset_memory_limit();
         }
         return false;
     }
@@ -1159,6 +1174,7 @@ class PDF_Doc_Core extends Common\Utility_Functions {
 
             // local path to image directory
             $legoeso_local_img_dir = $wp_upload_dir.$legoeso_img_dir;
+
             // image filename
             $legoeso_img_filename = rand(01,999).(time()+strlen($pdf_filename)).'.jpg';
             

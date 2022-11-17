@@ -30,6 +30,22 @@
     transition: width .3s;
 }*/
 
+/**
+Jquery progress bar
+*/
+.ui-progressbar {
+    position: relative;
+  }
+
+.progress-label {
+    position: absolute;
+    left: 50%;
+    top: 5px;
+    color: #fff;
+    font-weight: bold;
+    text-shadow: 1px 1px 0 rgb(10, 10, 10);
+    font-size: 12px;
+}
 
 .progress.hide {
     opacity: 0;
@@ -69,6 +85,7 @@
     border-end-end-radius: 20px 20px;
     background-color: #e9ecef;
     align-items: center;
+    
 }
 
 .server-response-head { 

@@ -3,9 +3,9 @@ Contributors: torviswesley
 Donate link: https://www.legoeso.com/
 Tags: PDF, PDFs, PDF Manager, PDF Documents, PDF Viewer, Organize, File Manager, OCR, PDF to Text
 Requires at least: 5.6
-Tested up to: 6.0
+Tested up to: 6.1
 Stable tag: 1.2.1
-Requires PHP: 7.0
+Requires PHP: 7.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -49,8 +49,11 @@ The Legoeso PDF Manager stores your PDF documents within the WordPress upload di
 
 == Changelog ==
 
-= 1.2.1 =
-* This is the latest version.
+= 1.2.2 =
+Implemented new DataTable widgit child rows to show document metadata
+Removed support Bootstrap v5.2.0-beta1 
+Add support for jQuery Ui widgets
+Implemented jQuery Ui progressbar
 
 == Upgrade Notice ==
 

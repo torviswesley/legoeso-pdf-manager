@@ -30,6 +30,47 @@
          * 
          * The file is enqueued from inc/frontend/class-frontend.php.
 	 */
+	
+
+
+	function drawMetaTb(d){
+		// create a custom table to include the metadata from the documents
+		if(typeof d == 'string'){
+			let tableHTML;
+			let data = parseMetaData(d);
+			tableHTML = '<table cellpadding="5" cellspacing="0" border="0" style="padding-left:50px;">';
+				// generate column headers
+				tableHTML += '<tr>';
+					for( const rdata in data) {
+						tableHTML += '<td><strong>' + rdata + '</strong></td>';
+					}
+				tableHTML += '</tr>';
+				// gernerate row data
+				tableHTML += '<tr>';
+				for( const rdata in data) {
+					tableHTML += '<td>' + data[rdata]  + '</td>';
+				}
+				tableHTML += '</tr>';
+			tableHTML += '</table>';
+			return tableHTML;
+		}
+	}
+
+	/**
+	 * returns document metadata
+	 * 
+	 * @param {String} metadata 
+	 * @returns {Object} returns object containing documents metadata or false
+	 */
+	function parseMetaData(metadata){
+		if(typeof(metadata) == "string"){
+			try{
+				return JSON.parse(metadata);
+			} catch (e){
+				return {'Title':'Unknown','CreationDate':'Unknown','Pages':'Unknown'};
+			}
+		}
+	}
 
 	/**
 	 * Converts string to Title Case
@@ -58,13 +99,28 @@
 	 * @param { Array} objHeadings 
 	 * @returns { Object} oHeadings
 	 */
-	function formatHeadings(objHeadings) {
+	function formatColumnNames(objHeadings) {
 		if (!objHeadings.length)
 			return;
 		let oHeadings = [];
 
 		objHeadings.forEach(element => {
-			let str = {'title':titleCase((element.toLocaleUpperCase()).replaceAll('_', ' '))}
+			let str;
+
+			if(element.toLowerCase() == 'id'){
+				str = {
+					orderable:false,
+					data:null,
+					defaultContent: '',
+					className: 'dt-control',
+					}
+			} else {
+				str = {
+					title:titleCase((element.toLocaleUpperCase()).replaceAll('_', ' ')),
+					//className: 'dt-control',
+				}
+			}
+
 			oHeadings.push(str);
 		});
 		return oHeadings;
@@ -110,16 +166,17 @@
 
 				let oData = JSON.parse(json_resp);
 				// extract table headers from first row of data
-				let doHeadings 	= formatHeadings(oData.columns);
+				let getColumnNames 	= formatColumnNames(oData.columns);
 				// get info to the current used to create DataTable
 				let view_data 	= getDTViewData();
+				let viewType = view_data.view_type;
 				// get document url
 				let _doc_url 	= function () { return getDTViewData().view_doc_url; } 
 
-				if(view_data.view_type == "preview"){
-
+					// set table id 
+					let tableid = "#"+view_data.table_id;
 					//  add the new data to the table
-					$("#"+view_data.table_id).DataTable({
+					var legoeso_dtable = $(tableid).DataTable({
 						ajax: data_url,
 						//data:  oData.data,
 						autowidth: true,
@@ -127,25 +184,28 @@
 
 							{
 								targets: 0,
-								visible: false,
-
+								visible: true,
 							},
 							{
 								targets: 1,
 								render: function(data, type, row, meta){
-
-									if(data){
-										return 	"<img height='150px' width='150px' src='"+row[1] +"' />";
-									} else {
-										return "* NO IMAGE *";
+									if(viewType == "preview"){
+										if(data){
+											return 	"<img height='150px' width='150px' src='"+row[1] +"' />";
+										} else {
+											return "* NO IMAGE *";
+										}
 									}
-
-								}			
+									else {
+										return data
+									}
+								},
+								visible : (viewType == 'preview') ? true : false ,			
 							},
 							{
 								targets: 2,
 								render: function(data, type, row, meta){
-									let pid = btoa(JSON.stringify(row.slice(0, row.length-1)));
+									let pid = btoa(JSON.stringify(row.slice(0, row.length-2)));
 									return '<a target="_blank" href="' + _doc_url() + '/' + row[2] + '?action=view_document&pid=' + pid +'&_wpnonce='+ get_wpnonce() +'"> ' + data +'</a> ';
 								}
 							},
@@ -154,45 +214,38 @@
 								visible: false,
 
 							},
-						],
-						columns: doHeadings,
-					});				
-				} else {
-					//  add the new data to the table
-					$("#"+view_data.table_id).DataTable({
-						data:  oData.data,
-						autowidth: true,
-						columnDefs:[
 							{
-								targets: 0,
+								targets: 7,
 								visible: false,
 
 							},
-							{
-								targets: 1,
-								visible: false,
-
-							},
-							{
-								targets: 2,
-								render: function(data, type, row, meta){
-									let pid = btoa(JSON.stringify(row.slice(0, row.length-1)));
-									return '<a target="_blank" href="' + _doc_url() + '/' + row[2] + '?action=view_document&pid=' + pid +'&_wpnonce='+ get_wpnonce() +'"> ' + data +'</a> ';
-								}
-							},
-							{
-								targets: 6,
-								visible: false,
-							},
-							
 						],
-						columns: doHeadings,
+						columns: getColumnNames,
+					});	
+
+					// add event listeners for opening and closing details
+					$(tableid + ' tbody').on('click', 'td.dt-control', function(){
+						let tr = $(this).closest('tr');
+						let row = legoeso_dtable.row(tr);
+
+						if(row.child.isShown()){
+							// this row is already open - close it
+							row.child.hide();
+							tr.removeClass('shown');
+						}
+						else {
+							// open this row
+							row.child(drawMetaTb( (row.data()[7]) )).show();
+							tr.addClass('shown');
+						}
 					});
-				}
 				return;
 			}
 		});
 	}
+
+
+				
 	/**
 	 * TODO: fix view types, display of tables and add render option to display images. 
 	 * add link to download individual pdf files
