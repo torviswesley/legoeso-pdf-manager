@@ -51,7 +51,7 @@ Features include unlimited file uploads. upload documents via drag and drop, bul
 ## For Help, comments or request additional features.
 Email support@legoeso.com
 
-## Changes v1.2.1 
+## Changes v1.2.2 
 1. Implemented new DataTable widgit child rows to show document metadata
 2. Removed support Bootstrap v5.2.0-beta1 
 3. Add support for jQuery Ui widgets
