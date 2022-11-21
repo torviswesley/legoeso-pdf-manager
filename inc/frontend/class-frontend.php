@@ -583,7 +583,7 @@ class Frontend extends Common\Utility_Functions {
 	 * @return 	none
 	 */
 	public function add_legoeso_viritual_pages(){
-		$is_login = isset($_GET['login']) ? $_GET['login']: '';
+		$is_login = isset($_GET['login']) ? sanitize_text_field($_GET['login']): '';
 		if( isset($_GET['action']) && $_GET['action'] == 'view_document' &&  $is_login != 1) {
 			
 			wp_verify_nonce( 'legoeso_pdf', '_wpnonce');
@@ -602,9 +602,9 @@ class Frontend extends Common\Utility_Functions {
 				}
 			}
 			else {
-				$_redirect_referer = '';
+				$_redirect_referer = (isset($_SERVER['HTTP_REFERER'])) ? urlencode($_SERVER['HTTP_REFERER']): home_url("index.php");
 				// build redirect query string
-				$redirect_to = add_query_arg(array('login' => urlencode('1'), 'redirect_to' => urlencode($_SERVER['HTTP_REFERER']), ), home_url("wp-login.php") );
+				$redirect_to = add_query_arg(array('login' => urlencode('1'), 'redirect_to' => $_redirect_referer, ), home_url("wp-login.php") );
 				wp_safe_redirect( $redirect_to, 302, "WP Legoeso PDF Manager");
 				die();
 			}

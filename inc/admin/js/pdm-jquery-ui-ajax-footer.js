@@ -10,9 +10,9 @@
 	 */
 
 	
-	var refreshCount = 1;
+	var refreshCount = 0;
 	var uploadTimer = 0;
-
+	var process_percent = 0;
 	/**
 	 * Declare Constants
 	 */
@@ -20,6 +20,10 @@
 	const allowedTypes = ['application/pdf', 'application/x-zip-compressed'];
 	const _debug = true;
 
+
+	/**
+	 * Misc functions
+	 */
 	// clears timerInterval
 	function stopRefresh(progressbar = null){
 		clearInterval(uploadTimer);
@@ -29,19 +33,34 @@
 		}
 	}
 
-	function _show_status_messages(_message_txt, _msg_class = 'warning'){
-		if(_debug){
-			console.log(_message_txt);
-		}
-		$('#status_message').removeClass();
-		$('#status_message').html(_message_txt).fadeIn();
-		$('#status_message').html(_message_txt).fadeOut(10000);
-		$('#status_message').addClass('col-auto ' + _msg_class);
+	/**
+	 * converts integer of bytes to unit size values i.e. B, KB, MB etc.
+	 * @param {Integer} bytes 
+	 * @returns {String}
+	 */
+	function bytesToSize(bytes) {
+		const units = ["byte", "kilobyte", "megabyte", "terabyte", "petabyte"];
+		const unit = Math.floor(Math.log(bytes) / Math.log(1024));
+		return new Intl.NumberFormat("en", { style: "unit", unit: units[unit] }).format(bytes / 1024 ** unit);
 	}
+
+	/**
+	 * Traverse Json Object 
+	 * @param {object} js_obj 
+	 * @return {string}
+	 */
+	 function do_JsonTree(js_obj){
+		let str_text = '';
+		for( let pn in js_obj){
+			str_text +=  pn +': ' +js_obj[pn] + '&#13;&#10;&#9;';
+		}
+		return (str_text);
+	}
+
 	/**
 	 * strips a string of the HTML tags
-	 * @param {*} str 
-	 * @returns str
+	 * @param {String} str 
+	 * @returns {String}
 	 */
 	function removeTags(str) {
 		if ((str===null) || (str===''))
@@ -54,6 +73,22 @@
 		// HTML tag with a null string.
 		return str.replace( /(<([^>]+)>)/ig, '');
 	}
+
+	/**
+	 * 
+	 * @param {String} _message_txt 
+	 * @param {String} _msg_class 
+	 */
+	function _show_status_messages(_message_txt, _msg_class = 'warning'){
+		if(_debug){
+			console.log(_message_txt);
+		}
+		$('#status_message').removeClass();
+		$('#status_message').html(_message_txt).fadeIn();
+		$('#status_message').html(_message_txt).fadeOut(10000);
+		$('#status_message').addClass('col-auto ' + _msg_class);
+	}
+
 	/**
 	 * Displays a message to the user.
 	 * @param {string} strMsg
@@ -122,7 +157,6 @@
 		// add text for header 
 		_server_response_head.html(_text);
 		_server_response_messages.html( _response_text );	
-
 	}
 
 	/**
@@ -137,7 +171,18 @@
 		this.className = (this.className == 'server-response-head') ? 'server-response-head-expand' : 'server-response-head';
 		let _server_message = $('#server-response-messages')[0];
 		_server_message.className = (_server_message.className == 'server-message') ? 'server-message-expand' : 'server-message';
+	}
 
+	/**
+	 * Enable/disables the select files button
+	 * @param {string} _on 
+	 */
+	function toggle_submit_buttons(_on){
+		let _val = (_on) ? true : false;
+		$('#drag-drop-info-p').css('display', (_val) ? 'none':'block');
+		$('#pdf_category').prop('disabled', _val);
+		$('#pdm-upload-browse-button').prop('disabled', _val);
+		$('#pdm-upload-submit-button').prop('disabled', _val);
 	}
 
 	function setdebug_log(_text) {
@@ -146,9 +191,6 @@
 				console.log(_text);
         }
     }
-	
-
-
 
 	// clears the response text area
 	function clear_response_area(){
@@ -164,10 +206,13 @@
 
 		toggle_submit_buttons(false);
 		let _upload_form = $('#pdm_upload_form')[0];
+		var progressbar = $("#progressbar"), progressLabel = $( ".progress-label" );
 
-		$('.progress').removeClass('hide');
-		$('.progress').addClass('display');
 		$('#legoeso-drop-text').text('Drag file here to upload');
+		refreshCount = 0; // reset counter
+
+		progressLabel.text(''); // remove trailing text from progress label
+		progressbar.progressbar("destroy"); // remove progressbar
 
 		if(_upload_form){
 			// Reset select category drop down 
@@ -176,7 +221,11 @@
 		}
 
 	}
-
+	/**
+	 * changes the text to be displayed within the  drag drop area
+	 * @param {string} _text 
+	 * @param {stirng} t_color 
+	 */
 	function change_drag_area_text(_text = '', t_color = 'none'){
 		let drop_area = $("#legoeso-drop-text");
 			drop_area.html(_text);
@@ -185,14 +234,7 @@
 				drop_area.addClass('drag-drop-text');
 			} else {
 				drop_area.removeClass('drag-drop-text');
-			}
-				
-	}
-
-	function bytesToSize(bytes) {
-		const units = ["byte", "kilobyte", "megabyte", "terabyte", "petabyte"];
-		const unit = Math.floor(Math.log(bytes) / Math.log(1024));
-		return new Intl.NumberFormat("en", { style: "unit", unit: units[unit] }).format(bytes / 1024 ** unit);
+			}	
 	}
 
 	/**
@@ -222,31 +264,6 @@
 			console.log(error);
 		}
 	}
-
-	/**
-	 * Enable/disables the select files button
-	 * @param {string} _on 
-	 */
-	function toggle_submit_buttons(_on){
-		let _val = (_on) ? true : false;
-		$('#pdf_category').prop('disabled', _val);
-		$('#pdm-upload-browse-button').prop('disabled', _val);
-		$('#pdm-upload-submit-button').prop('disabled', _val);
-	}
-
-	/**
-	 * Traverse Json Object 
-	 * @param {object} js_obj 
-	 * @return {string}
-	 */
-	function do_JsonTree(js_obj){
-		let str_text = '';
-		for( let pn in js_obj){
-			str_text +=  pn +': ' +js_obj[pn] + '&#13;&#10;&#9;';
-		}
-		return (str_text);
-	}
-
 
 	/**
 	 * validates submitted files are ready to be uploaded
@@ -302,11 +319,12 @@
 		return { 'passed_validation':_passed_validation, 'error_message': _error_message} ;
 	}
 
-	//	refreshes the progress-bar and keeps open communication with the server
+	/**
+	 * refreshes the progress-bar and keeps open communication with the server
+	 * 
+	 * @return {void}
+	 */
 	function updateFileProcessStatus() {
-		setdebug_log('Called: updateFileProcessStatus()');
-		//	show the hidden element
-		$('.progress').removeClass('hide');
 
 		$.ajax({
 
@@ -314,36 +332,31 @@
 				ajax_obj.pdm_nonce + '&pdm_process_text=' + ajax_obj.pdm_process_text,
 			dataType: 'json',
 			success: function (data) {
-				// build progress message 
-				let str_ajax_response = null;
-				if(typeof(data) == "object") {
-					str_ajax_response =	 'Processing File: "' + data.filename + '"<br>';
-					str_ajax_response += ' <strong>' + data.file + '</strong> of ' + data.total_files;
-					
-					// setup progress bar
-					displayProgressBar('Processing Files...');
 
-					if(data.percent != 100){
-						// draw status bar
-						change_drag_area_text(str_ajax_response);				
+				var progressLabel 	= $(".progress-label");
 
-						displayProgressBar('Processing Files... ('+ data.percent +'%)', data.percent);
-					} 
-					else if(data.percent == 100 && data.status == 'complete') 
-					{
-						let pb = displayProgressBar(data.status, data.percent);
-						// stop the timer
-						stopRefresh(pb);
+				let _status_message = 'Processing...';
+
+					if(typeof(data) == "object") {
+						var percent 	= data.percent || 0;
+						var file 		= data.file;
+						var message 	= data.message;
+						var total_files = data.total_files;
+
+						_status_message 	= 'Processing file: <br> <strong>"' + data.filename + '"</strong><br>';
+
+						if(data.message) {
+							progressLabel.text( message);
+						}
+						_status_message 	+= '<strong>' + file + '</strong> of ' + total_files;
+
+						change_drag_area_text(_status_message);	
 						
-						console.log('completed... refresh should stop')
-						// draw status bar
-						change_drag_area_text(str_ajax_response);
-						reset_upload_form();
-					}
-				} 
+						process_percent = percent;
+					}	
 			},
 			error: function (e) {
-				// stop refreh timer on error
+				// stop refresh timer on error
 				stopRefresh();
 
 				let errmsg = 'Response: ' + e.status + ' (' + e.statusText + ') ' + e.responseText;
@@ -355,75 +368,70 @@
 				}
 			}
 		});
+		
 	}
 
 	/**
-	 * Adds the upload and progress event listener to the XMLHttpRequest
+	 * Creates the XMLHttpRequest object and monitors the file upload progress and
 	 * updates the status 
 	 * @returns XHR object
 	 */
-	function callXHR() {
+	function sendXMLHttpRequest() {
 		let xhr = new window.XMLHttpRequest();
 		xhr.responseType = 'text';
-		xhr.upload.addEventListener("progress", 
-			function (evt) {
+		xhr.upload.addEventListener("progress", function (evt) {
 				let strText = 'Uploading file(s)...';
-				let percentComplete = 0;
+				var percentComplete = 0;
 
-				setdebug_log(strText);
 				if (evt.lengthComputable) {
 					percentComplete = Math.round( (evt.loaded / evt.total  * 100).toFixed(2) );
-					if(percentComplete) {
-				
-						// draw progress bar
-						displayProgressBar(percentComplete + '% ' + strText, percentComplete);
-						
-					} else {
-						displayProgressBar('Processing...');
-					}
+
+					// draw progress bar
+					doProgressBar( strText + percentComplete + '% ', percentComplete);
+					console.log(percentComplete);
 				}
 				change_drag_area_text(percentComplete + '% ' + strText  );
 			}, false
 		);
 
 		xhr.upload.addEventListener("load", 
-			function(evt){
+			function(){
+				doProgressBar('Processing...', false);
 				if(!uploadTimer){
-					uploadTimer = setInterval(updateFileProcessStatus, 900);
+					uploadTimer = setInterval(updateFileProcessStatus, 1000);
 				}
-				console.log('file(s) upload done. Timer ID: ' + uploadTimer);
-
 			}),
 			xhr.upload.addEventListener('error', function(e){
-				console.log('error on upload.')
-			});
+				console.log('error: ' + e.message);
+		});
+		
 		return xhr;
 	}
 
-
-
-	// jQuery progress bar
-	function displayProgressBar(progressText, _percentComplete = 0) {
+	/**
+	 * draw jQuery progressbar widget
+	 * @param {string} progressText 
+	 * @param {string} _percentComplete 
+	 * @returns {jQuery.widget}
+	 */
+	function doProgressBar(progressText = '', _percentComplete = 0) {
 		var progressbar = $("#progressbar"),
 			progressLabel = $(".progress-label");
 
 		var progressValue = progressbar.find(".ui-progressbar-value");
-		progressValue.css({ "background":"green" });
+			progressValue.css({ "background":"green" });
 
-		progressbar.progressbar({
-			value: _percentComplete,
+			progressbar.progressbar({
+				value: _percentComplete,
+				change: function() {
+					progressLabel.text(progressText);
+					console.log('change:'+progressText);
+				},
+				complete: function() {
+					console.log('complete: ' + progressText);
+				}
+			});
 
-			change: function() {
-				progressLabel.text(progressText);
-				console.log(progressText);
-			},
-			complete: function() {
-				progressLabel.text(progressText);
-				//progressbar.progressbar("destroy");
-				console.log("pb complete.");
-			}
-
-		});
 		return progressbar.progressbar("instance");
 	}
 	
@@ -453,7 +461,7 @@
 		toggle_submit_buttons(true);
 
 		$.ajax({
-			xhr: callXHR,
+			xhr: sendXMLHttpRequest,
 			url: ajax_obj.ajax_url,
 			type: 'POST',
 			contentType: false,
@@ -484,7 +492,10 @@
 						show_server_response('Upload completed!', 'sucess');
 					}
 				}
-				
+
+				if( process_percent == 100 || data._status == "complete"){
+					stopRefresh();
+				}
 				reset_upload_form();
 				legoeso_list.display();
 				

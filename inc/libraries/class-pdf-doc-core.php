@@ -7,7 +7,7 @@ use Timer;
 use \Imagick;
 
 /**
- * Adding support for PDF Parser Library see
+ * Add support for Smlot PDF Parser Library see
  * @author  Konrad Abicht <k.abicht@gmail.com>
  * @date    2021-02-09
  *
@@ -160,9 +160,9 @@ class PDF_Doc_Core extends Common\Utility_Functions {
      * 
 	 * @since    1.0.2
 	 * @access   private
-	 * @var      Int   $max_pages_extract    don't extract documents with pages > than max
+	 * @var      Int   $max_pages_to_extract    don't extract documents with pages > than max
 	 */
-    private $max_pages_extract;
+    private $max_pages_to_extract;
 
      /**
 	 * specifies whether the file is a large file.
@@ -215,6 +215,15 @@ class PDF_Doc_Core extends Common\Utility_Functions {
 	private $legoeso_db_tablename;
 
 	/**
+	 * Store the info for the current file that is being processed
+	 *
+	 * @since    1.2.2
+	 * @access   private
+	 * @var      Array    $legoeso_db_tablename
+	 */
+    private $process_file_info = [];
+
+	/**
 	 * Initializes class variables and set its properties.
 	 *
 	 * @since   1.0.0
@@ -225,11 +234,11 @@ class PDF_Doc_Core extends Common\Utility_Functions {
         $this->pdm_plugin_dir = NS\PLUGIN_NAME_DIR;
         $this->pdm_library = NS\PLUGIN_NAME_DIR.'inc/libraries/';
         
-        // set the max filesize
-        $this->pdm_max_filesize = 20010000;
+        // set the max filesize i.e 25MB
+        $this->pdm_max_filesize = 26214400;
         
-        // set the max number of pages to extract text
-        $this->max_pages_extract = 25;
+        // set the max number of pages to extract text from
+        $this->max_pages_to_extract = 25;
 
         // log memory limit for debugging and file processing
         $mem_limit = $this->return_bytes( ini_get('memory_limit') );
@@ -541,7 +550,10 @@ class PDF_Doc_Core extends Common\Utility_Functions {
             $filename       = sanitize_file_name($_files['name'][$i]);
             $_file_type     = sanitize_file_name($_files['type'][$i]);
             $_tmp_filename  = $_files['tmp_name'][$i];
-            
+
+            // saves/stores info about the current file process
+            $this->process_file_info = ['filename' => $filename, 'id' => ($i+1), 'total_files' => $_num_of_files];
+
             //  save the curent progress for the progress bar. 
             $this->save_progress($i+1, $_num_of_files, $filename, $this->processPDFFile($filename, $_tmp_filename));
         }
@@ -744,7 +756,7 @@ class PDF_Doc_Core extends Common\Utility_Functions {
     * @param array $arr_status
 	* @return none
     */
-    function save_progress($idx, $total_files, $_filename, $arr_status){
+    private function save_progress($idx, $total_files, $_filename, $arr_status){
         
         if( !is_array($arr_status)){
             return;
@@ -772,6 +784,7 @@ class PDF_Doc_Core extends Common\Utility_Functions {
             'total_files'       =>  $total_files,
             'status'            =>  ($percent_complete == 100) ? 'complete' : 'processing',
             'file'              =>  $idx,
+            'filename'          =>  esc_html($_filename),
             'retries'           =>  $this->_status_counter += 1,
         );
 
@@ -792,6 +805,29 @@ class PDF_Doc_Core extends Common\Utility_Functions {
         
         // Sleep one second so we can see the delay
         sleep(1);
+    }
+
+    /**
+     * sends Ajax respone/message of current file being procesed
+     * 
+     * @since 1.2.2 
+     * @param int $idx
+     * @param int $total_files
+     * @param array $arr_status
+	 * @return none
+     */
+    private function send_progress($message = 'Processing '){
+        $fileinfo = $this->process_file_info;
+        $idx = $fileinfo['id'];
+        $total_files = $fileinfo['total_files'];
+        $filename = $fileinfo['filename'];
+
+        // message to send back as response
+        $status_response = array(
+            'message'    =>  esc_html($message),
+        );
+        // sends info back to sercer
+        $this->save_progress($idx, $total_files, $filename, $status_response);
     }
 
      /**
@@ -826,11 +862,13 @@ class PDF_Doc_Core extends Common\Utility_Functions {
         */
         global $wpdb;
         $wpdb->show_errors(true);
-
+        
         //  set the tablename document will be inserted
         $tablename = $this->get_db_tablename();
+        
         //  get the category the document will be associated with
         $pdf_category = ( $this->get_post_data('pdf_category') == -1 ) ? 'General' : $this->get_post_data('pdf_category');
+
         // initialize default row values, will be used later to update the table data
         $insert_rowID = null;
         $pdf_has_path = -1; // pdf file path
@@ -848,9 +886,9 @@ class PDF_Doc_Core extends Common\Utility_Functions {
         $force_img_only     = $this->get_force_image_extraction();
 
         $extracted_image    = false;
-        $uploadStatus = 'failed';
-        $status_message = 'incomplete';
-        $pdf_fileversion = '0';
+        $uploadStatus       = 'failed';
+        $status_message     = 'incomplete';
+        $pdf_fileversion    = '0';
 
         if(file_exists($pdf_filepath)){
        
@@ -858,7 +896,7 @@ class PDF_Doc_Core extends Common\Utility_Functions {
             $pdf_has_path = 1;
             $pdf_fileversion = $this->get_pdfversion($pdf_filepath);
 
-            // default columns to insert data into database 
+            // default columns used to insert data into database 
             $pdf_query_columns = array(
                 'filename'           =>  sanitize_title_with_dashes($filename),
                 'has_path'           =>  $pdf_has_path,
@@ -896,27 +934,30 @@ class PDF_Doc_Core extends Common\Utility_Functions {
                     $pdf_query_columns = array_merge($pdf_query_columns, $pdf_extracted_columns);
                     $pdf_extract_properties = null;
                 }
+                else {
+                    // send status back to the Ajax caller
+                    $this->send_progress("Text extraction failed.");
+                }
             } 
             else {
-                //  Extract the text from the PDF file and get the document properties
+
+                // 1. Attempt to extract image data from PDF file
+                if($extractedImageInfo =  $this->extract_image_from_pdf($pdf_filepath)){
+                    $extracted_image = true;
+                }
+
+                // if image extraction successful, get path info to image
+                // and merge with standard columns
+                if($extracted_image){
+                    $image_paths = $extractedImageInfo;   // array
+                    $image_paths['has_img'] = 1;
+                    $pdf_query_columns = array_merge($pdf_query_columns, $image_paths);
+                }
+
+                // 2. Attempt to extract text from PDF file and get the document properties
                 if($pdf_extract_properties = $this->extractTextFromPDF($pdf_filepath)){
-                    
+
                     $extracted_textdata    = $pdf_extract_properties['extracted_data'];  // string
-
-                    if(!isset($pdf_extract_properties['error_message'])){
-                        // try to extract image data from PDF file
-                        if($extractedImageInfo =  $this->extract_image_from_pdf($pdf_filepath)){
-                            $extracted_image = true;
-                        }
-
-                        // if image extraction successful, get path info to image
-                        // and merge with standard columns
-                        if($extracted_image){
-                            $image_paths = $extractedImageInfo;   // array
-                            $image_paths['has_img'] = 1;
-                            $pdf_query_columns = array_merge($pdf_query_columns, $image_paths);
-                        }
-                    }
 
                     // add text extraction data to columns array
                     $pdf_extracted_columns = [            
@@ -928,30 +969,13 @@ class PDF_Doc_Core extends Common\Utility_Functions {
                     if(is_array($metadata)){
                         $pdf_query_columns = array_merge($pdf_query_columns, $metadata);
                     }
-
+                    // build columns for query
                     $pdf_query_columns = array_merge($pdf_query_columns, $pdf_extracted_columns);
 
                 }
                 else {
-                    // try to extract image data from PDF file
-                    if($extractedImageInfo =  $this->extract_image_from_pdf($pdf_filepath)){
-                        $extracted_image = true;
-                    }
-                    // if image extraction successful, get path info to image
-                    // and merge with standard columns
-                    if($extracted_image){
-                        $image_paths = $extractedImageInfo;   // array
-                        $image_paths['has_img'] = 1;
-                        $pdf_query_columns = array_merge($pdf_query_columns, $image_paths);
-                    }
-                 
-                    // add text extraction data to columns array
-                    $pdf_extracted_columns = [            
-                        'text_data'         =>  '* NO DATA *',
-                        'pdf_filesize'      =>  $this->get_working_filesize(),
-                    ];
-
-                    $pdf_query_columns = array_merge($pdf_query_columns, $pdf_extracted_columns);
+                    // send status back to the Ajax caller
+                    $this->send_progress("Text extraction failed.");
                 }
             }
         
@@ -965,10 +989,14 @@ class PDF_Doc_Core extends Common\Utility_Functions {
             if($insert_rowID < 1){
                 $uploadStatus = "failed";
                 $status_message = "failed to add '{$filename}' to database.";
+                // send status back to the Ajax caller
+                $this->send_progress($status_message);
             }
             else {
                 $uploadStatus = "success";
-                $status_message  = "{$filename} added successfully.";
+                $status_message  = "{$filename} - added successfully.";
+                // send status back to the Ajax caller
+                $this->send_progress($status_message);
             }
         }
 
@@ -1041,10 +1069,9 @@ class PDF_Doc_Core extends Common\Utility_Functions {
     {
         // log the following stats for debugging
         $mem_usage = memory_get_usage(true);
-        
-        $this->pdf_DebugLog("Method: extractTextFromPDF(): Memory Usage", $mem_usage);
         $filesize = $this->get_working_filesize();
 
+        // if the size of the file is less than the max filesize
         if( ( file_exists($input_filename)) && ($filesize < $this->get_max_filesize()) ){
             // initialize variables
             $extractedImagePath = null;
@@ -1055,8 +1082,6 @@ class PDF_Doc_Core extends Common\Utility_Functions {
             $_mem_peak_usage = memory_get_peak_usage(true);
 
             try {
-                // if the process is going to need more memory than currently available try extracting image only
-                $this->pdf_DebugLog("Method: extractTextFromPDF(): Current Memory Usage: ".memory_get_usage(true).", Filesize {$filesize}, ",  "Peak Usage: ".$_mem_peak_usage);
 
                 // if the current peak memory usage is greater than min peak, temporarily raise limit
                 if($_mem_peak_usage >= $this->get_min_peak_limit() ){
@@ -1065,9 +1090,7 @@ class PDF_Doc_Core extends Common\Utility_Functions {
                     $this->pdf_DebugLog("Method: extractTextFromPDF(): ", "Raising memory limit.");
                 }
 
-                    // create new instance of PdfParser
-                    $this->pdf_DebugLog("Method: extractTextFromPDF(): Min Limit".  $this->get_min_peak_limit() ." Peak Memory Usage Before Text Extraction:",  $_mem_peak_usage);
-                    
+                    // create new instance of PdfParser config
                     $_config = new \Smalot\PdfParser\Config();
                     $_config->setFontSpaceLimit(-60);
                     $_config->setDecodeMemoryLimit(102400000);
@@ -1079,38 +1102,32 @@ class PDF_Doc_Core extends Common\Utility_Functions {
                     // parse the pdf file and obtain data
                     $_pdffile = $pdf_parser->parseFile($input_filename);
 
-                    // get pdf metadata
-                    $pdf_metadata = $_pdffile->getDetails();
-
                     // get the number pages document contains
                     $number_pages = count($_pdffile->getPages());
 
                     $this->pdf_DebugLog("Method: extractTextFromPDF(): Meta Data:",  json_encode($pdf_metadata));
 
                     // only attempt to extract text if the file contains < the max pages allowed
-                    if($number_pages <= $this->max_pages_extract){
-                        // attempt to extract the text from the file, only extract text from 1st page
-                        //$extractedData = trim( sanitize_text_field($_pdffile->getText()) );
-                        //$extractedData = trim( sanitize_text_field($_pdffile->getPages()[0]->getText()) );
+                    if($number_pages <= $this->max_pages_to_extract){
                         $extractedData = sanitize_text_field($_pdffile->getText());
-                        $this->pdf_DebugLog("Method: extractTextFromPDF(): Memory Usage After Text Extraction",  memory_get_usage(true));
                     } 
 
                     // if no data was extracted from file extract image
-                    if (  strlen($extractedData) < 1 ){
+                    if ( strlen($extractedData) < 1 ){
                         $extractedData = "* NO DATA *";
                     }
 
+                    // get pdf metadata
+                    $pdf_metadata = $_pdffile->getDetails();
+
                     // clear pdf_parser reference in attempt to free its resources
                     $pdf_parser = null;
-                   
-                    $this->pdf_DebugLog("Method: extractTextFromPDF(): Peak Memory Usage After [Unset] Text Extraction", memory_get_usage(true));
 
                     return [
                             'extracted_data'        =>  $extractedData,
                             'pdf_metadata'          =>  ['metadata' => wp_json_encode($pdf_metadata),],
                             'pdf_filesize'          =>  $filesize,
-                            'status'                =>  'compelte',
+                            'status'                =>  'complete',
                             ];
 
             } 
@@ -1122,11 +1139,8 @@ class PDF_Doc_Core extends Common\Utility_Functions {
 
                     if(empty($extractedData)){
                         $this->pdf_DebugLog("Text extraction failed for file '{$input_filename}'::", $e->getMessage().", Line:".$e->getLine());
-                        $this->pdf_DebugLog("Method: extractTextFromPDF(): Memory Usage After Failing Text Extraction", memory_get_usage(true));
                     }
-                    else{
-                        $this->pdf_DebugLog("An error occurred while processing the pdf file::", $e->getMessage());
-                    }
+
                     return [
                         'extracted_data'        =>  "* NO DATA *",
                         'pdf_filesize'          =>  $filesize,
@@ -1138,22 +1152,98 @@ class PDF_Doc_Core extends Common\Utility_Functions {
             }  
         }
         else {
-            $_config = new \Smalot\PdfParser\Config();
-            $_config->setFontSpaceLimit(-60);
-            $_config->setDecodeMemoryLimit(102400000);
-            $_config->setRetainImageContent(false);
-            $this->raise_memory_limit();
+            // $_config = new \Smalot\PdfParser\Config();
+            // $_config->setFontSpaceLimit(-60);
+            // reducing deocode memory size for large files
+            //TODO fix uploading files message that stays
+            // fix processing to say this must be a large file please wait
+            // $_config->setDecodeMemoryLimit(43361254);
+            // $_config->setRetainImageContent(false);
+            // $this->raise_memory_limit();
 
-            // create new pdfParser object
-            $pdf_parser = new \Smalot\PdfParser\Parser([], $_config);
+            // $this->pdf_DebugLog("Method: extractTextFromPDF(): Large File:", memory_get_usage(true));
+            // $this->pdf_DebugLog("Method: extractTextFromPDF():2 Large File:", memory_get_peak_usage(true));
+            try{
+                function get_pdf_prop($pdfdata)
+                {
 
-            // parse the pdf file and obtain data
-            $_pdffile = $pdf_parser->parseFile($input_filename);
-
-            // get pdf metadata
-            $pdf_metadata = $_pdffile->getDetails();
+                    if(!$pdfdata)
+                        return false;
+                    //Extract cross-reference table and trailer
+                    if(!preg_match("/xref[\r\n]+(.*)trailer(.*)startxref/s", $pdfdata, $a))
+                        return false;
+                    $xref = $a[1];
+                    $trailer = $a[2];
+                    
+                    print($s);exit();  
+                    
+                    
+                    //Extract Info object number
+                    if(!preg_match('/Info ([0-9]+) /', $trailer, $a))
+                        return false;
+                    $object_no = $a[1];
+                
+                    //Extract Info object offset
+                    $lines = preg_split("/[\r\n]+/", $xref);
+                    $line = $lines[1 + $object_no];
+                    $offset = (int)$line;
+                    if($offset == 0)
+                        return false;
+                
+                    //Read Info object
+                    fseek($f, $offset, SEEK_SET);
+                    $s = fread($f, 1024);
+                    fclose($f);
+                
+                    //Extract properties
+                    if(!preg_match('/<<(.*)>>/Us', $s, $a))
+                        return false;
+                    $n = preg_match_all('|/([a-z]+) ?\((.*)\)|Ui', $a[1], $a);
+                    $prop = array();
+                    for($i=0; $i<$n; $i++){
+                        $prop[$a[1][$i]] = $a[2][$i];
+                    }
+                        
+                    
+                    return $prop;
+                }
+        
             
-            $this->reset_memory_limit();
+
+                // create new pdfParser object
+                // $pdf_parser = new \Smalot\PdfParser\Parser([], $_config);
+
+                // $this->reset_memory_limit();
+
+                // // parse the pdf file and obtain data
+                // $_pdffile = $pdf_parser->parseFile($input_filename);
+
+                // // get pdf metadata
+                // $pdf_metadata = $_pdffile->getDetails();
+            
+
+                // $this->reset_memory_limit();
+
+                $pdf_data = file_get_contents($input_filename, false, null, -16384);
+                // $meta = preg_match_all('/\/[^\(]*\(([^\/\)]*)/', $pdf_data, $matches);
+                $matches = get_pdf_prop($pdf_data);
+                $this->pdf_DebugLog("Method: extractTextFromPDF():Meta Large File:", $matches);
+
+                $pdf_data = null;
+                $matches = null;
+                return [
+                    'extracted_data'        =>  '*NO DATA*',
+                    'pdf_metadata'          =>  ['metadata' => wp_json_encode($meta),],
+                    'pdf_filesize'          =>  $filesize,
+                    'status'                =>  'complete',
+                    ];
+
+            }
+            catch(\Exception $e) {
+
+                return false;
+
+            }  
         }
         return false;
     }
@@ -1237,6 +1327,7 @@ class PDF_Doc_Core extends Common\Utility_Functions {
      * @since 1.2.1
      */
     private function reset_memory_limit(){
+        gc_collect_cycles();
         ini_restore('memory_limit');
     }
 
