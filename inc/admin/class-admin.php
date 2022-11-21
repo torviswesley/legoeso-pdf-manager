@@ -363,12 +363,12 @@ class Admin extends Common\Utility_Functions{
 				$status_text = file_get_contents($status_filename);
 				// send the json object back the client-side JavaScript
 				
-				$this->pdf_DebugLog(" Refresh Called::", "Time: ".time());
+				$this->pdf_DebugLog(" Refresh Called:: Time: ".time(), "");
 				//	convert to JSON to read the status of the process
 				$obj = json_decode($status_text);
 				if($status_text){
 					// finished
-					$this->pdf_DebugLog(" Sent Reponse::", "Time: ".time());
+					$this->pdf_DebugLog(" Sent Reponse:: Time: ".time(), "");
 					die($status_text);
 				} else {
 					// send Ajax response JSON encoded

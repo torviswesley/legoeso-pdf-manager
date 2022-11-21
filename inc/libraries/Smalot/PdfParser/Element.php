@@ -118,7 +118,7 @@ class Element
                 $name = \count($values);
                 $value = substr($content, $position);
             }
-
+           
             if ($element = ElementName::parse($value, $document, $position)) {
                 $values[$name] = $element;
             } elseif ($element = ElementXRef::parse($value, $document, $position)) {
@@ -144,7 +144,8 @@ class Element
                 break;
             }
         } while ($position < \strlen($content));
-
+        
+        gc_collect_cycles();
         return $values;
     }
 }

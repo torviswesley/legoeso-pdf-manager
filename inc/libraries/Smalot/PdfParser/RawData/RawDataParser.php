@@ -760,6 +760,7 @@ class RawDataParser
                     // start stream object
                     $objtype = 'stream';
                     $offset += 6;
+                    
                     if (1 == preg_match('/^([\r]?[\n])/isU', substr($pdfData, $offset), $matches)) {
                         $offset += \strlen($matches[0]);
                         $pregResult = preg_match(

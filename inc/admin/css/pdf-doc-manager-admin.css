@@ -3,61 +3,21 @@
  *
  * The file is enqueued from inc/admin/class-admin.php.
 
-#progressOutter {
-    width: 500px;
-    border: 0px solid #aaa;
-    height: 20px;
-}
-#progressbar {
-    width: 500px;
-    border: 0px solid #aaa;
-    height: 20px;
-}
-#progressbar .bar {
-    background-color: #ccc;
-    height: 20px;
-}
-
-
-.progress {
-    display: block;
-    text-align: center;
-    color:ghostwhite;
-    font-weight:bold;
-    width: 0;
-    height: 20px;
-    background: red;
-    transition: width .3s;
-}*/
-
 /**
 Jquery progress bar
 */
 .ui-progressbar {
     position: relative;
+    height: 10px;
   }
-
-.progress-label {
-    position: absolute;
-    left: 50%;
+  
+  .progress-label {
     top: 5px;
-    color: #fff;
+    color: rgb(0, 0, 0);
     font-weight: bold;
-    text-shadow: 1px 1px 0 rgb(10, 10, 10);
-    font-size: 12px;
-}
-
-.progress.hide {
-    opacity: 0;
-    transition: opacity 1.3s;
-} 
-
-.progress.display {
-    vertical-align: middle;
+    font-size: 14px;
     text-align: center;
-    margin: 5px 0px 0px 0px;
-    border-top-left-radius: 80px 80px;
-    border-top-right-radius: 80px 80px;
+
 }
 
 .status_messages {
@@ -136,6 +96,9 @@ a.delete_item{
     color:crimson;
 }
 
+.drag-drop-info {
+width: auto;
+}
 .drag-drop #pdm-drag-drop-area{
     border: 4px dashed #c3c4c7;
     height: 250px;  
@@ -143,7 +106,7 @@ a.delete_item{
 
 .drag-drop .drag-drop-inside {
 	margin: 60px auto 0;
-	width: 350px;
+	width: auto;
 }
 
 .drag-drop-inside p {

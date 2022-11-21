@@ -336,6 +336,8 @@ class Utility_Functions {
      * @return none
      */
 	public function save_changes_pdf_quick_edit($doc_data){
+        //  sanitize post data 
+        $doc_data = $this->sanitize_postdata_strong($doc_data);
 
          try{
             global $wpdb;
@@ -346,7 +348,7 @@ class Utility_Functions {
             // columns to update
             $columns_update = array(
                 'filename'		=>	sanitize_title_with_dashes($doc_data['edit-document_filename']),
-                'category'		=>	sanitize_text_field($doc_data['edit-document_category']),
+                'category'		=>	(isset($doc_data['edit-document_category']) && $doc_data['edit-document_category'] != '-1') ? $doc_data['edit-document_category'] : 'General',
             );
 
             // what to update
@@ -355,9 +357,6 @@ class Utility_Functions {
             //	update values of the WP_Options TABLE
             $rs = $wpdb->update($tablename, $columns_update, $_where);            
            
-       
-
-
             if($rs == 1){
                 $this->pdf_DebugLog("Updated", $columns_update);
                 $this->pdf_DebugLog("Updated: Result", $rs);

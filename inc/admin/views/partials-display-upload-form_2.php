@@ -26,7 +26,7 @@
                 </div>
                 <div class="drag-drop-inside"  >
                     <p class="drag-drop-info" id="legoeso-drop-text">Drop files to upload</p>
-                    <p>or</p>
+                    <p id="drag-drop-info-p"><strong> or </strong></p>
                     <p class="drag-drop-buttons">
                         <input style="display:none;" type="file" id="pdm_file" name="pdm_file[]" multiple/>
                         <input id="pdm-upload-browse-button" type="button" value="Select Files" class="button" style="position: relative; z-index: 1;"/>

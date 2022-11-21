@@ -218,8 +218,9 @@ class Font extends PDFObject
                         $char_from = hexdec($from);
                         $char_to = hexdec($matches['to'][$key]);
                         $offset = hexdec($matches['offset'][$key]);
-
+                       
                         for ($char = $char_from; $char <= $char_to; ++$char) {
+
                             $this->table[$char] = self::uchr($char - $char_from + $offset);
                         }
                     }
