@@ -50,10 +50,11 @@ The Legoeso PDF Manager stores your PDF documents within the WordPress upload di
 == Changelog ==
 
 = 1.2.2 =
-Implemented new DataTable widgit child rows to show document metadata
+Implemented new DataTable widget child rows to show document metadata
 Removed support Bootstrap v5.2.0-beta1 
 Add support for jQuery Ui widgets
 Implemented jQuery Ui progressbar
+Improved performance working with large files
 
 == Upgrade Notice ==
 

@@ -147,8 +147,8 @@ class PDF_Doc_List_Table extends Libraries\WP_List_Table  {
 			'total_pages'	=> ceil( $total_pdfs/$pdfs_per_page ),
 
 			// set ordering values if needed (useful for AJAX)
-			'orderby'		=> ! empty( $_REQUEST['orderby'] ) && '' != $_REQUEST['orderby'] ? $_REQUEST['orderby']  : 'date_uploaded',
-			'order'			=> ! empty( $_REQUEST['order'] ) && '' != $_REQUEST['order'] ? $_REQUEST['order']  : 'desc'
+			'orderby'		=> ! empty( $_REQUEST['orderby'] ) && '' != $_REQUEST['orderby'] ? $this->sanitize_postdata($_REQUEST['orderby'])  : 'date_uploaded',
+			'order'			=> ! empty( $_REQUEST['order'] ) && '' != $_REQUEST['order'] ? $this->sanitize_postdata($_REQUEST['order'])  : 'desc'
 		) );
 		
 		$this->pdf_DebugLog("Function Loaded::", "prepare_items");
@@ -395,7 +395,6 @@ class PDF_Doc_List_Table extends Libraries\WP_List_Table  {
 		 * Row action: View 
 		 */
 		$query_args_view_pdfdoc = array(
-			//'page'		=>	wp_unslash( isset($_REQUEST['page']) ?$_REQUEST['page'] : ''  ),
 			'action'	=>	'view_document',
 			'pid'		=>	 base64_encode(serialize($item)),
 			'_wpnonce'	=>	wp_create_nonce( 'view_pdf_file_nonce' ),
@@ -715,7 +714,7 @@ class PDF_Doc_List_Table extends Libraries\WP_List_Table  {
 				__( 'Error', $this->plugin_text_domain ),
 				array( 
 						'response' 	=> 403, 
-						'back_link' =>  esc_url( add_query_arg( array( 'page' => wp_unslash( $_REQUEST['page'] ) ) , admin_url( 'admin.php' ) ) ),
+						'back_link' =>  esc_url( add_query_arg( array( 'page' =>  $this->sanitize_postdata($_REQUEST['page'] ) ) , admin_url( 'admin.php' ) ) ),
 					)
 		);
 	}
