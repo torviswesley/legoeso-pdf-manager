@@ -80,9 +80,7 @@
 	 * @param {String} _msg_class 
 	 */
 	function _show_status_messages(_message_txt, _msg_class = 'warning'){
-		if(_debug){
-			console.log(_message_txt);
-		}
+		if(_debug){	console.log(_message_txt);}
 		$('#status_message').removeClass();
 		$('#status_message').html(_message_txt).fadeIn();
 		$('#status_message').html(_message_txt).fadeOut(10000);
@@ -185,13 +183,6 @@
 		$('#pdm-upload-submit-button').prop('disabled', _val);
 	}
 
-	function setdebug_log(_text) {
-		if (ajax_obj.wp_debug) {
-			if (_text)
-				console.log(_text);
-        }
-    }
-
 	// clears the response text area
 	function clear_response_area(){
 		// clear the server response box if it is visible
@@ -245,7 +236,9 @@
 	function _filter_file_types(file_list){
 		
 		try {
-			if(typeof file_list == 'undefined' || !file_list.toString().split(' ')[1] == 'FileList]' ){
+
+			if(typeof file_list == 'undefined' || 
+				!file_list.toString().split(' ')[1] == 'FileList]' ){
 				show_server_response('Invalid files list, unable to filter files', 'error');
 				return false;
 			}
@@ -349,9 +342,7 @@
 							progressLabel.text( message);
 						}
 						_status_message 	+= '<strong>' + file + '</strong> of ' + total_files;
-
 						change_drag_area_text(_status_message);	
-						
 						process_percent = percent;
 					}	
 			},

@@ -361,7 +361,6 @@ class Frontend extends Common\Utility_Functions {
 			 * Let's grab the WordPress database global object we will use it to add the data to the short code in the plugin
 			 */
 			global $wpdb;
-			$wpdb->show_errors;
 			$_result = $wpdb->get_results($query, $ResultArrayType);
 			$wpdb->flush();
 			return( ['db_results' => $_result, 'num_rows' => $wpdb->num_rows, 'error' => $wpdb->last_error,] ) ;
