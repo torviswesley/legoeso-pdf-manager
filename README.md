@@ -51,9 +51,6 @@ Features include unlimited file uploads. Upload documents via drag and drop, bul
 2. Restrict documents by user groups - @ request
 3. Extract and collect data from pdf documents that can be stored - @ request
 
-## For Help, comments or request additional features.
-Email support@legoeso.com
-
 ## Changes v1.2.2 
 1. Implemented new DataTable widget child rows to allow access to document metadata
 2. Removed support Bootstrap v5.2.0-beta1 
@@ -71,3 +68,6 @@ Email support@legoeso.com
 2. Add Imagick support to convert PDF to image
 3. Removed all python scripts
 4. Removed and/or Updated required dependencies
+
+## For Help, comments or request additional features.
+Email support@legoeso.com
