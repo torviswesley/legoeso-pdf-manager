@@ -16,7 +16,7 @@ class PDM_Exception_Error extends ErrorException {
         'error_message' =>  $_exception->getMessage(),
         'error_code'    =>  $_exception->getCode(),
         'error_line'    =>  $_exception->getLine(),
-        'file'          =>  $_exception->getFile(),
+        'filename'      =>  $_exception->getFile(),
         );
     } 
 }

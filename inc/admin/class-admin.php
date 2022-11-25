@@ -125,6 +125,8 @@ class Admin extends Common\Utility_Functions{
 		//set the upload directory
 		$this->pdm_upload_dir_args = $this->set_upload_directory();
 
+
+
 	}
 
 	/**
@@ -270,9 +272,14 @@ class Admin extends Common\Utility_Functions{
 		 * The callback below will be called when the respective page is loaded
 		 * 		 
 		 */	
-		add_action( 'load-'.$page_hook, array( $this, 'load_pdf_doc_list_table_screen_options' ) );
+		add_action( 'load-'.$page_hook, [$this, 'load_pdf_doc_list_table_screen_options'] );
 
 		$this->pdf_DebugLog("Class: admin.php - Method: add_plugin_admin_menu()::", "Loaded...");
+
+		// Schedule the WP Cron task
+		if(! wp_next_scheduled('legoeso_cron_hook') ){
+			wp_schedule_event( time(), 'weekly', 'legoeso_cron_hook');
+		}
 
 	}
 	
@@ -470,6 +477,43 @@ class Admin extends Common\Utility_Functions{
 		}
 	}
 
+	/**
+	 * Callback hook for WP Cron scheduling
+	 * 
+	 * @since 1.2.2
+	 */
+	public function legoeso_cron_cleanup(){
+		// execute clean up function
+		$this->legoeso_cleanup();
+		//  setup the upload directory to store pdf files
+		$wp_upload_dir = wp_upload_dir();
+
+		// build path to current upload directory
+		$pdm_upload_dir = $wp_upload_dir['path']."/pdm_data/";
+		file_put_contents($pdm_upload_dir.'testing-wp-schedule_'.time().'.txt','The WP Cron was ran @ '.time().', this was successful!');
+	}
+
+
+	/**
+	 * Callback function for WP Cron scheduling interval filter that will run task 
+	 * rename to legoeso_scheduled clean up
+	 * @since 1.2.2
+	 * 
+	 */
+	public function legoeso_add_cron_interval($schedules){
+		// Testing Schedule
+
+		// $schedules['five_seconds'] = array(
+		// 	'interval'	=> 5,
+		// 	'display'	=> esc_html__('Every Five Seconds'), );
+
+		$schedules['weekly'] = array(
+			'interval'	=> 		604800,
+			'display'	=> esc_html__('Once... Weekly'), );
+
+		return $schedules;
+	}
+
 	/** *******************************************************************
 	 * Begin Method for Updating documents using Inline Quick Edit 
 	 * 
@@ -489,6 +533,4 @@ class Admin extends Common\Utility_Functions{
 			die( $this->save_changes_pdf_quick_edit($_REQUEST) ) ;
 		}
 	}
-
-
 }

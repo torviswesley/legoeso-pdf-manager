@@ -21,6 +21,14 @@ class Utility_Functions {
      */
     public $Exception_Error = [];
 
+    /**
+     * Sets the max number of day before file is removed from the server
+     * @since   1.2.2
+     * @access  private
+     * @var     integer
+     * 
+     */
+    private $max_file_age = 8; // zipi files created by this plugin will be deleted after 7 days
 
     public function __construct() {
 
@@ -137,20 +145,7 @@ class Utility_Functions {
             return sanitize_text_field(substr(file_get_contents($pdf_file_path), 0, 10));
         }
     }
-
-    /**
-     * Removes special characters from string
-     * @since 1.0.0
-     * @param string $string
-     * @return string
-     */
-    public function clean($string)
-    {
-        // Removes special chars.
-        $string = preg_replace('/[^(\x30-\x7a)]/',' ', $string);
-        return $string;
-    }
-        
+       
     /**
      *  Recursively removes an entire directory and its subdirectories
      * 
@@ -175,7 +170,35 @@ class Utility_Functions {
     }
 
     /**
-     * Reads the given directory structure
+     * removes unmapped files within the legoeso pdm_data directory 
+     * 
+     * @since 1.2.2
+     * @param array - list of filename/paths to remove
+     * @return bool - returns true if  passed objectis an array
+     */
+    function delete_files($unmapped_files, $delete_downloads = false){
+        if(is_array($unmapped_files)){
+            
+            if(!$delete_downloads){
+                foreach($unmapped_files as $file){
+                    if(file_exists($file)){
+                        unlink($file);
+                    }
+                }
+            }
+            elseif($delete_downloads){
+                foreach($unmapped_files as $file){
+                    if( file_exists($file) && ($this->get_file_age($file) >= $this->max_file_age) ){
+                        unlink($file);
+                    }
+                }
+            }
+            return true;
+        }
+    }
+
+    /**
+     * Recursively reads the given directory structure and returns list of files in array
      * 
      * @since 1.0.1
      * @param string $dir
@@ -211,17 +234,118 @@ class Utility_Functions {
     }
 
     /**
-     *  Returns a generated nonce as a hidden field, on false returns only the int nonce.
-     * @since 1.0.0
-     * @param bool $hidden
-     * @return string
+     * Recursively reads the given directory structure, 
+     * only returns .pdf or .jpg files located in WP_upload/pdm_data directory
+     * 
+     * @since 1.2.2
+     * 
+     * @param string $dir - directory to search
+     * @param string $type - one of three types pfd, jpg, zip
+     * @return array
      */
-    public function pdm_nonce(){
-        $seed = random_int(0,89615);
-        $pdm_nonce = md5($seed);
-        return "<input type='hidden' id='pdm_nonce' class='button' name='pdm_nonce' value='{$pdm_nonce}'/>";
+    function legoeso_dir_tree($dir, $type = 'pdf'){
+        $paths = [];
+        $stack[] = $dir;
+
+        while($stack){
+            $thisdir = array_pop($stack);
+            if($dircont = scandir($thisdir)){
+                $i=0;
+                while(isset($dircont[$i])){
+                    if($dircont[$i] !== '.' && $dircont[$i] !== '..'){
+                        $current_file = "{$thisdir}/{$dircont[$i]}";
+                        if(is_file($current_file)) {
+                            if(preg_match('/pdm_data/',$current_file)){
+                                $paths[] = realpath("{$thisdir}/{$dircont[$i]}");
+                            }
+                        } elseif (is_dir($current_file) ){
+                            $stack[] = realpath($current_file);
+                        }
+                    }
+                    $i++;
+                }
+            }
+        }
+
+        // choose which files to filter and return
+        if($type == 'jpg'){
+            return array_filter( $paths, function($filename, $ext = '/[.]jpg/'){
+                return preg_match($ext, $filename);
+            });
+        }
+        elseif($type == 'pdf'){
+            return array_filter( $paths, function($filename, $ext = '/[.]pdf/'){
+                return preg_match($ext, $filename);
+            });
+        }
+        elseif($type == 'zip') {
+            return array_filter( $paths, function($filename, $ext = '/[.]zip/'){
+                return preg_match($ext, $filename);
+            });
+        }
     }
 
+    /**
+     * Returns an array of file paths from the database
+     * 
+     * @since 1.2.2
+     * 
+     * @param bool 
+     * @return array
+     */
+    private function get_document_filepaths($get_pdfs = true){
+        // setup wpdb
+        global $wpdb;
+        if($wpdb){
+
+            $w = ($get_pdfs) ? 'pdf_path':'image_path';
+
+            $sql_query = "SELECT id, {$w} from {$wpdb->prefix}legoeso_file_storage";
+            $result = $wpdb->get_results($sql_query, ARRAY_A );
+
+            $paths = [];
+            foreach($result as $row){
+                $paths[$row['id']] = $row[$w];
+            }
+            asort($paths);
+            return $paths;
+        }
+    }
+    /**
+     * callback function used by WP Cron scheduled task 
+     * 
+     * @since 1.2.2
+     * @return 
+     */
+    public function legoeso_cleanup(){
+
+        // get WP upload directory information
+		$wp_upload_dir = wp_upload_dir();
+
+        //  clean up unmapped pdf documents
+        $this->delete_files( array_diff($this->legoeso_dir_tree($wp_upload_dir['basedir']), $this->get_document_filepaths()) );
+
+        // clean up unmapped images
+        $this->delete_files(array_diff($this->legoeso_dir_tree($wp_upload_dir['basedir'], 'jpg'), $this->get_document_filepaths(false)) );
+        
+        // get all zip files created by plugin
+        $this->delete_files($this->legoeso_dir_tree($wp_upload_dir['basedir'], 'zip'), true);
+    }
+    
+    /**
+     * returns the number of days since the file was created/last modified
+     * 
+     * @since 1.2.2
+     * 
+     * @param string $file - file path
+     */
+    public function get_file_age($file){
+        if(isset($file) && file_exists($file)){
+            // time of last modification (Unix timestamp)
+            return abs( round( (time()-(filemtime($file))) / 86400) );
+        }
+    }
+    
     /**
     * Checks the remaining execution time left for the current running process
     * @since 1.0.0
@@ -231,6 +355,32 @@ class Utility_Functions {
     public function execTimeRemaining(){
        return  ini_get('max_execution_time') === "0" ? null :
             ((int)ini_get('max_execution_time')) - (microtime(true) - $_SERVER['REQUEST_TIME_FLOAT']);
+    }
+
+        /**
+    * convert MB to bytes, preforms simple conversion
+    *
+    * @since 1.2.1
+    *
+    * @num int expects number represented as i.e. 256M (megabytes)
+    *
+    * @return int 
+    */
+    function return_bytes($val) {
+        $val = trim($val);
+        $last = strtolower($val[strlen($val)-1]);
+        $val = substr($val, 0, strlen($val)-1);
+        switch($last) {
+            // The 'G' modifier is available
+            case 'g':
+                $val *= 1024;
+            case 'm':
+                $val *= 1024;
+            case 'k':
+                $val *= 1024;
+        }
+    
+        return $val;
     }
 
     /**
@@ -254,6 +404,23 @@ class Utility_Functions {
         else {
             return round($size);
         }
+    }
+
+    /**
+    * convert MB to bytes, preforms simple conversion
+    *
+    * @since 1.0.2
+    *
+    * @num int expects number represented as i.e. 256M (megabytes)
+    *
+    * @return int 
+    */
+    public function php_to_bytes($num){
+        $const_b = 1048576; // 1MB = 1048576 bytes
+        $n = explode('M', $num); 
+        // expects number represented as i.e. 256M (megabytes)
+        $num_conv = ($n[0] * $const_b);
+        return ($num_conv);
     }
 
     /**
@@ -327,6 +494,7 @@ class Utility_Functions {
 			}
 		}
 	}
+
     /**
      * Saves the changes made to the pdf document using Quick Edit
      * 
@@ -373,49 +541,6 @@ class Utility_Functions {
         }
         
 	}
-
-    /**
-    * convert MB to bytes, preforms simple conversion
-    *
-    * @since 1.0.2
-    *
-    * @num int expects number represented as i.e. 256M (megabytes)
-    *
-    * @return int 
-    */
-    public function php_to_bytes($num){
-        $const_b = 1048576; // 1MB = 1048576 bytes
-        $n = explode('M', $num); 
-        // expects number represented as i.e. 256M (megabytes)
-        $num_conv = ($n[0] * $const_b);
-        return ($num_conv);
-    }
-
-    /**
-    * convert MB to bytes, preforms simple conversion
-    *
-    * @since 1.2.1
-    *
-    * @num int expects number represented as i.e. 256M (megabytes)
-    *
-    * @return int 
-    */
-    function return_bytes($val) {
-        $val = trim($val);
-        $last = strtolower($val[strlen($val)-1]);
-        $val = substr($val, 0, strlen($val)-1);
-        switch($last) {
-            // The 'G' modifier is available
-            case 'g':
-                $val *= 1024;
-            case 'm':
-                $val *= 1024;
-            case 'k':
-                $val *= 1024;
-        }
-    
-        return $val;
-    }
 
     /**
     * toggle checkbox values
@@ -500,8 +625,7 @@ class Utility_Functions {
           // Add to debug log    
         $this->pdf_DebugLog("Class: init.php - Medthod:: check_dependencies()", wp_json_encode($installed_libs));
         return($installed_libs);
-    }
-
+    } 
 }
 
 ?>

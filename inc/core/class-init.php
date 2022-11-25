@@ -137,7 +137,13 @@ class Init extends Common\Utility_Functions {
 		
 		// Action wp_ajax, for file upload status
 		$this->loader->add_action( 'wp_ajax_file_upload_status', $plugin_admin, '_file_upload_status_callback' );
-		
+
+		// Filter for WP Cron scheuled tasks
+		$this->loader->add_filter('cron_schedules', $plugin_admin, 'legoeso_add_cron_interval');
+
+		// Action hook to invoke WP scheduled task
+		$this->loader->add_action( 'legoeso_cron_hook', $plugin_admin, 'legoeso_cron_cleanup');
+
 	}
 
 	/**

@@ -55,6 +55,7 @@ Removed support Bootstrap v5.2.0-beta1
 Add support for jQuery Ui widgets
 Implemented jQuery Ui progressbar
 Improved performance working with large files
+Added WP Cron scheduled clean-up to remove unmapped and unused files weekly, zip files created by the plugin will expire and deleted after 7 days.
 
 == Upgrade Notice ==
 

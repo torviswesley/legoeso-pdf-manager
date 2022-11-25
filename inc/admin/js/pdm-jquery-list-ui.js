@@ -311,8 +311,11 @@
              $.ajax({
                  xhr: function(){
                      var xhr = new window.XMLHttpRequest();
+                     var percentComplete = 0;
                      xhr.addEventListener("progress", function (evt) {
                          if (evt.lengthComputable) {
+                                percentComplete = Math.round( (evt.loaded / evt.total  * 100).toFixed(2) );
+
                              console.log('Zipping Files...');	
                          }
                      }, false);
@@ -358,6 +361,9 @@
                      $('#bulk-action-selector-top').prop('selectedIndex', 0);
                      $('#bulk-action-selector-bottom').prop('selectedIndex', 0);
  
+                 },
+                 error: function(e){
+                    console.log('error:')
                  }
              });
  

@@ -57,6 +57,7 @@ Email support@legoeso.com
 3. Add support for jQuery Ui widgets
 4. Implemented jQuery Ui progressbar
 5. Improved performance working with large files
+6. Added WP Cron scheduled clean-up to remove unmapped and unused files weekly, zip files created by the plugin will expire and deleted after 7 days.
 
 ## Changes v1.2.1 
 1. Resolved WordPress security vulnerabilities

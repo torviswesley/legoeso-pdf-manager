@@ -84,7 +84,7 @@ class PDF_Doc_List_Table extends Libraries\WP_List_Table  {
 		/** 
 		 * Check if a search was performed.
 		*/
-		$pdf_search_key = isset( $_REQUEST['s'] ) ? sanitize_text_field( trim( $_REQUEST['s'] ) ) : '';
+		$pdf_search_key = isset( $_REQUEST['s'] ) ? sanitize_text_field( $_REQUEST['s'] ) : '';
 	
         /**
 		 * Define the column headers. This includes a complete
@@ -103,7 +103,6 @@ class PDF_Doc_List_Table extends Libraries\WP_List_Table  {
         $this->_column_headers = array($columns, $hidden, $sortable);
 		$this->_column_headers = $this->get_column_info();
 
-		
 		/**
 		 * Handle and process any table actions
 		 */
@@ -138,6 +137,9 @@ class PDF_Doc_List_Table extends Libraries\WP_List_Table  {
 		$this->items = array_slice( $table_data, ( ( $table_page - 1 ) * $pdfs_per_page ), $pdfs_per_page );
 		$total_pdfs = count( $table_data );
 
+		$orderby = sanitize_key( $this->validate_sort_params( isset( $_GET['orderby'] ) ?  $_GET['orderby'] : 'insert_date' ) );
+		$order = ( isset( $_GET['order']) && ( $_GET['order'] == 'desc' || $_GET['order'] == "asc" ) ) ? sanitize_key( $_GET['order'] ) : 'desc';
+
 		/**
 		 * Set the pagination arguments
 		 */
@@ -147,8 +149,8 @@ class PDF_Doc_List_Table extends Libraries\WP_List_Table  {
 			'total_pages'	=> ceil( $total_pdfs/$pdfs_per_page ),
 
 			// set ordering values if needed (useful for AJAX)
-			'orderby'		=> ! empty( $_REQUEST['orderby'] ) && '' != $_REQUEST['orderby'] ? $this->sanitize_postdata($_REQUEST['orderby'])  : 'date_uploaded',
-			'order'			=> ! empty( $_REQUEST['order'] ) && '' != $_REQUEST['order'] ? $this->sanitize_postdata($_REQUEST['order'])  : 'desc'
+			'orderby'		=> sanitize_key($orderby),
+			'order'			=> sanitize_key($order),
 		) );
 		
 		$this->pdf_DebugLog("Function Loaded::", "prepare_items");
@@ -231,6 +233,12 @@ class PDF_Doc_List_Table extends Libraries\WP_List_Table  {
 		_e( 'No documents avaliable.', $this->plugin_text_domain );
 	}
 
+	/**
+	 * returns the value for the column sort
+	 */
+	private function validate_sort_params($s_param){
+		return in_array($s_param, $this->get_sortable_columns()) ? $s_param : 'insert_date';
+	}
 
 	/*
 	 * Fetch table data from custom table legoeso_file_storage in the WordPress database.
@@ -244,10 +252,12 @@ class PDF_Doc_List_Table extends Libraries\WP_List_Table  {
 
 		global $wpdb;
 		$pdf_search_key = sanitize_text_field($pdf_search_key);
-		$wpdb_table = $this->get_database_tablename();		
-		$orderby = ( isset( $_GET['orderby'] ) ) ? esc_sql( $_GET['orderby'] ) : 'insert_date';
-		$order = ( isset( $_GET['order'] ) ) ? esc_sql( $_GET['order'] ) : 'DESC';
+		$wpdb_table = $this->get_database_tablename();
 		
+		$orderby = sanitize_key( $this->validate_sort_params( isset( $_GET['orderby'] ) ?  $_GET['orderby'] : 'insert_date' ) );
+		$order = ( isset( $_GET['order']) && ( $_GET['order'] == 'desc' || $_GET['order'] == "asc" ) ) ? sanitize_key( $_GET['order'] ) : 'desc';
+	
+	
 		// select which columns to exclude in search
 		$xluded_columns = array_flip( array('cb', 'insert_date', 'pdf_image', ) );
 
@@ -720,6 +730,36 @@ class PDF_Doc_List_Table extends Libraries\WP_List_Table  {
 	}
 
 	/**
+	 * create a new zipArchive object and add the pdf doucment to it
+	 * 
+	 * @since 1.2.2
+	 */
+	public function add_to_zipArchive($zipfilename, $filename, $document_filename){
+		try{
+			// create a new ZipArchive object
+			$zip = new ZipArchive();
+			// create a new zip archive
+			if ($zip->open($zipfilename, ZipArchive::CREATE) !==TRUE) {
+				$this->pdf_DebugLog("*** Bulk download: Error::", "Could not create '{$zipfilename}'" );
+				return;
+			}
+			//	add pdf file to zip file
+			if(file_exists($filename)){
+				if(!$zip->addFromString($document_filename, file_get_contents($filename))){
+					$this->pdf_DebugLog("*** ZipArchive Error::", "Could not add '{$filename}'");
+					return ['failed' => $document_filename];
+				}
+			}
+
+			// close zip file
+			$zip->close();
+			return ['added' => $document_filename];
+		} 
+		catch(\Exception $e){
+			$this->pdf_DebugLog("*** Exception Error::", "Could not add '{$zipfilename}'" . $e->getMessage());
+		}
+	}
+	/**
 	* Get and compile pdf data from database, creates new pdf file
 	*
 	* @since    1.0.1
@@ -731,38 +771,26 @@ class PDF_Doc_List_Table extends Libraries\WP_List_Table  {
 		$pdf_doc_ids = $this->utilities->sanitize_postdata_strong($pdf_doc_ids);
 		function zip_pdf_docs($_this, $zip_filename, $sql_dataset){
 			// create new array to collect filenames
-			$zipped_pdfs = []; 		
-			// create a new ZipArchive object
-			$zip = new ZipArchive();
+			$zipped_pdfs = []; 	
 
-			// set a better name
-			if ($zip->open($zip_filename, ZipArchive::CREATE) !==TRUE) {
-				$_this->pdf_DebugLog("*** Bulk download: Error::", "Could not create '{$zip_filename}'" );
-				return;
-			}
-
-			// loop through sql results
 			foreach($sql_dataset as $key => $data){	
-				// collect row  data/information
-				$sID = $data['ID'];
-				$pdf_data = $data['pdf_path'];
-				$sfilename = $data['filename'];
 
-				// if the filename has already appears to have been already added to the zip,
+			// collect row  data/information
+				$sID = $data['ID'];
+				$pdf_filepath = $data['pdf_path'];
+				$document_filename = str_replace('-pdf','',$data['filename']).'.pdf';
+
+				// if the filename appears to have been already added to the zip,
 				// resolve duplicate by appending the files' ID to the filename
-				if(in_array($sfilename, $zipped_pdfs)){
-					$sf = explode('.',$sfilename);
-					$sfilename = $sf[0].'_'.$sID.'.'.$sf[1];
+				if(in_array($document_filename, $zipped_pdfs)){
+					$sf = explode('.',$document_filename);
+					$document_filename = $sf[0].'_'.$sID.'.'.$sf[1];
 				}
-				//	add each pdf file to the zip file
-				if(file_exists($pdf_data)){
-					$zip->addFromString($sfilename, file_get_contents($pdf_data));
-					//	add filename to stack
-					$zipped_pdfs[] = $sfilename;
-				}
+
+				// add the document to the ZipArchive
+				$zipped_pdfs[] = $_this->add_to_zipArchive($zip_filename, $pdf_filepath, $document_filename);
 			}
-			// close zip file
-			$zip->close();
+
 			return $zipped_pdfs;
 		}		
 		/**
@@ -775,9 +803,9 @@ class PDF_Doc_List_Table extends Libraries\WP_List_Table  {
 			$file_dir = $wp_upload_dir['path'];
 			
 			// directpry location and name of file where zip file will be saved
-			$zipfile_basedir = "{$file_dir}/pdm_data/pdf_download_".time().".zip";
+			$zipfile_basedir = "{$file_dir}/pdm_data/legoeso_pdf_download_".time().".zip";
 			// URL where zip file can be downloaded
-			$zipfile_url = $wp_upload_dir['url'] . "/pdm_data/pdf_download_".time().".zip";
+			$zipfile_url = $wp_upload_dir['url'] . "/pdm_data/legoeso_pdf_download_".time().".zip";
 
 			// loop through the sql results and add each row of data to 
 			// the zip file

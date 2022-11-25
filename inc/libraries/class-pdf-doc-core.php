@@ -858,7 +858,7 @@ class PDF_Doc_Core extends Common\Utility_Functions {
 	 */
     private function addFileToDatabase($pdf_filepath, $filename){
         /**
-        * Initialize variables
+        * Initialize wp database & variables
         */
         global $wpdb;
         $wpdb->show_errors(true);
@@ -900,7 +900,7 @@ class PDF_Doc_Core extends Common\Utility_Functions {
             $pdf_query_columns = array(
                 'filename'           =>  sanitize_title_with_dashes($filename),
                 'has_path'           =>  $pdf_has_path,
-                'pdf_path'           =>  $pdf_filepath,
+                'pdf_path'           =>  realpath($pdf_filepath),
                 'filetype'           =>  'application/pdf',
                 'pdf_version'        =>  $pdf_fileversion,
                 'category'           =>  $pdf_category,
@@ -1105,8 +1105,6 @@ class PDF_Doc_Core extends Common\Utility_Functions {
                     // get the number pages document contains
                     $number_pages = count($_pdffile->getPages());
 
-                    $this->pdf_DebugLog("Method: extractTextFromPDF(): Meta Data:",  json_encode($pdf_metadata));
-
                     // only attempt to extract text if the file contains < the max pages allowed
                     if($number_pages <= $this->max_pages_to_extract){
                         $extractedData = sanitize_text_field($_pdffile->getText());
@@ -1119,7 +1117,9 @@ class PDF_Doc_Core extends Common\Utility_Functions {
 
                     // get pdf metadata
                     $pdf_metadata = $_pdffile->getDetails();
-
+                    
+                    $this->pdf_DebugLog("Method: extractTextFromPDF(): Meta Data:",  json_encode($pdf_metadata));
+                  
                     // clear pdf_parser reference in attempt to free its resources
                     $pdf_parser = null;
 
@@ -1155,7 +1155,7 @@ class PDF_Doc_Core extends Common\Utility_Functions {
             // $_config = new \Smalot\PdfParser\Config();
             // $_config->setFontSpaceLimit(-60);
             // reducing deocode memory size for large files
-            //TODO fix uploading files message that stays
+            // 
             // fix processing to say this must be a large file please wait
             // $_config->setDecodeMemoryLimit(43361254);
             // $_config->setRetainImageContent(false);
@@ -1164,49 +1164,49 @@ class PDF_Doc_Core extends Common\Utility_Functions {
             // $this->pdf_DebugLog("Method: extractTextFromPDF(): Large File:", memory_get_usage(true));
             // $this->pdf_DebugLog("Method: extractTextFromPDF():2 Large File:", memory_get_peak_usage(true));
             try{
-                function get_pdf_prop($pdfdata)
-                {
+                // function get_pdf_prop($pdfdata)
+                // {
 
-                    if(!$pdfdata)
-                        return false;
-                    //Extract cross-reference table and trailer
-                    if(!preg_match("/xref[\r\n]+(.*)trailer(.*)startxref/s", $pdfdata, $a))
-                        return false;
-                    $xref = $a[1];
-                    $trailer = $a[2];
+                //     if(!$pdfdata)
+                //         return false;
+                //     //Extract cross-reference table and trailer
+                //     if(!preg_match("/xref[\r\n]+(.*)trailer(.*)startxref/s", $pdfdata, $a))
+                //         return false;
+                //     $xref = $a[1];
+                //     $trailer = $a[2];
                     
-                    print($s);exit();  
+                //     print($s);exit();  
                     
                     
-                    //Extract Info object number
-                    if(!preg_match('/Info ([0-9]+) /', $trailer, $a))
-                        return false;
-                    $object_no = $a[1];
+                //     //Extract Info object number
+                //     if(!preg_match('/Info ([0-9]+) /', $trailer, $a))
+                //         return false;
+                //     $object_no = $a[1];
                 
-                    //Extract Info object offset
-                    $lines = preg_split("/[\r\n]+/", $xref);
-                    $line = $lines[1 + $object_no];
-                    $offset = (int)$line;
-                    if($offset == 0)
-                        return false;
+                //     //Extract Info object offset
+                //     $lines = preg_split("/[\r\n]+/", $xref);
+                //     $line = $lines[1 + $object_no];
+                //     $offset = (int)$line;
+                //     if($offset == 0)
+                //         return false;
                 
-                    //Read Info object
-                    fseek($f, $offset, SEEK_SET);
-                    $s = fread($f, 1024);
-                    fclose($f);
+                //     //Read Info object
+                //     fseek($f, $offset, SEEK_SET);
+                //     $s = fread($f, 1024);
+                //     fclose($f);
                 
-                    //Extract properties
-                    if(!preg_match('/<<(.*)>>/Us', $s, $a))
-                        return false;
-                    $n = preg_match_all('|/([a-z]+) ?\((.*)\)|Ui', $a[1], $a);
-                    $prop = array();
-                    for($i=0; $i<$n; $i++){
-                        $prop[$a[1][$i]] = $a[2][$i];
-                    }
+                //     //Extract properties
+                //     if(!preg_match('/<<(.*)>>/Us', $s, $a))
+                //         return false;
+                //     $n = preg_match_all('|/([a-z]+) ?\((.*)\)|Ui', $a[1], $a);
+                //     $prop = array();
+                //     for($i=0; $i<$n; $i++){
+                //         $prop[$a[1][$i]] = $a[2][$i];
+                //     }
                         
                     
-                    return $prop;
-                }
+                //     return $prop;
+                // }
         
             
 
@@ -1224,20 +1224,20 @@ class PDF_Doc_Core extends Common\Utility_Functions {
 
                 // $this->reset_memory_limit();
 
-                $pdf_data = file_get_contents($input_filename, false, null, -16384);
+                // $pdf_data = file_get_contents($input_filename, false, null, -16384);
                 // $meta = preg_match_all('/\/[^\(]*\(([^\/\)]*)/', $pdf_data, $matches);
-                $matches = get_pdf_prop($pdf_data);
-                $this->pdf_DebugLog("Method: extractTextFromPDF():Meta Large File:", $matches);
+                // $matches = get_pdf_prop($pdf_data);
+                // $this->pdf_DebugLog("Method: extractTextFromPDF():Meta Large File:", $matches);
 
-                $pdf_data = null;
-                $matches = null;
-                return [
-                    'extracted_data'        =>  '*NO DATA*',
-                    'pdf_metadata'          =>  ['metadata' => wp_json_encode($meta),],
-                    'pdf_filesize'          =>  $filesize,
-                    'status'                =>  'complete',
-                    ];
-
+                // $pdf_data = null;
+                // $matches = null;
+                // return [
+                //     'extracted_data'        =>  '*NO DATA*',
+                //     'pdf_metadata'          =>  ['metadata' => wp_json_encode($meta),],
+                //     'pdf_filesize'          =>  $filesize,
+                //     'status'                =>  'complete',
+                //     ];
+                    return false;
             }
             catch(\Exception $e) {
 
@@ -1296,7 +1296,7 @@ class PDF_Doc_Core extends Common\Utility_Functions {
                         if(file_put_contents($legoeso_img_path, $pdf_image_data)){
                             if(file_exists($legoeso_img_path)) {
                                 $pdf_image_data = null;
-                                return ['image_url' => $_image_url, 'image_path' => $legoeso_img_path];
+                                return ['image_url' => $_image_url, 'image_path' => realpath($legoeso_img_path)];
                             }
                         }
                         else {
