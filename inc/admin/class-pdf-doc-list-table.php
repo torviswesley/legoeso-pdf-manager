@@ -252,6 +252,7 @@ class PDF_Doc_List_Table extends Libraries\WP_List_Table  {
 
 		global $wpdb;
 		$pdf_search_key = sanitize_text_field($pdf_search_key);
+
 		$wpdb_table = $this->get_database_tablename();
 		
 		$orderby = sanitize_key( $this->validate_sort_params( isset( $_GET['orderby'] ) ?  $_GET['orderby'] : 'insert_date' ) );
@@ -265,7 +266,7 @@ class PDF_Doc_List_Table extends Libraries\WP_List_Table  {
 		$pdm_columns = $this->get_columns();
 		
 		// build search parameters for columns to be searched
-		$append_query = implode(" LIKE '%{$pdf_search_key}%' OR ", array_flip( array_diff_key($pdm_columns, $xluded_columns) ) );
+		$append_query = implode(" LIKE '{$pdf_search_key}%' OR ", array_flip( array_diff_key($pdm_columns, $xluded_columns) ) );
 
 		if(!empty($pdf_search_key)){
 			$pdm_doc_query = "SELECT 
