@@ -266,14 +266,14 @@ class PDF_Doc_List_Table extends Libraries\WP_List_Table  {
 		$pdm_columns = $this->get_columns();
 		
 		// build search parameters for columns to be searched
-		$append_query = implode(" LIKE '{$pdf_search_key}%' OR ", array_flip( array_diff_key($pdm_columns, $xluded_columns) ) );
+		$append_query = implode(" LIKE '%{$pdf_search_key}%' OR ", array_flip( array_diff_key($pdm_columns, $xluded_columns) ) );
 
 		if(!empty($pdf_search_key)){
 			$pdm_doc_query = "SELECT 
-			pdf_doc_num, filename, category, SUBSTRING(text_data,1,100), has_img, image_url, upload_userid, date_uploaded, ID FROM $wpdb_table 
+			pdf_doc_num, filename, category, SUBSTRING(text_data,1,150), has_img, image_url, upload_userid, date_uploaded, ID FROM $wpdb_table 
 			WHERE {$append_query} LIKE '%$pdf_search_key%' ORDER BY $orderby $order";
 		} else{
-			$pdm_doc_query = "SELECT pdf_doc_num, filename, category, SUBSTRING(text_data,1,100), has_img, image_url, upload_userid, date_uploaded, ID FROM $wpdb_table ORDER BY $orderby $order";
+			$pdm_doc_query = "SELECT pdf_doc_num, filename, category, SUBSTRING(text_data,1,150), has_img, image_url, upload_userid, date_uploaded, ID FROM $wpdb_table ORDER BY $orderby $order";
 		}
 
 		$this->pdf_DebugLog("Search Query ::", $pdm_doc_query);
@@ -358,7 +358,8 @@ class PDF_Doc_List_Table extends Libraries\WP_List_Table  {
 	 * @return string Text to be placed inside the column <td>.
 	 */
 	protected function column_text_data( $item ){
-		$strTexData = $item['SUBSTRING(text_data,1,100)'];
+
+		$strTexData = $item['SUBSTRING(text_data,1,150)'];
 		if(empty($strTexData)){
 			return sprintf( __(' No Text Available ') );
 		}

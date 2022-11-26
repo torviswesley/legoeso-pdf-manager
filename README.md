@@ -5,7 +5,7 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.html
 ## Description
 The Legoeso PDF Manager is a lightweight, simple but powerful PDF document manager. It helps you organize your PDF documents for easy display, and distribution within your WordPress site. It supports multiple file upload or bulk upload of files stored in a zip file.
 
-Features include unlimited file uploads. Upload documents via drag and drop, bulk upload, bulk download, bulk delete, automatically generates document previews for list display, and visitors can securely view PDF documents within WordPress. In addition, you modify document names and categories on the fly, and perform keyword document searches.
+Features include unlimited file uploads. Upload documents via drag and drop, bulk upload, bulk download, bulk delete, automatically generates document previews for list display, and visitors can securely view PDF documents within WordPress. In addition, you can modify document names and categories on the fly, and perform keyword document searches.
 		  
 
 ## Installation Manually
@@ -64,7 +64,7 @@ Features include unlimited file uploads. Upload documents via drag and drop, bul
 2. Refactored PDF extraction code for better performance
 
 ## Changes v1.1.0 
-1. Added support for standalone PDF Parser see https://github.com/smalot/pdfparser
+1. Added support for standalone PDF Parser see: https://github.com/smalot/pdfparser
 2. Add Imagick support to convert PDF to image
 3. Removed all python scripts
 4. Removed and/or Updated required dependencies
