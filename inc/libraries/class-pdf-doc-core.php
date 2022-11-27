@@ -906,6 +906,8 @@ class PDF_Doc_Core extends Common\Utility_Functions {
                     ]; 
 
                     $metadata = $pdf_extract_properties['pdf_metadata'];
+
+                    // add metadata to columns
                     if(is_array($metadata)){
                         $pdf_query_columns = array_merge($pdf_query_columns, $metadata);
                     }
@@ -945,17 +947,30 @@ class PDF_Doc_Core extends Common\Utility_Functions {
                     ];
 
                     $metadata = $pdf_extract_properties['pdf_metadata'];
+
+                    // add metadata to columns
                     if(is_array($metadata)){
                         $pdf_query_columns = array_merge($pdf_query_columns, $metadata);
                     }
+
                     // build columns for query
                     $pdf_query_columns = array_merge($pdf_query_columns, $pdf_extracted_columns);
 
                 }
                 else {
+
+                    // append filesize to metadata
+                    $metadata = ['metadata' => wp_json_encode(['FileSize' => $this->MakeReadable($this->get_working_filesize())])  ];
+
+                    // add metadata to columns
+                    if(is_array($metadata)){
+                        $pdf_query_columns = array_merge($pdf_query_columns, $metadata);
+                    }
+
                     // send status back to the Ajax caller
                     $this->send_progress("Text extraction failed.");
                 }
+
             }
         
             // execute sql query to insert file data into the database
@@ -1096,7 +1111,10 @@ class PDF_Doc_Core extends Common\Utility_Functions {
 
                     // get pdf metadata
                     $pdf_metadata = $_pdffile->getDetails();
-                    
+
+                    // append filesize to metadata
+                    $pdf_metadata['FileSize'] = $this->MakeReadable($this->get_working_filesize());
+
                     $this->pdf_DebugLog("Method: extractTextFromPDF(): Meta Data:",  json_encode($pdf_metadata));
                   
                     // clear pdf_parser reference in attempt to free its resources

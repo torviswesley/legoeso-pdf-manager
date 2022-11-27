@@ -78,7 +78,7 @@ class Utility_Functions {
     public function pdf_DebugLog($headerMsg, $resultMsg=''){
 
         $headerMsg = (empty($headerMsg)) ? "Default Header:" : $headerMsg;
-        $this->pdm_docs_log(__METHOD__.'()'.$headerMsg);
+        $this->pdm_docs_log(__FUNCTION__.'()'.$headerMsg);
 
         if(!is_array($resultMsg)){
             $this->pdm_docs_log("\t".$resultMsg);
@@ -340,6 +340,7 @@ class Utility_Functions {
      * @since 1.2.2
      * 
      * @param string $file - file path
+     * @return int timestamp
      */
     public function get_file_age($file){
         if(isset($file) && file_exists($file)){
@@ -385,6 +386,20 @@ class Utility_Functions {
         return $val;
     }
 
+    /**
+     * Converts bytes to human readable form
+     * 
+     * @since 1.2.2
+     * @param int in bytes
+     * @return string files in human readable form
+     */
+
+    public function MakeReadable($bytes) {
+        if(!empty($bytes) && $bytes > 0){
+            $i = floor(log($bytes, 1024));
+            return round($bytes / pow(1024, $i), [0,0,2,2,3][$i]).['B','kB','MB','GB','TB'][$i];
+        }
+    }
     /**
      * Parses the filesize remove unit and non numeric characters
      * 
