@@ -189,7 +189,7 @@
 							{
 								targets: 1,
 								render: function(data, type, row, meta){
-									if(viewType == "preview"){
+									if(viewType == "document_preview"){
 										if(data){
 											return 	"<img height='150px' width='150px' src='"+row[1] +"' />";
 										} else {
@@ -200,7 +200,7 @@
 										return data
 									}
 								},
-								visible : (viewType == 'preview') ? true : false ,			
+								visible : (viewType == 'document_preview') ? true : false ,			
 							},
 							{
 								targets: 2,

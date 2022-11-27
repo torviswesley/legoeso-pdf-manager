@@ -24,7 +24,7 @@
 					of the shortcodes listed below.  There are three (3) "types" of views that can be used.
 					<ul  style="list-style-type:square;">
 						<li> <strong> tableview</strong> - This is the default type and generates an easy to read table using the columns: Filename, Category, Upload Userid, and Date Uploaded. </li>
-						<li> <strong> preview_table</strong> - This type also generates an easy to read table but includes a preview image of the document. 
+						<li> <strong> document_preview</strong> - This type also generates an easy to read table but includes a preview image of the document. 
 							(Please note, when displaying a large number of rows while using this view type there maybe a slight delay loading the table. 
 							If this is an issue, you can limit the number of rows returned by specifying a category)</li>
 						<li> <strong> listview </strong>- This view generates an ordered or unordered list of the documents by specifying the "pdf_id" for each document you would like to list.</li>
@@ -39,10 +39,10 @@
 							<li><strong>[legoeso_display_documents category="Saved Documents"]</strong> -  This shortcode will generate a table with all documents assigned to the category "Saved Documents".</li> 
 						</ul>
 					</li>
-					<li> <u>Preview_table [preview_table]</u>
+					<li> <u>Preview_table [document_preview]</u>
 						<ul style="list-style-type:square;">
-							<li> <strong>[legoeso_display_documents type="preview_table"]</strong> - This shortcode will generate a table with all documents but includes an image preview of the document if one is available.</li> 
-							<li> <strong>[legoeso_display_documents type="preview_table" category="Saved Documents"]</strong> - This shortcode will generate a table with all documents assigned to the "Saved Documents" category and will included an image preview of the document if one is available.</li> 
+							<li> <strong>[legoeso_display_documents type="document_preview"]</strong> - This shortcode will generate a table with all documents but includes an image preview of the document if one is available.</li> 
+							<li> <strong>[legoeso_display_documents type="document_preview" category="Saved Documents"]</strong> - This shortcode will generate a table with all documents assigned to the "Saved Documents" category and will included an image preview of the document if one is available.</li> 
 						</ul>
 					</li>
 					<li> <u>Listview [listview]</u> - This shortcode accepts a comma delimited list of document ID's.  Document IDs can be obtained within the Legoeso PDF's admin menu. Locate the "PDF ID" column to locate the documnets id you wish to display.  

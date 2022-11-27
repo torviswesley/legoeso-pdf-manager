@@ -75,7 +75,9 @@ class Utility_Functions {
      * @param string $resultMsg
      * @return none
      */
-    public function pdf_DebugLog($headerMsg="Default Header:",$resultMsg=''){
+    public function pdf_DebugLog($resultMsg='', $headerMsg){
+
+        $headerMsg = (empty($headerMsg)) ? "Default Header:" : $headerMsg;
         $this->pdm_docs_log($headerMsg);
 
         if(!is_array($resultMsg)){
