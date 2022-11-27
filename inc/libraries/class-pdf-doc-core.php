@@ -105,24 +105,6 @@ class PDF_Doc_Core extends Common\Utility_Functions {
 	private $force_image_extraction;
 
      /**
-	 * The directory location to the class libraries for this plugin.
-	 *
-	 * @since    1.0.0
-	 * @access   private
-	 * @var      String    $pdm_library    The directory location to the class libraries for this plugin.
-	 */
-    public $pdm_library;
-
-     /**
-	 * The directory path location for the plugin.
-	 *
-	 * @since    1.0.0
-	 * @access   private
-	 * @var      String    $pdm_plugin_dir    The directory path location for the plugin
-	 */
-    public $pdm_plugin_dir;
-
-     /**
 	 * Property used to store the filename used to save upload status
 	 * @since    1.0.1
 	 * @access   private
@@ -231,8 +213,6 @@ class PDF_Doc_Core extends Common\Utility_Functions {
 	 */
     public function __construct(){
         global $wpdb;
-        $this->pdm_plugin_dir = NS\PLUGIN_NAME_DIR;
-        $this->pdm_library = NS\PLUGIN_NAME_DIR.'inc/libraries/';
         
         // set the max filesize i.e 25MB
         $this->pdm_max_filesize = 26214400;
@@ -331,7 +311,6 @@ class PDF_Doc_Core extends Common\Utility_Functions {
 	 * @return none
 	 */
     public function process_pdf_upload($_files, $_post_data){ 
-
         //
         /**
         * Step 1: 
@@ -377,7 +356,7 @@ class PDF_Doc_Core extends Common\Utility_Functions {
     public function validateFileUpload($_submitted_files){
 
         //  include the timer class
-        include $this->pdm_plugin_dir.'inc/libraries/class-timer.php';
+        include wp_normalize_path(plugin_dir_path (__DIR__)).'libraries/class-timer.php';
 
         //  Translates the file uplaod error number to readable text
         function displayFileError($errNumber){
@@ -1306,7 +1285,7 @@ class PDF_Doc_Core extends Common\Utility_Functions {
                 }
                 catch(\Exception | \E_Error $e) {
                     //plugin_basename()
-                    return ['image_url' => plugins_url($this->plugin_text_domain.'/assets/').'no_image.png', 'image_path' => plugin_dir_path( __DIR__ ).'assets/no_image.png'];
+                    return ['image_url' => plugin_dir_url(__DIR__).'/assets/'.'no_image.png', 'image_path' => plugin_dir_path( __DIR__ ).'assets/no_image.png'];
                 }
             }
         }

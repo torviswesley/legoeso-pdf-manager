@@ -191,12 +191,12 @@ class Frontend extends Common\Utility_Functions {
 		{		
 			//	generate json data to be displayed in DataTable 
 			$this->get_document_data($category, $this->get_record_limit(), true);
-			ob_start();
+			
 		}
 		elseif($type  ==  "tableview") {
 			//	generate json data to be displayed in DataTable 
 			$this->get_document_data($category, $this->get_record_limit());
-			ob_start();
+			
 		} 
 		elseif($type == "listview"){
 			// get the list of documents
@@ -213,16 +213,14 @@ class Frontend extends Common\Utility_Functions {
 
 		// set/add object data to be used by DataTables to generate view
 		$this->set_datatable_views($datatable_array);
+		$this->set_localize_json_file();
 
 		// collect and return the datatable to the page
-		$this->get_tableview($datatable_array, $category);
-		$this->set_localize_json_file();
-		return ob_get_clean();
-
+		return $this->get_tableview($datatable_array, $category);
     }
 
 	/**
-	 * gets the HTML table template used to build the datatables
+	 * builds the HTML table template used to generate the datatables
 	 * @param array 	$_datatable_array
 	 * @param string 	$category
 	 * @since 1.2.0
@@ -230,7 +228,17 @@ class Frontend extends Common\Utility_Functions {
 	 */
 	public function get_tableview($_datatable_array, $category){
 		$_tableid = $_datatable_array['table_id'];
-		return include  plugin_dir_path( __FILE__). 'views/partials-pdf-frontend-listview.php';
+		// update custom class to fix table formating
+		$datatable_template = 	'<div class="custom_test" >';
+		$datatable_template .= 	'<div style="background: #f5f5f5; border-radius: 4px; padding: 1em; border: 1px solid #a3a3a3; font-size: 0.8rem;">';
+		$datatable_template .=	'<h3> List Results for Category:';
+		$datatable_template .=	(!empty($category)) ? esc_html(strtoupper($category)) : 'All Documents';
+		$datatable_template .=	'</h3><table id="'.esc_attr($_tableid).'" class="display">';
+		$datatable_template .=	'</table>';
+		$datatable_template .=	'</div>';
+		$datatable_template .=	'</div>';
+
+		return $datatable_template;
 	}
 
 	/**
@@ -479,7 +487,6 @@ class Frontend extends Common\Utility_Functions {
 			'json_data_url'		=>	plugin_dir_url( __DIR__) .'frontend/data/',
 			'_wpnonce'			=>	wp_create_nonce( 'legoeso_pdf' ),
 		);
-
 	
 		//  Add local JavaScript data objects to datatable script
 		//	check to see if the property pdf_json_file is empty if so return and do nothing
