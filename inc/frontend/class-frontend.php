@@ -124,7 +124,7 @@ class Frontend extends Common\Utility_Functions {
 		// load stylesheets
 		wp_enqueue_style( 'legoeso-frontend-styles', plugin_dir_url( __FILE__ ) . 'css/pdf-doc-manager-frontend.css', array(), $this->version, 'all' );
         wp_enqueue_style( 'legoeso-frontend-styles-datatable', plugin_dir_url( __FILE__ ) .'css/dataTables.jqueryui.min.css');
-		// wp_enqueue_style( 'legoeso-frontend-styles-datatables', plugin_dir_url( __FILE__ ) .'css/datatables.min.css');
+		wp_enqueue_style( 'legoeso-frontend-styles-jquery-ui', plugin_dir_url( __FILE__ ) .'css/jquery-ui.min.css');
 	}
 
 	/**
@@ -200,7 +200,7 @@ class Frontend extends Common\Utility_Functions {
 		} 
 		elseif($type == "listview"){
 			// get the list of documents
-			return $this->generate_shortcode_listview( $docids, $this->get_listview_type($attributes) );
+			return $this->generate_shortcode_listview( $docids, "legoeso_listview_".$_view_count, $this->get_listview_type($attributes));
 		}
 
 		// generate datatable object information
@@ -213,6 +213,7 @@ class Frontend extends Common\Utility_Functions {
 
 		// set/add object data to be used by DataTables to generate view
 		$this->set_datatable_views($datatable_array);
+		// localize javascript dataTable object
 		$this->set_localize_json_file();
 
 		// collect and return the datatable to the page
@@ -229,14 +230,14 @@ class Frontend extends Common\Utility_Functions {
 	public function get_tableview($_datatable_array, $category){
 		$_tableid = $_datatable_array['table_id'];
 		// update custom class to fix table formating
-		$datatable_template = 	'<div class="custom_test" >';
-		$datatable_template .= 	'<div style="background: #f5f5f5; border-radius: 4px; padding: 1em; border: 1px solid #a3a3a3; font-size: 0.8rem;">';
-		$datatable_template .=	'<h3> List Results for Category:';
+		
+		$datatable_template = 	'<div class="legoeso-dt-container ui-widget-content">';
+		$datatable_template .=	'<h3 class="">Showing Category: ';
 		$datatable_template .=	(!empty($category)) ? esc_html(strtoupper($category)) : 'All Documents';
-		$datatable_template .=	'</h3><table id="'.esc_attr($_tableid).'" class="display">';
-		$datatable_template .=	'</table>';
+		$datatable_template .=	'</h3>';
+		$datatable_template .=	'<table id="'.esc_attr($_tableid).'" class="display" style="width:100%"></table>';
 		$datatable_template .=	'</div>';
-		$datatable_template .=	'</div>';
+
 
 		return $datatable_template;
 	}
@@ -257,7 +258,7 @@ class Frontend extends Common\Utility_Functions {
 	 * @since 1.2.0
 	 * @return string
 	 */
-	 public function generate_shortcode_listview($doc_ids, $type = 'unordered'){
+	 public function generate_shortcode_listview($doc_ids, $listview_id, $type = 'unordered'){
 		if(!empty($doc_ids)){
 			// parse document ids submitted by user
 			$docs = explode(',', $doc_ids);
@@ -270,7 +271,7 @@ class Frontend extends Common\Utility_Functions {
 			// specify valid list types.
 			$valid_types = ['unordered' => 'u', 'ordered' => 'o'];
 
-			$type_ = (array_key_exists($type, $valid_types)) ? $valid_types[$type] : $valid_types['unordered'];
+			$list_type = (array_key_exists($type, $valid_types)) ? $valid_types[$type] : $valid_types['unordered'];
 
 			// get a list of document ids
 			$doc_ids = (count($docs) > 1) ? implode(", ", $docs) : $doc_ids;
@@ -285,10 +286,14 @@ class Frontend extends Common\Utility_Functions {
 			$_results = $this->get_query_results($sql_query, ARRAY_A);
 			$db_results = $_results['db_results'];
 
-			/**
-			 * @todo Add list type option to shortcode i.e type="A", or type="I"
-			 */
-			$html_list =  wp_kses_post('<'.$type_.'l id="" name="legoeso_list" class="pdm-document-view">');
+			$icon_class = '';
+			$list_class = '';
+			if($list_type == 'u'){
+				$list_class = 'legoeso_ulist';
+				$icon_class = '<i class="ui-icon ui-icon-circle-triangle-e "></i>';
+			}
+
+			$html_list =  wp_kses_post('<'.$list_type.'l id="'.$listview_id.'" name="'.$listview_id.'" class="'.$list_class.'">');
 			foreach($db_results as $data){
 				$query_args_view_pdfdoc = array(
 					'action'	=>	'view_document',
@@ -297,12 +302,11 @@ class Frontend extends Common\Utility_Functions {
 				);
 
 				$pdf_link = esc_url( add_query_arg( $query_args_view_pdfdoc, home_url($data['filename']) ) );
-				$html_list .= wp_kses_post('<li><a target="_blank" href="' . $pdf_link . '">'. __($data['filename'] , $this->plugin_text_domain ) . '</a> <br></li>');
+				$html_list .= wp_kses_post('<li>'.$icon_class.'<a target="_blank" href="' . $pdf_link . '">'. __($data['filename'] , $this->plugin_text_domain ) . '</a> <br></li>');
 			}
-			$html_list .= wp_kses_post('</'.$type_.'l>') ;
+			$html_list .= wp_kses_post('</'.$list_type.'l>') ;
 			return $html_list;
 		}
-
     }
 	
 	/**
@@ -385,7 +389,6 @@ class Frontend extends Common\Utility_Functions {
 		$json_file = preg_replace('[\x20]','_',  strtolower($_json_file)).'.json';
 		
 		// build path to the json file that store the data
-		
 		$json_file_dir = plugin_dir_path(__DIR__).'frontend/data/';
 		$json_file_path = $json_file_dir.$json_file;
 
@@ -393,9 +396,7 @@ class Frontend extends Common\Utility_Functions {
 			if(mkdir($json_file_dir, 0777)){
 				$this->pdf_DebugLog("Dir Created::", $json_file_dir);
 			}
-			else{
-				$this->pdf_DebugLog("Error Creating Dir::", $json_file_dir);
-			}
+			else{ $this->pdf_DebugLog("Error Creating Dir::", $json_file_dir); }
 		}
 		
 		// if file exists delete and recreate the file
@@ -631,7 +632,7 @@ class Frontend extends Common\Utility_Functions {
 	private function get_doc_id($query_uri){
 		if(isset($query_uri)){
 			try{
-
+				// decodes json web token
 				$base =  base64_decode($query_uri) ;
 				// regex pattern to search for admin object
 				$admin_re = '/^[\w]:\d:{[\w\D]+}$/';

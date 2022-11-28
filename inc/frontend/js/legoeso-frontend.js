@@ -177,6 +177,7 @@
 					let tableid = "#"+view_data.table_id;
 					//  add the new data to the table
 					var legoeso_dtable = $(tableid).DataTable({
+						className: 'ui-toolbar ui-widger-header ui-helper-clearfix ui-corner-tl ui-corner-tr',
 						ajax: data_url,
 						//data:  oData.data,
 						autowidth: true,
@@ -192,13 +193,9 @@
 									if(viewType == "document_preview"){
 										if(data){
 											return 	"<img height='150px' width='150px' src='"+row[1] +"' />";
-										} else {
-											return "* NO IMAGE *";
-										}
+										} else { return "* NO IMAGE *";	}
 									}
-									else {
-										return data
-									}
+									else { return data;	}
 								},
 								visible : (viewType == 'document_preview') ? true : false ,			
 							},

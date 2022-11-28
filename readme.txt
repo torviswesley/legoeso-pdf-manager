@@ -4,8 +4,8 @@ Donate link: https://www.legoeso.com/
 Tags: PDF, PDFs, PDF Manager, PDF Documents, PDF Viewer, Organize, File Manager, OCR, PDF to Text
 Requires at least: 5.6
 Tested up to: 6.1
-Stable tag: 1.2.1
-Requires PHP: 7.1
+Stable tag: 1.2.2
+Requires PHP: 7.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -39,42 +39,43 @@ Easily include all or a list of PDF documents into your posts by using one of th
 1. Locate Legoeso PDFs within the WordPress menu. 
 2. Select a category, Drag and Drop your PDF documents to the upload area. You can choose to a single .pdf document, multiple documents or a zip file containing multiple PDF documents. 
 
-== Add Categories. Documents can be grouped by categories. ==
-1. To add categories locate 'Post' within the WordPress Menu, select categories.  
-2. Add a new categories then return to Legoeso PDFs, the category will now be listed within the drop-down menu. 
+== Add Categories ==
+
+== Documents can be grouped by categories. ==
+1. To add categories locate 'Post' within the WordPress Menu, select categories from the submenu.  
+2. Enter your new category, click 'Add New Category' then return to Legoeso PDFs. The category will now be listed within the category drop-down menu. 
 
 == Displaying PDF Documents ==
-1. To list you document within your WordPress site. Create or edit a page, insert one the shortcodes listed on the Legoeso setting page
-2. Save your page. A list of documents or link shall appear on the page.
+1. To list your documents within your WordPress site. Simply create or edit a WordPress page, insert the shortcode [legoeso_display_documents] (or one of the shortcodes listed on the Legoeso settings page).
+2. Save and preview your page. A list of documents shall appear on the page.
 
 == Limitations ==
-1. The PHP PDF Parser is not suitable for parsing very large files (See: https://github.com/smalot/pdfparser/issues/104 ) and may generate a memory allocation errors when attempting to parse some file. In cases of large files, no text parsing will be attempted, only an image preview will be extracted. 
+1. The Legoeso PDF Manager uses smalot/PHP PDF Parser and is not suitable for parsing very large files [See: smalot/pdfparser](https://github.com/smalot/pdfparser/issues/104) and may generate out of memory allocation errors when attempting to parse some file. In cases of large files, no text parsing will be attempted, an image preview will be extracted instead. 
 2. Encrypted PDF's files are not supported 
 
 == Other Usages: ==
-1. E-mail PDF - @ request
+1. E-mail PDFs - @ request
 2. Restrict documents by user groups - @ request
-3. Extract and collect data from pdf documents that can be stored - @ request
+3. Extract and harvest data from pdf documents that can be stored - @ request
 
 == Frequently Asked Questions ==
 
 = How do I get started? =
-* Upload and activate the Legoeso PDF Manager to your WordPress site.
-* Locate Legoeso PDF’s within the admin menu.
-* select or drag your documents to the drop area.  
+* Downpload, install and activate the Legoeso PDF Manager on your WordPress site.
+* Locate 'Legoeso PDF’s' within the admin menu.
+* Select or drag your documents to the drop area.  
 
 = How do I include my PDF documents in my post = 
 * Simple. Just include the shortcode [legoeso_display_documents] within your page. You can display your PDF documents on any page by using any of the shortcodes listed in the Legoeso Settings admin menu. There are three (3) "types" of views that can be used.
 
 = Is there a file size limit? =
-The plugin has no file size limitation, however, your web hosting provider may have limitations, such as the maximum number of files that can be uploaded at one time, the maximum file upload size and the maximum memory that can be allocated to a pHp script. In cases of large documents, only a preview image will be generated, no text will not be extracted from the document, therefore the document will not be included when performing keyword searches. 
-In addition a document's text will not be extracted from a document that has too many pages.
+The plugin has no file size limitation, however, your web hosting provider may have limitations, such as the maximum number of files that can be uploaded at one time, the maximum file upload size and the maximum memory that can be allocated to a PHP script. In cases of large documents, only a preview image will be generated, no text will not be extracted from the document, therefore the document's text will not be included when performing keyword searches. 
 
 = Why wasn't there a text preview after I uploaded my document?
-If no text could be detected from a document only a preview image will be shown.  This is true also for large documents with many pages, only a snap shot of the document will be generated.
+If no text could be detected from the document only a preview image will be shown.  This is also true for large documents with many pages, only a preview image of the document will be generated.
 
 = Where does Legoeso PDF Manager store its PDF documents? =
-The Legoeso PDF Manager stores your PDF documents within the WordPress upload directory
+The Legoeso PDF Manager stores your PDF documents within the WordPress upload directory.
 
 == Screenshots ==
 
@@ -86,12 +87,12 @@ The Legoeso PDF Manager stores your PDF documents within the WordPress upload di
 == Changelog ==
 
 = 1.2.2 =
-Implemented new DataTable widget child rows to show document metadata
-Removed support Bootstrap v5.2.0-beta1 
-Add support for jQuery Ui widgets
-Implemented jQuery Ui progressbar
-Improved performance working with large files
-Added WP Cron scheduled clean-up to remove unmapped and unused files weekly, zip files created by the plugin will expire and deleted after 7 days.
+* Implemented new DataTable widget child rows to show document metadata
+* Removed support Bootstrap v5.2.0-beta1 
+* Add support for jQuery Ui widgets
+* Implemented jQuery Ui progressbar
+* Improved performance working with large files
+* Added WP Cron scheduled clean-up to remove unmapped and unused files weekly, zip files created by the plugin will expire and deleted after 7 days.
 
 == Upgrade Notice ==
 

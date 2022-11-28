@@ -1,23 +1,11 @@
 <?php
+namespace Legoeso_PDF_Manager\Inc\Admin;
 
+use Legoeso_PDF_Manager as NS;
+use Legoeso_PDF_Manager\Inc\Common as Common;
+use Legoeso_PDF_Manager\Inc\Libraries as Libraries;
 /**
  * Fired when the plugin is uninstalled.
- *
- * When populating this file, consider the following flow
- * of control:
- *
- * - This method should be static
- * - Check if the $_REQUEST content actually is the plugin name
- * - Run an admin referrer check to make sure it goes through authentication
- * - Verify the output of $_GET makes sense
- * - Repeat with other user roles. Best directly by using the links/query string parameters.
- * - Repeat things for multisite. Once for a single site in the network, once sitewide.
- *
- * This file may be updated more in future version of the Boilerplate; however, this is the
- * general skeleton and outline for how the file should work.
- *
- * For more information, see the following discussion:
- * https://github.com/tommcfarlin/WordPress-Plugin-Boilerplate/pull/123#issuecomment-28541913
  *
  * @link       https://www.legoeso.com
  * @since      1.0.0
@@ -27,5 +15,15 @@
 
 // If uninstall not called from WordPress, then exit.
 if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
+	exit;
+}
+
+if(is_user_logged_in() && current_user_can($this->pdm_required_cap))
+{
+
+// Drop the custom table if plugin is uninstalled.
+// global $wpdb;
+// $tablename = $wpdb->prefix.'legoeso_file_storage';
+// $wpdb->query( "DROP TABLE IF EXISTS `{$tablename}`;" );
 	exit;
 }

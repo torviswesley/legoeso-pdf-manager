@@ -1,28 +1,43 @@
 <?php
+/*
+Legoeso PDF Manager is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 2 of the License, or
+any later version.
+
+Legoeso PDF Manager is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with Legoeso PDF Manager. If not, see http://www.gnu.org/licenses/gpl-2.0.txt.
+*/
 /**
+ *
+ * @link              	https://www.legoeso.com
+ * @since             	1.0.0
+ * @package           	Legoeso PDF Manager
+ * @author				Torvis Wesley
+ * @copyright			2022 Legoeso, LLC
+ * @license				GPL-2.0+
  * 
- *
- * This file is read by WordPress to generate the plugin information in the plugin
- * admin area. This file also includes all of the dependencies used by the plugin,
- * registers the activation and deactivation functions, and defines a function
- * that starts the plugin.
- *
- * @link              https://www.legoeso.com
- * @since             1.0.0
- * @package           Legoeso Legoeso_PDF_Manager
- *
  * @wordpress-plugin
- * Plugin Name:       Legoeso PDF Manager
- * Plugin URI:        https://www.legoeso.com/legoeso-pdf-document-manager
- * Description:       A simple PDF document manager. Manage, display, and distribute PDF documents easily. Initially a custom solution designed for the purpose of extracting invoice and account information from scanned documents.  This plugin allows the storing, organizing, and archiving of PDF documents for distribution within a WordPress site. Features include uploading, searching, and viewing saved PDF documents.
- * Version:           1.2.2
- * Author:            Torvis Wesley
- * Author URI:        https://www.legoeso.com
- * License:           GPL-2.0+
- * License URI:       http://www.gnu.org/licenses/gpl-2.0.txt
- * Text Domain:       Legoeso PDF document manager
- * Domain Path:       /languages
+ * Plugin Name:       	Legoeso PDF Manager
+ * Plugin URI:        	https://www.legoeso.com/legoeso-pdf-document-manager
+ * Description:       	A simple PDF document manager. Manage, display, and distribute PDF documents easily. Initially a custom solution designed for the purpose of extracting invoice and account information from scanned documents.  This plugin allows the storing, organizing, and archiving of PDF documents for distribution within a WordPress site. Features include uploading, searching, and viewing saved PDF documents.
+ * Version:           	1.2.2
+ * Requires at least:	5.6
+ * Requires PHP:		7.0
+ * Author:            	Torvis Wesley
+ * Author URI:        	https://www.legoeso.com
+ * License:           	GPL-2.0+
+ * License URI:       	http://www.gnu.org/licenses/gpl-2.0.txt
+ * Text Domain:       	Legoeso PDF document manager
+ * Domain Path:       	/languages
  */
+
+
 
 namespace Legoeso_PDF_Manager;
 
@@ -39,7 +54,7 @@ define( __NAMESPACE__ . '\NS', __NAMESPACE__ . '\\' );
 
 define( NS . 'PLUGIN_NAME', 'legoeso-pdf-manager' );
 
-define( NS . 'PLUGIN_VERSION', '1.2.1' );
+define( NS . 'PLUGIN_VERSION', '1.2.2' );
 
 define( NS . 'PLUGIN_NAME_DIR', plugin_dir_path( __FILE__ ) );
 
@@ -57,23 +72,19 @@ define( NS . 'JQUERY_UI_WP_URL', plugin_dir_url( __FILE__ ) );
 /**
  * Autoload Classes
  */
-
 require_once( PLUGIN_NAME_DIR . 'inc/libraries/autoloader.php' );
 
 /**
  * Register Activation and Deactivation Hooks
  * This action is documented in inc/core/class-activator.php
  */
-
 register_activation_hook( __FILE__, array( NS . 'Inc\Core\Activator', 'activate' ) );
 
 /**
  * The code that runs during plugin deactivation.
  * This action is documented inc/core/class-deactivator.php
  */
-
 register_deactivation_hook( __FILE__, array( NS . 'Inc\Core\Deactivator', 'deactivate' ) );
-
 
 /**
  * Plugin Singleton Container
@@ -117,7 +128,7 @@ function Legoeso_PDF_Manager_init() {
 		return Legoeso_PDF_Manager::init();
 }
 
-$min_php = '5.6.0';
+$min_php = '7.0.0';
 
 // Check the minimum required PHP version and run the plugin.
 if ( version_compare( PHP_VERSION, $min_php, '>=' ) ) {

@@ -21,9 +21,8 @@
 	background-color:#6B6B6B;
 	border: 1px solid #484848;
 }
-.custom_test {
-	color:rgb(27, 24, 24);
-}
+
+
 .pdm_docs_preview_container {
 	display:flex;
 	justify-content: space-around;
@@ -33,4 +32,19 @@
 	max-width: 100px;
     max-height: 100px;
     border: 1px solid;
+}
+
+.legoeso-dt-container{
+	background: #f5f5f5; 
+	border-radius: 4px; 
+	padding: 1em; 
+	border: 1px solid #a3a3a3;
+	font-size: 0.8rem;
+}
+.legoeso_header {
+	color:rgb(27, 24, 24);
+}
+
+.legoeso_ulist {
+	list-style: none;
 }
