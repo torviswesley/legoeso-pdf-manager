@@ -25,11 +25,7 @@ class Deactivator {
 
 
 	public static function deactivate() {
-		/**
-		 * 
-		 * 
-		 * 
-		 */
+
 		//global $wpdb;
 		/**
 		* Table information
