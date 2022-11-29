@@ -1,9 +1,8 @@
 <?php
-namespace Legoeso_PDF_Manager\Inc\Admin;
+namespace Legoeso_PDF_Manager;
 
-use Legoeso_PDF_Manager as NS;
 use Legoeso_PDF_Manager\Inc\Common as Common;
-use Legoeso_PDF_Manager\Inc\Libraries as Libraries;
+
 /**
  * Fired when the plugin is uninstalled.
  *
@@ -17,13 +16,18 @@ use Legoeso_PDF_Manager\Inc\Libraries as Libraries;
 if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
 	exit;
 }
+/**
+ * Autoload Classes
+ */
+require_once( __DIR__ . '/inc/libraries/autoloader.php' );
 
-if(is_user_logged_in() && current_user_can($this->pdm_required_cap))
-{
+if (is_user_logged_in() && current_user_can('upload_files')){
 
-// Drop the custom table if plugin is uninstalled.
-// global $wpdb;
-// $tablename = $wpdb->prefix.'legoeso_file_storage';
-// $wpdb->query( "DROP TABLE IF EXISTS `{$tablename}`;" );
-	exit;
+	// Drop the custom legoeso_file_storage table when plugin is uninstalled.
+	global $wpdb;
+	$tablename = $wpdb->prefix.'legoeso_file_storage';
+	$wpdb->query("DROP TABLE IF EXISTS `{$tablename}`;");
+	// clean up any remaining files/documents left behind
+	$utils = new Common\Utility_Functions();
+	$utils->legoeso_cleanup(true);
 }

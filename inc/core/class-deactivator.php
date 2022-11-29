@@ -25,14 +25,6 @@ class Deactivator {
 
 
 	public static function deactivate() {
-
-		//global $wpdb;
-		/**
-		* Table information
-		*/
-		// $tablename = $wpdb->prefix.'options';
-		// $wpdb->query( "DELETE FROM `{$tablename}` WHERE `option_name` LIKE 'legoeso_%' " );
-
 		// unschedule the legoeso_cron_hook task upon deactivation
 		$legoeso_cron_timestamp = wp_next_scheduled( 'legoeso_cron_hook');
 		wp_unschedule_event($legoeso_cron_timestamp, 'legoeso_cron_hook');
