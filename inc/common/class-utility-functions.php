@@ -206,7 +206,6 @@ class Utility_Functions {
                     }
                 }
                 else{
-                    echo "UNINSTALL FALSE";
                     // removes all files and directories up to the specified dir
                     foreach($files as $file){
                         (is_dir("$directory/$file")) ? $this->clean_dir("$directory/$file") : unlink("$directory/$file");
