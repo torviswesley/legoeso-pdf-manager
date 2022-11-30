@@ -196,13 +196,13 @@ class Utility_Functions {
                         else { 
                             if (preg_match('/[\/]legoeso_pdm_data/m', $directory)) {
                                 $this->pdf_DebugLog("Deleting File:", "[$directory/$file]");
-                                //unlink("$directory/$file");
+                                unlink("$directory/$file");
                             }
                         }
                     }
                     if (preg_match('/[\/]legoeso_pdm_data/m', $directory)) {
                         $this->pdf_DebugLog("Removing DIR:", "[$directory]");
-                        //return rmdir($directory);
+                        return rmdir($directory);
                     }
                 }
                 else{
