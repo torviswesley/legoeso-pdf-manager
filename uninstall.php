@@ -30,5 +30,4 @@ if (is_user_logged_in() && current_user_can('upload_files')){
 	//clean up any remaining files/documents left behind
 	$utils = new Common\Utility_Functions();
 	$utils->legoeso_cleanup(true);
-	exit;
 }
