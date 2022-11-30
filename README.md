@@ -43,8 +43,8 @@ Features include unlimited file uploads. Upload documents via drag and drop, bul
 2. Save your page. A list of documents or link shall appear on the page.
 
 ## Limitations
-1. The PHP PDF Parser is not suitable for parsing very large files (See: https://github.com/smalot/pdfparser/issues/104 ) and may generate a memory allocation errors when attempting to parse some file. In cases of large files, no text parsing will be attempted, only an image preview will be extracted. 
-2. Encrypted PDF's files are not supported 
+1. The PHP PDF Parser is not suitable for parsing very large files (See: https://github.com/smalot/pdfparser/issues/104 ) and may generate 'Fatal errors:  Allowed memory allocation error' when attempting to parse some files. In cases of large files, no text parsing will be attempted, only an image preview will be extracted. 
+2. Encrypted PDF's files are not supported. 
 
 ## Other Usages:
 1. E-mail PDF - @ request
@@ -52,12 +52,12 @@ Features include unlimited file uploads. Upload documents via drag and drop, bul
 3. Extract and collect data from pdf documents that can be stored - @ request
 
 ## Changes v1.2.2 
-1. Implemented new DataTable widget child rows to allow access to document metadata
-2. Removed support Bootstrap v5.2.0-beta1 
+1. Implemented new DataTable widget child rows to allow access to document metadata.
+2. Removed Bootstrap v5.2.0-beta1 support
 3. Added support for jQuery Ui widgets
 4. Implemented jQuery Ui progressbar
-5. Improved performance working with large files
-6. Added WP Cron scheduled clean-up to remove unmapped and unused files weekly, zip files created by the plugin will expire and deleted after 7 days.
+5. Improved performance working with large files.
+6. Added WP Cron scheduled clean-up to remove unmapped and unused files weekly, and zip files created by the plugin will expire and be deleted after 7 days.
 
 ## Changes v1.2.1 
 1. Resolved WordPress security vulnerabilities

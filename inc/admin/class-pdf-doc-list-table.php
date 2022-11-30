@@ -409,7 +409,7 @@ class PDF_Doc_List_Table extends Libraries\WP_List_Table  {
 		$query_args_view_pdfdoc = array(
 			'action'	=>	'view_document',
 			'pid'		=>	 base64_encode(serialize($item)),
-			'_wpnonce'	=>	wp_create_nonce( 'view_pdf_file_nonce' ),
+			'_wpnonce'	=>	wp_create_nonce( 'legoeso_pdf' ),
 		);
 		
 		$view_pdf_doc_meta_link = esc_url( add_query_arg( $query_args_view_pdfdoc, $load_pdf_filename ) );

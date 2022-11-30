@@ -87,12 +87,12 @@ The Legoeso PDF Manager stores your PDF documents within the WordPress upload di
 == Changelog ==
 
 = 1.2.2 =
-* Implemented new DataTable widget child rows to show document metadata
-* Removed support Bootstrap v5.2.0-beta1 
-* Add support for jQuery Ui widgets
+* Implemented new DataTable widget child rows to allow access to document metadata.
+* Removed Bootstrap v5.2.0-beta1 support
+* Added support for jQuery Ui widgets
 * Implemented jQuery Ui progressbar
-* Improved performance working with large files
-* Added WP Cron scheduled clean-up to remove unmapped and unused files weekly, zip files created by the plugin will expire and deleted after 7 days.
+* Improved performance working with large files.
+* Added WP Cron scheduled clean-up to remove unmapped and unused files weekly, and zip files created by the plugin will expire and be deleted after 7 days.
 
 == Upgrade Notice ==
 

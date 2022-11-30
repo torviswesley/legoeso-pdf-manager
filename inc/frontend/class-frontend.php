@@ -598,14 +598,12 @@ class Frontend extends Common\Utility_Functions {
 		$is_login = isset($_GET['login']) ? sanitize_text_field($_GET['login']): '';
 		if( isset($_GET['action']) && $_GET['action'] == 'view_document' &&  $is_login != 1) {
 			
-			wp_verify_nonce( 'legoeso_pdf', '_wpnonce');
-
 			// if user is not logged in redirect to login page
 			if(is_user_logged_in()) {	
 				
 				$pid = (isset($_GET['pid']) && strlen($_GET['pid']) > 10) ? $this->get_doc_id($_GET['pid']) : null;
 				
-				if( !empty($pid) && is_numeric($pid) ){
+				if( !empty($pid) && is_numeric($pid) && wp_verify_nonce($_GET['_wpnonce'], 'legoeso_pdf')){
 					$dt = $this->display_pdf_document($pid);
 				}
 				else {

@@ -959,8 +959,8 @@ class PDF_Doc_Core extends Common\Utility_Functions {
                 }
                 else {
 
-                    // append filesize to metadata
-                    $metadata = ['metadata' => wp_json_encode(['FileSize' => $this->MakeReadable($this->get_working_filesize())])  ];
+                    // append filesize/version to metadata
+                    $metadata = ['metadata' => wp_json_encode(['FileSize' => $this->MakeReadable($this->get_working_filesize()), 'PdfVersion' => $pdf_fileversion])  ];
 
                     // add metadata to columns
                     if(is_array($metadata)){
@@ -1114,7 +1114,7 @@ class PDF_Doc_Core extends Common\Utility_Functions {
 
                     // append filesize to metadata
                     $pdf_metadata['FileSize'] = $this->MakeReadable($this->get_working_filesize());
-
+                    $pdf_metadata['PdfVersion'] = $this->get_pdfversion($input_filename);
                     $this->pdf_DebugLog("Method: extractTextFromPDF(): Meta Data:",  json_encode($pdf_metadata));
                   
                     // clear pdf_parser reference in attempt to free its resources
