@@ -1257,7 +1257,7 @@ class PDF_Doc_Core extends Common\Utility_Functions {
         if ( file_exists($pdf_filename) ){
             $_ftype = mime_content_type($pdf_filename);
             $wp_upload_dir = $this->pdm_upload_dir_agrs['wp_upload_dir']['path'];
-            $legoeso_img_dir = '/pdm_data/images/';
+            $legoeso_img_dir = '/legoeso_pdm_data/images/';
 
             // local path to image directory
             $legoeso_local_img_dir = $wp_upload_dir.$legoeso_img_dir;

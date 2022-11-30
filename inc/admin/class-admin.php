@@ -141,7 +141,7 @@ class Admin extends Common\Utility_Functions{
 		//  setup the upload directory to store pdf files
 		$wp_upload_dir = wp_upload_dir();
 		// build path to current upload directory
-		$pdm_upload_dir = $wp_upload_dir['path']."/pdm_data/".time();
+		$pdm_upload_dir = $wp_upload_dir['path']."/legoeso_pdm_data/".time();
 		$pdm_upload_status_file = $pdm_upload_dir."/".rand(01,9999999).".txt";
 
 		$upload_dir_ars  = array(
@@ -489,7 +489,7 @@ class Admin extends Common\Utility_Functions{
 		$wp_upload_dir = wp_upload_dir();
 
 		// build path to current upload directory
-		$pdm_upload_dir = $wp_upload_dir['path']."/pdm_data/";
+		$pdm_upload_dir = $wp_upload_dir['path']."/legoeso_pdm_data/";
 		file_put_contents($pdm_upload_dir.'testing-wp-schedule_'.time().'.txt','The WP Cron was ran @ '.time().', this was successful!');
 	}
 

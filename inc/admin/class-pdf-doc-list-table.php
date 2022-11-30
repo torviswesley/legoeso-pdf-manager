@@ -805,9 +805,9 @@ class PDF_Doc_List_Table extends Libraries\WP_List_Table  {
 			$file_dir = $wp_upload_dir['path'];
 			
 			// directpry location and name of file where zip file will be saved
-			$zipfile_basedir = "{$file_dir}/pdm_data/legoeso_pdf_download_".time().".zip";
+			$zipfile_basedir = "{$file_dir}/legoeso_pdm_data/legoeso_pdf_download_".time().".zip";
 			// URL where zip file can be downloaded
-			$zipfile_url = $wp_upload_dir['url'] . "/pdm_data/legoeso_pdf_download_".time().".zip";
+			$zipfile_url = $wp_upload_dir['url'] . "/legoeso_pdm_data/legoeso_pdf_download_".time().".zip";
 
 			// loop through the sql results and add each row of data to 
 			// the zip file

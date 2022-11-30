@@ -108,7 +108,7 @@ class Utility_Functions {
 
             //  get the WordPress upload directory
             $wp_upload_dir = wp_upload_dir();
-            $pdm_upload_dir = (!empty($pdm_upload_directory)) ? $pdm_upload_directory : $wp_upload_dir['path'].'/pdm_data';
+            $pdm_upload_dir = (!empty($pdm_upload_directory)) ? $pdm_upload_directory : $wp_upload_dir['path'].'/legoeso_pdm_data';
 
             $str_filepath = $pdm_upload_dir.'/'.$filename;
 
@@ -147,7 +147,33 @@ class Utility_Functions {
             return sanitize_text_field(substr(file_get_contents($pdf_file_path), 0, 10));
         }
     }
-       
+        
+    /**
+     * callback function used by WP Cron scheduled task 
+     * 
+     * @since 1.2.2
+     * @return 
+     */
+    public function legoeso_cleanup($clean_all = false){
+        // get WP upload directory information
+        $wp_upload_dir = wp_upload_dir();
+        
+        if($clean_all){
+            // clean up / remove all plugin files and directories
+            $this->clean_dir($wp_upload_dir['basedir'], true);
+            return;
+        }
+
+        //  clean up unmapped pdf documents
+        $this->delete_files( array_diff($this->legoeso_dir_tree($wp_upload_dir['basedir']), $this->get_document_filepaths()) );
+
+        // clean up unmapped images
+        $this->delete_files(array_diff($this->legoeso_dir_tree($wp_upload_dir['basedir'], 'jpg'), $this->get_document_filepaths(false)) );
+
+        // get all zip files created by plugin
+        $this->delete_files($this->legoeso_dir_tree($wp_upload_dir['basedir'], 'zip'), true);
+    }
+
     /**
      *  Recursively removes an entire directory and its subdirectories
      * 
@@ -156,21 +182,37 @@ class Utility_Functions {
      * @param boolean   $all - set to true to delete all files/folders
      * @return boolean 
      */
-    public function clean_dir($directory, $target = null){
-        if(is_dir($directory) ){       
+    public function clean_dir($directory, $uninstall = false){
+        if(is_dir($directory) ){   
+            $directory = wp_normalize_path($directory);   
             try 
             {
                 $files = array_diff(scandir($directory), array('.', '..'));
-                foreach($files as $file){
-                    (is_dir("$directory/$file")) ? $this->clean_dir("$directory/$file", $target) : unlink("$directory/$file");
+                if($uninstall){
+                    foreach($files as $file){
+                        if(is_dir("$directory/$file")){
+                            $this->clean_dir("$directory/$file", $uninstall); 
+                        } 
+                        else { 
+                            if (preg_match('/[\/]legoeso_pdm_data/m', $directory)) {
+                                $this->pdf_DebugLog("Deleting File:", "[$directory/$file]");
+                                //unlink("$directory/$file");
+                            }
+                        }
+                    }
+                    if (preg_match('/[\/]legoeso_pdm_data/m', $directory)) {
+                        $this->pdf_DebugLog("Removing DIR:", "[$directory]");
+                        //return rmdir($directory);
+                    }
                 }
-                if (!isset($target)){
+                else{
+                    echo "UNINSTALL FALSE";
+                    // removes all files and directories up to the specified dir
+                    foreach($files as $file){
+                        (is_dir("$directory/$file")) ? $this->clean_dir("$directory/$file") : unlink("$directory/$file");
+                    }
                     return rmdir($directory);
-                }
-                elseif (preg_match($target, $directory)) {
-                    return rmdir($directory);
-                }
-                    
+                } 
 
             } catch(PDM_Exception_Error $e) {
                 $this->Exception_Error[] = $e->getErrorObject($e);
@@ -245,7 +287,7 @@ class Utility_Functions {
 
     /**
      * Recursively reads the given directory structure, 
-     * only returns .pdf or .jpg files located in WP_upload/pdm_data directory
+     * only returns .pdf or .jpg files located in WP_upload/legoeso_pdm_data directory
      * 
      * @since 1.2.2
      * 
@@ -265,7 +307,7 @@ class Utility_Functions {
                     if($dircont[$i] !== '.' && $dircont[$i] !== '..'){
                         $current_file = "{$thisdir}/{$dircont[$i]}";
                         if(is_file($current_file)) {
-                            if(preg_match('/pdm_data/',$current_file)){
+                            if(preg_match('/legoeso_pdm_data/',$current_file)){
                                 $paths[] = realpath("{$thisdir}/{$dircont[$i]}");
                             }
                         } elseif (is_dir($current_file) ){
@@ -324,31 +366,7 @@ class Utility_Functions {
             return $paths;
         }
     }
-    /**
-     * callback function used by WP Cron scheduled task 
-     * 
-     * @since 1.2.2
-     * @return 
-     */
-    public function legoeso_cleanup($clean_all = false){
-        // get WP upload directory information
-        $wp_upload_dir = wp_upload_dir();
-        
-        if($clean_all){
-            // clean up / remove all plugin files and directories
-            $this->clean_dir($wp_upload_dir['basedir'], "/pdm_data/");
-            return;
-        }
 
-        //  clean up unmapped pdf documents
-        $this->delete_files( array_diff($this->legoeso_dir_tree($wp_upload_dir['basedir']), $this->get_document_filepaths()) );
-
-        // clean up unmapped images
-        $this->delete_files(array_diff($this->legoeso_dir_tree($wp_upload_dir['basedir'], 'jpg'), $this->get_document_filepaths(false)) );
-
-        // get all zip files created by plugin
-        $this->delete_files($this->legoeso_dir_tree($wp_upload_dir['basedir'], 'zip'), true);
-    }
     
     /**
      * returns the number of days since the file was created/last modified
