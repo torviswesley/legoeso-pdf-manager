@@ -25,7 +25,7 @@ along with Legoeso PDF Manager. If not, see http://www.gnu.org/licenses/gpl-2.0.
  * @wordpress-plugin
  * Plugin Name:       	Legoeso PDF Manager
  * Plugin URI:        	https://www.legoeso.com/legoeso-pdf-document-manager
- * Description:       	A simple PDF document manager. Manage, display, and distribute PDF documents easily. Initially a custom solution designed for the purpose of extracting invoice and account information from scanned documents.  This plugin allows the storing, organizing, and archiving of PDF documents for distribution within a WordPress site. Features include uploading, searching, and viewing saved PDF documents.
+ * Description:       	The Legoeso PDF Manager is a simple, lightweight, but powerful PDF document manager. It helps you organize your PDF documents for easy display, and distribution within your WordPress site. It supports multiple file upload or bulk upload of files stored in a zip file.
  * Version:           	1.2.2
  * Requires at least:	5.6
  * Requires PHP:		7.0
