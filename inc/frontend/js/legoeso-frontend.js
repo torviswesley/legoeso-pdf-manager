@@ -145,54 +145,75 @@
 		function getDTViewData(){
 			return dt_viewdata;
 		}
+
 		// returns a local copy of the _wpnonce
 		function get_wpnonce(){
 			return _wpnonce;
 		}
+
 		let data_url = json_data_url + dt_viewdata.data_filename;
+		let ajax_url = legoesodata.ajax_url +'?action='+ legoesodata.action +
+			'&category='+ encodeURIComponent(dt_viewdata.category) + 
+			'&nonce=' + get_wpnonce();
+
 		// create new instance of XMLHttpRequest to fetch data
-		let xhr = new XMLHttpRequest();
+		// let xhr = new XMLHttpRequest();
 
-		xhr.open('GET', data_url);
-		xhr.send();
-		xhr.addEventListener("load", function (e) {
-			if (xhr.readyState === 4 && xhr.status === 200) {
+		// xhr.open('GET', ajax_url);
+		// xhr.send();
+		// xhr.addEventListener("load", function (e) {
+		// 	if (xhr.readyState === 4 && xhr.status === 200) {
 
-				//  get and parse the JSON string
-				let json_resp =  xhr.responseText;
+		// 		//  get and parse the JSON string
+		// 		let json_resp =  xhr.responseText;
 				
-				if(!isJsonString(json_resp))
-					return;
+		// 		// if(!isJsonString(json_resp))
+		// 		// 	return;
 
-				let oData = JSON.parse(json_resp);
-				// extract table headers from first row of data
-				let getColumnNames 	= formatColumnNames(oData.columns);
-				// get info to the current used to create DataTable
-				let view_data 	= getDTViewData();
-				let viewType = view_data.view_type;
-				// get document url
-				let _doc_url 	= function () { return getDTViewData().view_doc_url; } 
-
+		// 		let oData = JSON.parse(json_resp);
+		// 		// extract table headers from first row of data
+		// 		let getColumnNames 	= formatColumnNames(oData.columns);
+		// 		// get info to the current used to create DataTable
+		// 		let view_data 	= getDTViewData();
+		// 		let viewType = view_data.view_type;
+		// 		// get document url
+				let _doc_url 	= dt_viewdata.view_doc_url;
+				let viewType = dt_viewdata.view_type;
 					// set table id 
-					let tableid = "#"+view_data.table_id;
+					let tableid = "#"+dt_viewdata.table_id;
 					//  add the new data to the table
 					var legoeso_dtable = $(tableid).DataTable({
 						className: 'ui-toolbar ui-widger-header ui-helper-clearfix ui-corner-tl ui-corner-tr',
-						ajax: data_url,
+						ajax: ajax_url,
 						//data:  oData.data,
 						autowidth: true,
+
+						columns: [
+							{title:'ID'},
+							{title:'Image'},
+							{title:'Filename'},
+							{title:'Category'},
+							{title:'Upload User'},
+							{title:'Upload Date'},
+							{title:'text_data'},
+							{title:'metadata'},
+						],
 						columnDefs:[
 
 							{
 								targets: 0,
 								visible: true,
+								className: 'dt-control',
+								defaultContent:'',
+								orderable: false,
+								data:null,
 							},
 							{
 								targets: 1,
 								render: function(data, type, row, meta){
 									if(viewType == "document_preview"){
 										if(data){
-											return 	"<img height='150px' width='150px' src='"+row[1] +"' />";
+											return 	"<img height='150px' width='150px' src='"+ row[1] +"' />";
 										} else { return "* NO IMAGE *";	}
 									}
 									else { return data;	}
@@ -202,8 +223,10 @@
 							{
 								targets: 2,
 								render: function(data, type, row, meta){
-									let pid = btoa(JSON.stringify(row.slice(0, row.length-2)));
-									return '<a target="_blank" href="' + _doc_url() + '/' + row[2] + '?action=view_document&pid=' + pid +'&_wpnonce='+ get_wpnonce() +'"> ' + data +'</a> ';
+									let o = Object.fromEntries(Object.entries(row).filter(e => e[0] != '6'));
+									let pid = btoa( JSON.stringify(o) );
+									//let pid = btoa(JSON.stringify(row.slice(0, row.length-2)));
+									return '<a target="_blank" href="' + _doc_url + '/' + row[2] + '?action=view_document&pid=' + pid +'&nonce='+ get_wpnonce() +'"> ' + row[2] +'</a> ';
 								}
 							},
 							{
@@ -217,7 +240,6 @@
 
 							},
 						],
-						columns: getColumnNames,
 					});	
 
 					// add event listeners for opening and closing details
@@ -237,8 +259,8 @@
 						}
 					});
 				return;
-			}
-		});
+			// }
+		// });
 	}
 
 
@@ -260,12 +282,12 @@
 	// load each of the datatable views
 	if(legoesodata.datatable_views.length > 0){
 		// collection of views to display i.e Datatables
-		let _views = legoesodata.datatable_views;
+		let views = legoesodata.datatable_views;
 		let _json_data_url = legoesodata.json_data_url;
 	
-		for(const _dt_viewdata of _views){
+		for(const table_view of views){
 			//show_viewType(viewData, _json_data_url);
-			loadTableData(_dt_viewdata, _json_data_url, legoesodata._wpnonce);
+			loadTableData(table_view, _json_data_url, legoesodata.nonce);
 		}
 	}
 

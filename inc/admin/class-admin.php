@@ -124,9 +124,6 @@ class Admin extends Common\Utility_Functions{
 		$this->pdm_required_cap = 'upload_files'; // specify minimum required capability
 		//set the upload directory
 		$this->pdm_upload_dir_args = $this->set_upload_directory();
-
-
-
 	}
 
 	/**
@@ -159,7 +156,6 @@ class Admin extends Common\Utility_Functions{
 	 * @return	none
 	 */
 	public function enqueue_styles() {
-		//wp_enqueue_style('bootstrap_css', plugin_dir_url( __FILE__ ) .  'css/bootstrap.min.css' );
 		wp_enqueue_style( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'css/pdf-doc-manager-admin.css', array(), $this->version, 'all' );
 		wp_enqueue_style( 'jquery-ui-theme', plugin_dir_url( __FILE__ ) . 'css/jquery-ui.min.css', array(),'', 'all' );
 		wp_enqueue_style('dashicons');
@@ -252,7 +248,7 @@ class Admin extends Common\Utility_Functions{
 				__( 'Legoeso Settings', $this->plugin_text_domain ),		// menu title
 				$this->pdm_required_cap,										// capability
 				$this->plugin_name.'_settings',								// menu slug
-				array($this, 'legoeso_settings'),						// cal back
+				array($this, 'legoeso_show_settings'),						// cal back
 		);
 		// only include if user has manage_categories
 		//	add submenu 
@@ -448,39 +444,16 @@ class Admin extends Common\Utility_Functions{
 	 * @since	1.0.1
 	 * @return	none
 	 */
-	public function legoeso_settings(){
+	public function legoeso_show_settings(){
 		if(is_user_logged_in() && current_user_can($this->pdm_required_cap)){
-			// if($_POST){	
-			// 	//	manaully add checkbox element/value if not present
-			// 	if(!array_key_exists('legoeso_pytesseract_enabled', $_POST)){
-			// 		$_POST['legoeso_pytesseract_enabled'] = 'off';
-			// 	}
-			// 	if(!array_key_exists('legoeso_force_image_enabled', $_POST)){
-			// 		$_POST['legoeso_force_image_enabled'] = 'off';
-			// 	}
-				
-			// 	//	update setting upon saving changes.
-			// 	$this->updateSettings($_POST);
-			// }
-			
-			/** *******************************************************************
-			 * Begin collection of dependency variables
-			 **********************************************************************/
-
-			// toggle force image only
-			// $cb_force_img = $this->toggle_checkbox(get_option("legoeso_force_image_enabled"));
-			// $force_image_enabled_value = $cb_force_img[0];
-			// $force_image_enabled = $cb_force_img[1];
-
-
 			// render and displays the Seettngs tabs
 			include( 'views/partials-pdm-settings.php' );
 		}
 	}
 
 	/**
-	 * Callback hook for WP Cron scheduling
-	 * 
+	 * Callback hook for WP Cron scheduling, this hook will run every seven days to cleanup up the
+	 * legoeso_pdm_data directory: removes expired zip files, and any unmapped files
 	 * @since 1.2.2
 	 */
 	public function legoeso_cron_cleanup(){
@@ -491,9 +464,10 @@ class Admin extends Common\Utility_Functions{
 
 		// build path to current upload directory
 		$pdm_upload_dir = $wp_upload_dir['path']."/legoeso_pdm_data/";
-		file_put_contents($pdm_upload_dir.'testing-wp-schedule_'.time().'.txt','The WP Cron was ran @ '.time().', this was successful!');
+		if(is_dir($pdm_upload_dir)){
+			file_put_contents($pdm_upload_dir.'legoeso-last-scheduled-cleanup-run-'.time().'.txt','Legoeso PDF Manager last scheduled cleanup was ran @ '.time().', clean up successful!');
+		}
 	}
-
 
 	/**
 	 * Callback function for WP Cron scheduling interval filter that will run task 

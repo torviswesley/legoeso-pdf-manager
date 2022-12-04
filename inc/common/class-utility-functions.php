@@ -76,17 +76,18 @@ class Utility_Functions {
      * @return none
      */
     public function pdf_DebugLog($headerMsg, $resultMsg=''){
+        if(WP_DEBUG === true){
+            $headerMsg = (empty($headerMsg)) ? "Default Header:" : $headerMsg;
+            $this->pdm_docs_log(debug_backtrace()[1]['function'].'() '.$headerMsg);
 
-        $headerMsg = (empty($headerMsg)) ? "Default Header:" : $headerMsg;
-        $this->pdm_docs_log(debug_backtrace()[1]['function'].'() '.$headerMsg);
+            if(!is_array($resultMsg)){
+                $this->pdm_docs_log("\t".$resultMsg);
 
-        if(!is_array($resultMsg)){
-            $this->pdm_docs_log("\t".$resultMsg);
-
-        } 
-        elseif(is_array($resultMsg)){
-            $this->pdm_docs_log("\t".wp_json_encode($resultMsg));
-        }    
+            } 
+            elseif(is_array($resultMsg)){
+                $this->pdm_docs_log("\t".wp_json_encode($resultMsg));
+            }    
+        }
     }
 
     /**
@@ -157,29 +158,26 @@ class Utility_Functions {
     public function legoeso_cleanup($clean_all = false){
         // get WP upload directory information
         $wp_upload_dir = wp_upload_dir();
-        
+        $files_to_delete = [];
+
         if($clean_all){
             // clean up / remove all plugin files and directories
-            $this->clean_dir($wp_upload_dir['basedir'], true);
-            return;
+            return $this->clean_dir($wp_upload_dir['basedir'], true);
         }
-
-        //  clean up unmapped pdf documents
-        $this->delete_files( array_diff($this->legoeso_dir_tree($wp_upload_dir['basedir']), $this->get_document_filepaths()) );
-
-        // clean up unmapped images
-        $this->delete_files(array_diff($this->legoeso_dir_tree($wp_upload_dir['basedir'], 'jpg'), $this->get_document_filepaths(false)) );
-
-        // get all zip files created by plugin
-        $this->delete_files($this->legoeso_dir_tree($wp_upload_dir['basedir'], 'zip'), true);
+        // get list of files that can be removed/deleted
+        $files_to_delete = array_diff($this->legoeso_dir_tree($wp_upload_dir['basedir'],''), $this->get_valid_filepaths());
+       // delete the files
+        $this->delete_files($files_to_delete);
+        //$this->pdf_DebugLog("Legoeso - files deleted:", $files_to_delete);
+        return true;
     }
 
     /**
-     *  Recursively removes an entire directory and its subdirectories
-     * 
+     *  Recursively removes all legoeso_pdm_data files/directories and its subdirectories
+     *  
      * @since 1.0.1
      * @param string    $directory
-     * @param boolean   $all - set to true to delete all files/folders
+     * @param boolean   $uninstall - set to true delete all files/folders
      * @return boolean 
      */
     public function clean_dir($directory, $uninstall = false){
@@ -188,6 +186,7 @@ class Utility_Functions {
             try 
             {
                 $files = array_diff(scandir($directory), array('.', '..'));
+                
                 if($uninstall){
                     foreach($files as $file){
                         if(is_dir("$directory/$file")){
@@ -215,9 +214,24 @@ class Utility_Functions {
 
             } catch(PDM_Exception_Error $e) {
                 $this->Exception_Error[] = $e->getErrorObject($e);
+                return false;
             }
-            
+            return true;
         }
+    }
+
+    /**
+     * Validates if zip file has expired, returns true if so
+     * 
+     * @since 1.2.2
+     * @param string $file
+     * @return bool true if files is expired
+     */
+    private function is_expired($file){
+        if( file_exists($file) && ($this->get_file_age($file) >= $this->max_file_age) ){
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -227,19 +241,16 @@ class Utility_Functions {
      * @param array - list of filename/paths to remove
      * @return bool - returns true if  passed objectis an array
      */
-    function delete_files($unmapped_files, $delete_downloads = false){
+    function delete_files($unmapped_files){
         if(is_array($unmapped_files)){
-            
-            if(!$delete_downloads){
-                foreach($unmapped_files as $file){
-                    if(file_exists($file)){
-                        unlink($file);
+            foreach($unmapped_files as $file){
+                if(file_exists($file)){
+                    if(mime_content_type($file) == 'application/x-zip-compressed'){
+                        if($this->is_expired($file)){
+                            unlink($file);
+                        }
                     }
-                }
-            }
-            elseif($delete_downloads){
-                foreach($unmapped_files as $file){
-                    if( file_exists($file) && ($this->get_file_age($file) >= $this->max_file_age) ){
+                    else {
                         unlink($file);
                     }
                 }
@@ -347,25 +358,26 @@ class Utility_Functions {
      * @param bool 
      * @return array
      */
-    private function get_document_filepaths($get_pdfs = true){
+    private function get_valid_filepaths(){
         // setup wpdb
         global $wpdb;
         if($wpdb){
 
-            $w = ($get_pdfs) ? 'pdf_path':'image_path';
-
-            $sql_query = "SELECT id, {$w} from {$wpdb->prefix}legoeso_file_storage";
+            $sql_query = "SELECT id, pdf_path, image_path from {$wpdb->prefix}legoeso_file_storage";
             $result = $wpdb->get_results($sql_query, ARRAY_A );
 
             $paths = [];
             foreach($result as $row){
-                $paths[$row['id']] = $row[$w];
+                $pdf_file = $row['pdf_path'];
+                $image_file = $row['image_path'];
+
+                ( !empty($pdf_file)) ? $paths[] = $pdf_file: '';
+                ( !empty($image_file)) ?  $paths[] = $image_file: '';
             }
             asort($paths);
             return $paths;
         }
     }
-
     
     /**
      * returns the number of days since the file was created/last modified
@@ -393,7 +405,7 @@ class Utility_Functions {
             ((int)ini_get('max_execution_time')) - (microtime(true) - $_SERVER['REQUEST_TIME_FLOAT']);
     }
 
-        /**
+    /**
     * convert MB to bytes, preforms simple conversion
     *
     * @since 1.2.1

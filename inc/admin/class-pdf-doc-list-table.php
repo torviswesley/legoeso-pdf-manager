@@ -724,7 +724,7 @@ class PDF_Doc_List_Table extends Libraries\WP_List_Table  {
 				__( 'Error', $this->plugin_text_domain ),
 				array( 
 						'response' 	=> 403, 
-						'back_link' =>  esc_url( add_query_arg( array( 'page' =>  $this->sanitize_postdata($_REQUEST['page'] ) ) , admin_url( 'admin.php' ) ) ),
+						'back_link' =>  add_query_arg(  [ 'page' =>  $this->sanitize_postdata($_REQUEST['page']) ] , admin_url( 'admin.php' ) ),
 					)
 		);
 	}
