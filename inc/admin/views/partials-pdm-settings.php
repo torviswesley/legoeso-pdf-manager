@@ -10,7 +10,8 @@
 
 		<div class="accordion-item accordion-body">
 			<strong>Current Operating System:</strong>  <?php echo esc_html($sys_info['server']);?><br>
-			<strong>Zip:  </strong><?php echo esc_html($sys_info['phpinfo']['Zip version']); ?>
+			<strong>PHP Version:  </strong><?php echo esc_html($sys_info['php_version']); ?><br>
+			<strong>Zip:  </strong><?php echo esc_html($sys_info['zip_info']['Zip version']); ?><br>
 			<strong>Imagick:</strong>  <?php echo esc_html($sys_info['imagick']['imagick module version']);?><br>
 			<strong>Imagick compiled Version: </strong> <?php echo esc_html($sys_info['imagick']['Imagick using ImageMagick library version']);?>
 		</div>

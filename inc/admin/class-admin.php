@@ -304,7 +304,7 @@ class Admin extends Common\Utility_Functions{
 
 		// instantiate the PDF List Table
 		$this->pdf_list_table = new PDF_Doc_List_Table( $this->plugin_text_domain );
-		$this->pdf_DebugLog("Method: load_pdf_doc_list_table_screen_options()::","Loaded screen options and instantiate PDF List Table");
+		$this->pdf_DebugLog("Loading::","Loaded screen options and instantiate PDF List Table");
 
 	}
 
@@ -318,7 +318,7 @@ class Admin extends Common\Utility_Functions{
 		if(is_user_logged_in() && current_user_can($this->pdm_required_cap)){
 			// render and display initial List Table
 			include_once( 'views/partials-pdm-display.php' );
-			$this->pdf_DebugLog("Method: load_pdf_doc_list_table()::", wp_json_encode($this->pdf_list_table));
+			$this->pdf_DebugLog("Load List Table", wp_json_encode($this->pdf_list_table));
 		}
 	}
 
@@ -385,6 +385,7 @@ class Admin extends Common\Utility_Functions{
 			}
 		}
 	}
+
 	/**
 	 * Callback for the ajax wp_ajax__ajax_pdm_history_callback for checking ajax response.
 	 *
@@ -420,7 +421,7 @@ class Admin extends Common\Utility_Functions{
 
 		if(is_user_logged_in() && current_user_can($this->pdm_required_cap)){
 		
-			$this->pdf_DebugLog("Medthod: ajax_upload_handler(): Beginning Upload Process ::", "ajax_upload_handler");
+			$this->pdf_DebugLog("Beginning Upload Process ::", "ajax_upload_handler");
 			
 			/**
 			* PDF_Doc_Core handles the upload request.

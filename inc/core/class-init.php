@@ -159,6 +159,8 @@ class Init extends Common\Utility_Functions {
 		$this->loader->add_action( 'wp_enqueue_scripts', $plugin_public, 'enqueue_styles' );
 		$this->loader->add_action( 'wp_enqueue_scripts', $plugin_public, 'enqueue_scripts' );
 		$this->loader->add_action( 'init', $plugin_public, 'load_legoeso_shortcodes' );
+		$this->loader->add_action('wp_ajax_show_data', $plugin_public, 'legoeso_frontend_ajax_handler');
+		
 		// Add filters
 		$this->loader->add_filter( 'init', $plugin_public, 'add_legoeso_viritual_pages' );
 

@@ -7,7 +7,7 @@ $upload_frm = ( isset($_REQUEST['pdm_upload_view']) && sanitize_text_field($_REQ
  * Get the value of the checkbox Force PDF Preview, the value overrides the current
  * setting set within the settings page
  */
-$cb_force_img = $this->toggle_checkbox('on');
+$cb_force_img = $this->toggle_checkbox('off');
 $force_image_enabled_value = $cb_force_img[0];
 $force_image_enabled = $cb_force_img[1];
 ?>

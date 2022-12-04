@@ -78,7 +78,7 @@ class Utility_Functions {
     public function pdf_DebugLog($headerMsg, $resultMsg=''){
 
         $headerMsg = (empty($headerMsg)) ? "Default Header:" : $headerMsg;
-        $this->pdm_docs_log(__FUNCTION__.'()'.$headerMsg);
+        $this->pdm_docs_log(debug_backtrace()[1]['function'].'() '.$headerMsg);
 
         if(!is_array($resultMsg)){
             $this->pdm_docs_log("\t".$resultMsg);
@@ -116,8 +116,8 @@ class Utility_Functions {
             $file_info['file'] = $str_filepath;
             $file_info['path'] = $pdm_upload_dir;
         
-            $this->pdf_DebugLog("Current Upload Directory:: ", $pdm_upload_dir);
-            $this->pdf_DebugLog("Full file path to upload:: ", $str_filepath);
+            // $this->pdf_DebugLog("Current Upload Directory:: ", $pdm_upload_dir);
+            // $this->pdf_DebugLog("Full file path to upload:: ", $str_filepath);
 
             if(!file_exists($pdm_upload_dir)){
                 mkdir( $pdm_upload_dir, 0755, true);
@@ -427,7 +427,7 @@ class Utility_Functions {
      * @return string files in human readable form
      */
 
-    public function MakeReadable($bytes) {
+    public function make_file_size_readable($bytes) {
         if(!empty($bytes) && $bytes > 0){
             $i = floor(log($bytes, 1024));
             return round($bytes / pow(1024, $i), [0,0,2,2,3][$i]).['B','kB','MB','GB','TB'][$i];
@@ -511,39 +511,39 @@ class Utility_Functions {
      * @param array $_POST
      * @return none
      */
-	public function updateSettings($POST){
-		if(!wp_verify_nonce( $POST['_pdm_doc_settings_nonce'], 'pdm-doc-settings-nonce' ) && !is_array($POST)){
-			$this->pdf_DebugLog("Update Settings Security Check::", "failed!");
-			return;
-		}
+	// public function updateSettings($POST){
+	// 	if(!wp_verify_nonce( $POST['_pdm_doc_settings_nonce'], 'pdm-doc-settings-nonce' ) && !is_array($POST)){
+	// 		$this->pdf_DebugLog("Update Settings Security Check::", "failed!");
+	// 		return;
+	// 	}
   
-		global $wpdb;
-		$wpdb->show_errors(true);
-		// table to update
-		$tablename = $wpdb->prefix.'options';
+	// 	global $wpdb;
+	// 	$wpdb->show_errors(true);
+	// 	// table to update
+	// 	$tablename = $wpdb->prefix.'options';
 
-		// columns to process
-		$do = array('legoeso_force_image_enabled');
+	// 	// columns to process
+	// 	$do = array('legoeso_force_image_enabled');
 
-		foreach($POST as  $key => $val){
+	// 	foreach($POST as  $key => $val){
 			
-			if(in_array($key, $do)){
+	// 		if(in_array($key, $do)){
 
-				$columns_update = array(
-					'option_name'		=>	$key,
-					'option_value'		=>	sanitize_option($val),
-					'autoload'			=>	'yes',
-				);
+	// 			$columns_update = array(
+	// 				'option_name'		=>	$key,
+	// 				'option_value'		=>	sanitize_option($val),
+	// 				'autoload'			=>	'yes',
+	// 			);
 
-				// what to update
-				$_where = array('option_name' => $key);
+	// 			// what to update
+	// 			$_where = array('option_name' => $key);
 
-				//	update values of the WP_Options TABLE
-				$update_result = $wpdb->update($tablename, $columns_update, $_where);
-				$this->pdf_DebugLog("Updated {$key}: Result", $update_result);
-			}
-		}
-	}
+	// 			//	update values of the WP_Options TABLE
+	// 			$update_result = $wpdb->update($tablename, $columns_update, $_where);
+	// 			$this->pdf_DebugLog("Updated {$key}: Result", $update_result);
+	// 		}
+	// 	}
+	// }
 
     /**
      * Saves the changes made to the pdf document using Quick Edit
@@ -576,8 +576,6 @@ class Utility_Functions {
             $rs = $wpdb->update($tablename, $columns_update, $_where);            
            
             if($rs == 1){
-                $this->pdf_DebugLog("Updated", $columns_update);
-                $this->pdf_DebugLog("Updated: Result", $rs);
                 return wp_json_encode( array('response' => $rs ) );
                 
             } else {
@@ -663,8 +661,9 @@ class Utility_Functions {
 
 		$installed_libs['server'] = $phpinfo['']['System'];
 		$installed_libs['imagick'] =$phpinfo['imagick'];
-        $installed_libs['phpinfo'] = $phpinfo['zip'];
-        
+        $installed_libs['zip_info'] = $phpinfo['zip'];
+        $installed_libs['php_version'] = $phpinfo['Core']['PHP Version'];
+
         //  add relavant php.ini values
         $installed_libs['server_limits']['max_execution_time'] = $phpinfo['Core']['max_execution_time'];
         $installed_libs['server_limits']['memory_limit'] = $phpinfo['Core']['memory_limit'];
@@ -673,7 +672,7 @@ class Utility_Functions {
         $installed_libs['server_limits']['post_max_size'] = $phpinfo['Core']['post_max_size'];
 
           // Add to debug log    
-        $this->pdf_DebugLog("Class: init.php - Medthod:: check_dependencies()", wp_json_encode($installed_libs));
+        $this->pdf_DebugLog("Dependency Check", wp_json_encode($installed_libs));
         return($installed_libs);
     } 
 }

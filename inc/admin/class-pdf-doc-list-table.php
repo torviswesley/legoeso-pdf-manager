@@ -153,7 +153,6 @@ class PDF_Doc_List_Table extends Libraries\WP_List_Table  {
 			'order'			=> sanitize_key($order),
 		) );
 		
-		$this->pdf_DebugLog("Function Loaded::", "prepare_items");
 	}
 
 	/**
@@ -276,7 +275,7 @@ class PDF_Doc_List_Table extends Libraries\WP_List_Table  {
 			$pdm_doc_query = "SELECT pdf_doc_num, filename, category, SUBSTRING(text_data,1,150), has_img, image_url, upload_userid, date_uploaded, ID FROM $wpdb_table ORDER BY $orderby $order";
 		}
 
-		$this->pdf_DebugLog("Search Query ::", $pdm_doc_query);
+		//$this->pdf_DebugLog("Search Query ::", $pdm_doc_query);
 		
 		// query output_type will be an associative array with ARRAY_A.
 		// return result array to prepare_items.
@@ -409,7 +408,7 @@ class PDF_Doc_List_Table extends Libraries\WP_List_Table  {
 		$query_args_view_pdfdoc = array(
 			'action'	=>	'view_document',
 			'pid'		=>	 base64_encode(serialize($item)),
-			'_wpnonce'	=>	wp_create_nonce( 'legoeso_pdf' ),
+			'nonce'	=>	wp_create_nonce( 'legoeso_pdf' ),
 		);
 		
 		$view_pdf_doc_meta_link = esc_url( add_query_arg( $query_args_view_pdfdoc, $load_pdf_filename ) );
@@ -515,7 +514,7 @@ class PDF_Doc_List_Table extends Libraries\WP_List_Table  {
 		
 		// check for individual row actions
 		$the_table_action = $this->current_action();
-		$this->pdf_DebugLog("Method: handle_table_actions(): Current Bulk Action::", $the_table_action);
+		//$this->pdf_DebugLog(" Current Bulk Action::", $the_table_action);
 		
 		// specify the valid action types
 		$valid_actions = ['bulk-download', 'bulk-delete', 'bulk-email'];
@@ -603,7 +602,7 @@ class PDF_Doc_List_Table extends Libraries\WP_List_Table  {
 
 			// sanitize ids to process
 			$bulk_pdf_ids = $this->utilities->sanitize_postdata_strong($bulk_pdf_ids);
-			$this->pdf_DebugLog("Method: pdf_bulk_delete(): IDs::", $bulk_pdf_ids);
+			//$this->pdf_DebugLog("IDs::", $bulk_pdf_ids);
 
 			$_status = 'failed';	// initialize variable
 
@@ -648,14 +647,13 @@ class PDF_Doc_List_Table extends Libraries\WP_List_Table  {
 			$result = $wpdb->query($sql_query, ARRAY_A);
 
 
-			$this->pdf_DebugLog("File(s) Deleted::", $files_deleted);
-			$this->pdf_DebugLog("Query to Delete PDF Documents::", $sql_query);
+			// $this->pdf_DebugLog("File(s) Deleted::", $files_deleted);
+			// $this->pdf_DebugLog("Query to Delete PDF Documents::", $sql_query);
 
 			// if rows were deleted successfully lets remove the files from the directory
 			if($result){
-				$this->pdf_DebugLog("Deleted PDF Documents From File Sytem::", wp_json_encode($files_deleted));
-				
-				$this->pdf_DebugLog("Bulk Delete: Query Succeeded::", "--");
+				// $this->pdf_DebugLog("Deleted PDF Documents From File Sytem::", wp_json_encode($files_deleted));
+				// $this->pdf_DebugLog("Bulk Delete: Query Succeeded::", "--");
 
 				// set the status to compelte
 				$_status = 'complete';
@@ -685,7 +683,7 @@ class PDF_Doc_List_Table extends Libraries\WP_List_Table  {
 		if(!isset($bulk_pdf_ids) && !is_array($bulk_pdf_ids) && count($bulk_pdf_ids) > 1)
 			return;
 		if ($results !== false){
-			$this->pdf_DebugLog("Bulk Email: Query Succeeded::", "Begin Emailing '{$wpdb->num_rows}' PDF Documents ");
+			// $this->pdf_DebugLog("Bulk Email: Query Succeeded::", "Begin Emailing '{$wpdb->num_rows}' PDF Documents ");
 			//	return a response to the caller
 			return 	array(
 					'status'	=> 'complete',
@@ -742,7 +740,7 @@ class PDF_Doc_List_Table extends Libraries\WP_List_Table  {
 			$zip = new ZipArchive();
 			// create a new zip archive
 			if ($zip->open($zipfilename, ZipArchive::CREATE) !==TRUE) {
-				$this->pdf_DebugLog("*** Bulk download: Error::", "Could not create '{$zipfilename}'" );
+				// $this->pdf_DebugLog("*** Bulk download: Error::", "Could not create '{$zipfilename}'" );
 				return;
 			}
 			//	add pdf file to zip file
@@ -813,8 +811,8 @@ class PDF_Doc_List_Table extends Libraries\WP_List_Table  {
 			// the zip file
 			$pdf_docs = zip_pdf_docs($_this, $zipfile_basedir, $sql_results);
 
-			$_this->pdf_DebugLog("*** Bulk download: Complete::", "Path Zip file: {$zipfile_basedir}" );
-			$_this->pdf_DebugLog("*** Bulk download: Complete::", "Url Zip file: {$zipfile_url}" );
+			// $_this->pdf_DebugLog("*** Bulk download: Complete::", "Path Zip file: {$zipfile_basedir}" );
+			// $_this->pdf_DebugLog("*** Bulk download: Complete::", "Url Zip file: {$zipfile_url}" );
 			
 			//	return a response to the caller
 			return 	array(
@@ -837,11 +835,10 @@ class PDF_Doc_List_Table extends Libraries\WP_List_Table  {
 		$sql_query = "SELECT `".implode("`,`", $columns)."` FROM `".$this->get_database_tablename()."` {$sql_filter};";
 		$pdf_downloads = $wpdb->get_results($sql_query, ARRAY_A);
 		
-		$this->pdf_DebugLog("Query for Bulk Download::", $sql_query);
+		// $this->pdf_DebugLog("Query for Bulk Download::", $sql_query);
 
 		if ($wpdb->num_rows > 0){
-
-			$this->pdf_DebugLog("Bulk download: Query Succeeded::", "Begin Zipping '{$wpdb->num_rows}' PDF Documents ");
+			// $this->pdf_DebugLog("Bulk download: Query Succeeded::", "Begin Zipping '{$wpdb->num_rows}' PDF Documents ");
 			die( wp_json_encode(do_pdf_docs($this, $pdf_downloads)) );
 		} else {
 			$this->pdf_DebugLog("Bulk download: Query Failed::", "{$wpdb->last_error}");
@@ -892,7 +889,6 @@ class PDF_Doc_List_Table extends Libraries\WP_List_Table  {
 
 		check_ajax_referer( 'ajax-pdm-doc-list-nonce', '_ajax_pdm_doc_list_nonce');
 		// Logging actions taken
-		$this->pdf_DebugLog("Method: ajax_response():", "Fired!");
 		extract( $this->_args );
 		extract( $this->_pagination_args, EXTR_SKIP);
 	

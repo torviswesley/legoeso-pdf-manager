@@ -233,7 +233,7 @@ class PDF_Doc_Core extends Common\Utility_Functions {
 		$this->legoeso_db_tablename = "{$wpdb->prefix}legoeso_file_storage";
 
         // Get current options set for force_image_extraction
-        $this->force_image_extraction = 1;
+        $this->force_image_extraction = 0;
 
         parent::__construct();
     }
@@ -275,6 +275,7 @@ class PDF_Doc_Core extends Common\Utility_Functions {
     private function is_large_file(): bool {
         return $this->pdm_large_file;
     }
+
     /**
      * return the filesize for the current filesize
      * @since 1.2.1
@@ -283,6 +284,7 @@ class PDF_Doc_Core extends Common\Utility_Functions {
     public function get_working_filesize(){
         return $this->pdm_filesize;
     }
+
 	/**
 	 * returns plugin database tablename used by WP
 	 * @since 1.2.0
@@ -301,8 +303,54 @@ class PDF_Doc_Core extends Common\Utility_Functions {
         return $this->pdm_max_filesize;
     }
 
+    /**
+     * returns min memory limit to use before raising memory limit
+     * 
+     * @since 1.2.1
+     */
+    private function get_min_peak_limit(){
+        $mem = ini_get('memory_limit');
+        $mem = $this->return_bytes($mem);
+        return ( ceil( $mem / 2) );
+    }
+
+     /* returns current value option 'force_image_extraction' aka generate pdf preview 
+     * 
+     * @since 1.2.1
+     */
+    private function get_force_image_extraction(){
+        return $this->force_image_extraction;
+    }
+
+    /* sets the current value option for 'force_image_extraction' aka generate pdf preview 
+     * 
+     * @since 1.2.1
+     */
+    private function set_force_image_extraction($option){
+        $this->force_image_extraction = $option;
+    }
 
     /**
+     * temporary sets the memory limit for the script
+     * 
+     * @since 1.2.1
+     */
+    private function raise_memory_limit(){
+        ini_set('memory_limit', '768M');
+    }
+
+    /**
+     * restores the original memory limit
+     * 
+     * @since 1.2.1
+     */
+    private function reset_memory_limit(){
+        gc_collect_cycles();
+        ini_restore('memory_limit');
+    }
+
+
+     /**
 	 * Handles and processes the uploaded file
      * 
 	 * The second format will make the initial sorting order be descending
@@ -403,7 +451,7 @@ class PDF_Doc_Core extends Common\Utility_Functions {
         * Start Timer
         */
         $sTimer = new Timer();
-        $this->pdf_DebugLog("Method: validateFileUpload(): File Process Start Time:", $sTimer->startTimer());
+        $this->pdf_DebugLog("File Process Start Time:", $sTimer->startTimer());
         
         //  Count the number of files submitted
         $file_count = count($_submitted_files['name']);
@@ -418,7 +466,7 @@ class PDF_Doc_Core extends Common\Utility_Functions {
         $this->completeProcess();
 
         // log timer
-        $this->pdf_DebugLog("Method: validateFileUpload(): File Process End Time:",  $sTimer->stopTimer());
+        $this->pdf_DebugLog("File Process End Time:",  $sTimer->stopTimer());
     }
     /**
      * Finalizes the upload process 
@@ -520,8 +568,8 @@ class PDF_Doc_Core extends Common\Utility_Functions {
         // get the total number of files
         $_num_of_files = $_files['file_count'];
 
-        $this->pdf_DebugLog("Method: processFileUploads(): ({$_num_of_files }) File(s) to be processed: [Object]::", $_files);
-        $this->pdf_DebugLog("Method: processFileUploads(): Upload Directory Info: [Object]::", wp_json_encode($this->pdm_upload_dir_agrs));
+        $this->pdf_DebugLog("({$_num_of_files }) File(s) to be processed: [Object]::", $_files);
+        $this->pdf_DebugLog("Upload Directory Info: [Object]::", wp_json_encode($this->pdm_upload_dir_agrs));
 
         // loop over the row of  files
         for($i=0; $i < $_num_of_files;$i++){
@@ -589,7 +637,7 @@ class PDF_Doc_Core extends Common\Utility_Functions {
         // get the collection of types
         $_file_types = $_files['type']; // fix, if value is not there stop script do add to database
 
-        // $this->pdf_DebugLog("Method: processZipFile(): **** Types:: ",   $_file_types);
+        // $this->pdf_DebugLog("** Types:: ",   $_file_types);
         // filter file types to only include zip files
         foreach($_file_types as $index => $type){
             
@@ -604,7 +652,7 @@ class PDF_Doc_Core extends Common\Utility_Functions {
                 $zip_file['error']   =  $_files['error'][$index];
                 $zip_file['size']    =  $_files['size'][$index];
 
-                 $this->pdf_DebugLog("Method: processZipFile(): **** Prepare to UNZIP FILE Type: $type Name:".$_files['name'][$index]." - ".$index,  $zip_file);
+                 $this->pdf_DebugLog("Unzipping file Type: $type Name:".$_files['name'][$index]." - ".$index,  $zip_file);
                 // pass the zip file to unzip and collect the extracted files in an array
                 $this->unzipfiles( $zip_file, $unzipped );
                  
@@ -618,8 +666,8 @@ class PDF_Doc_Core extends Common\Utility_Functions {
         // remove the zip files from $_files array
         $_files = remove_item($_files, $removed);   
 
-        $this->pdf_DebugLog("Method: processZipFile(): **** Extracted Files: 'unzipped' ::",  $unzipped);
-        $this->pdf_DebugLog("Method: processZipFile(): **** Updated: '_files' Array ::",  $_files);
+        $this->pdf_DebugLog("* Extracted Files: 'unzipped' ::",  $unzipped);
+        $this->pdf_DebugLog("* Updated: '_files' Array ::",  $_files);
 
         return ($_files);
     }
@@ -645,8 +693,8 @@ class PDF_Doc_Core extends Common\Utility_Functions {
 
         // Build folder path to temp directory         
         $folder = $writeToPath . "unzipped_" . basename($zip_tmp_name);
-        $this->pdf_DebugLog("Method: unzipfiles(): Temp Directory ", $zip_tmp_name);
-        $this->pdf_DebugLog("Method: unzipfiles(): Adding Directory ", $folder);
+        // $this->pdf_DebugLog("Temp Directory ", $zip_tmp_name);
+        // $this->pdf_DebugLog("Adding Directory ", $folder);
     
         //  create the temp directory
         if (!file_exists($folder)) {
@@ -676,9 +724,10 @@ class PDF_Doc_Core extends Common\Utility_Functions {
                 $_unzipped_files['size'][] = isset($filepath) ? filesize($filepath):0;
             }
         }
-        $this->pdf_DebugLog("Method: unzipfiles(): **** FILES EXTRACTED ***:: ", $_unzipped_files);
+        $this->pdf_DebugLog("* FILES EXTRACTED *:: ", $_unzipped_files);
     
     }
+    
     /**
 	 *  Processess a single PDFFile for futher processing.
 	 *
@@ -707,19 +756,19 @@ class PDF_Doc_Core extends Common\Utility_Functions {
                 $this->pdm_large_file = true;
             }
 
-            $this->pdf_DebugLog("Method: processPDFFile(): Uploaded File Information: Object::", wp_json_encode($file_info_arr));
+            $this->pdf_DebugLog("Uploaded File Information: Object::", wp_json_encode($file_info_arr));
             
             // Get the path to the file that was uploaded
             $fileUploaded = $file_info_arr['file'];
             
             if(!is_wp_error($file_info_arr)){
-                $this->pdf_DebugLog("Method: processPDFFile(): Upload Status: File successfully uploaded!::", "Adding file to database");
+                $this->pdf_DebugLog("Upload Status: File successfully uploaded!::", "Adding file to database");
                 // add file to database / return an array results
                 return $this->addFileToDatabase($fileUploaded, $filename);
             }
         }
 
-        $this->pdf_DebugLog("Method: processPDFFile(): Upload Status: File NOT uploaded!::", "Failed Upload.");
+        $this->pdf_DebugLog("pload Status: File NOT uploaded!::", "Failed Upload.");
         return ['upload_status' => 'failed', 'status_message' => 'File NOT uploaded!', 'filename'  =>  $filename, 'percent' => 100];
     }
     
@@ -892,7 +941,9 @@ class PDF_Doc_Core extends Common\Utility_Functions {
              * Begin processing file
             */
             // attempt text extraction only, no preview image will be added to database for document
-            if(!$force_img_only){
+            $this->pdf_DebugLog("Force Image Extraction?", $force_img_only);
+
+            if($force_img_only == 0){
 
                 //  Extract the text from the PDF file and get the document properties
                 if($pdf_extract_properties = $this->extractTextFromPDF($pdf_filepath)){
@@ -918,11 +969,16 @@ class PDF_Doc_Core extends Common\Utility_Functions {
                 else {
                     // send status back to the Ajax caller
                     $this->send_progress("Text extraction failed.");
+                    // append filesize/version to metadata
+                    $metadata = ['metadata' => wp_json_encode(['FileSize' => $this->make_file_size_readable($this->get_working_filesize()), 'PdfVersion' => $pdf_fileversion])  ];
+                
+                    // merge metadata to columns array
+                    if(is_array($metadata)){
+                        $pdf_query_columns = array_merge($pdf_query_columns, $metadata);
+                    }
                 }
-            } 
-            else {
 
-                // 1. Attempt to extract image data from PDF file
+                // Attempt to extract image data from PDF file
                 if($extractedImageInfo =  $this->extract_image_from_pdf($pdf_filepath)){
                     $extracted_image = true;
                 }
@@ -934,41 +990,39 @@ class PDF_Doc_Core extends Common\Utility_Functions {
                     $image_paths['has_img'] = 1;
                     $pdf_query_columns = array_merge($pdf_query_columns, $image_paths);
                 }
+                else {
+                    // send status back to the Ajax caller
+                    $this->send_progress("Image extraction failed.");
+                }
 
-                // 2. Attempt to extract text from PDF file and get the document properties
-                if($pdf_extract_properties = $this->extractTextFromPDF($pdf_filepath)){
 
-                    $extracted_textdata    = $pdf_extract_properties['extracted_data'];  // string
 
-                    // add text extraction data to columns array
-                    $pdf_extracted_columns = [            
-                        'text_data'         =>  $extracted_textdata,
-                        'pdf_filesize'      =>  $this->get_working_filesize(),
-                    ];
+            } 
+            else {
 
-                    $metadata = $pdf_extract_properties['pdf_metadata'];
+                // Attempt to extract image data from PDF file
+                if($extractedImageInfo =  $this->extract_image_from_pdf($pdf_filepath)){
+                    $extracted_image = true;
+                }
 
-                    // add metadata to columns
-                    if(is_array($metadata)){
-                        $pdf_query_columns = array_merge($pdf_query_columns, $metadata);
-                    }
-
-                    // build columns for query
-                    $pdf_query_columns = array_merge($pdf_query_columns, $pdf_extracted_columns);
-
+                // if image extraction successful, get path info to image
+                // and merge with standard columns
+                if($extracted_image){
+                    $image_paths = $extractedImageInfo;   // array
+                    $image_paths['has_img'] = 1;
+                    $pdf_query_columns = array_merge($pdf_query_columns, $image_paths);
                 }
                 else {
-
-                    // append filesize/version to metadata
-                    $metadata = ['metadata' => wp_json_encode(['FileSize' => $this->MakeReadable($this->get_working_filesize()), 'PdfVersion' => $pdf_fileversion])  ];
-
-                    // add metadata to columns
-                    if(is_array($metadata)){
-                        $pdf_query_columns = array_merge($pdf_query_columns, $metadata);
-                    }
-
                     // send status back to the Ajax caller
-                    $this->send_progress("Text extraction failed.");
+                    $this->send_progress("Image extraction failed.");
+                }
+
+                // append filesize/version to metadata
+                $metadata = ['metadata' => wp_json_encode(['FileSize' => $this->make_file_size_readable($this->get_working_filesize()), 'PdfVersion' => $pdf_fileversion])  ];
+                
+                // merge metadata to columns array
+                if(is_array($metadata)){
+                    $pdf_query_columns = array_merge($pdf_query_columns, $metadata);
                 }
 
             }
@@ -1006,7 +1060,7 @@ class PDF_Doc_Core extends Common\Utility_Functions {
         
         // collect/store the result of the process here
         $this->file_process_results[] = $wpdb_response;
-        $this->pdf_DebugLog("Method: addFileToDatabase(): Database results: Data:: 2", $wpdb_response);
+        //$this->pdf_DebugLog("Database results: Data:: 2", $wpdb_response);
         return $wpdb_response;
     }
 
@@ -1071,7 +1125,7 @@ class PDF_Doc_Core extends Common\Utility_Functions {
             $extractedImagePath = null;
             $extractedImageInfo = null;
             $extractedData = '';
-
+            $pdf_metadata = [];
             $_mem_info = $this->pdm_mem_info;
             $_mem_peak_usage = memory_get_peak_usage(true);
 
@@ -1113,9 +1167,9 @@ class PDF_Doc_Core extends Common\Utility_Functions {
                     $pdf_metadata = $_pdffile->getDetails();
 
                     // append filesize to metadata
-                    $pdf_metadata['FileSize'] = $this->MakeReadable($this->get_working_filesize());
+                    $pdf_metadata['FileSize'] = $this->make_file_size_readable($this->get_working_filesize());
                     $pdf_metadata['PdfVersion'] = $this->get_pdfversion($input_filename);
-                    $this->pdf_DebugLog("Method: extractTextFromPDF(): Meta Data:",  json_encode($pdf_metadata));
+                    //$this->pdf_DebugLog("Meta Data:",  json_encode($pdf_metadata));
                   
                     // clear pdf_parser reference in attempt to free its resources
                     $pdf_parser = null;
@@ -1233,7 +1287,8 @@ class PDF_Doc_Core extends Common\Utility_Functions {
                 //     'pdf_metadata'          =>  ['metadata' => wp_json_encode($meta),],
                 //     'pdf_filesize'          =>  $filesize,
                 //     'status'                =>  'complete',
-                //     ];
+                $this->pdf_DebugLog("File too Large:", $input_filename);
+
                     return false;
             }
             catch(\Exception $e) {
@@ -1309,50 +1364,7 @@ class PDF_Doc_Core extends Common\Utility_Functions {
         }
         return false;
     }
-    /**
-     * temporary sets the memory limit for the script
-     * 
-     * @since 1.2.1
-     */
-    private function raise_memory_limit(){
-        ini_set('memory_limit', '768M');
-    }
 
-    /**
-     * restores the original memory limit
-     * 
-     * @since 1.2.1
-     */
-    private function reset_memory_limit(){
-        gc_collect_cycles();
-        ini_restore('memory_limit');
-    }
-
-    /**
-     * returns min memory limit to use before raising memory limit
-     * 
-     * @since 1.2.1
-     */
-    private function get_min_peak_limit(){
-        $mem = ini_get('memory_limit');
-        $mem = $this->return_bytes($mem);
-        return ( ceil( $mem / 2) );
-    }
-
-     /* returns current value option 'force_image_extraction' aka generate pdf preview 
-     * 
-     * @since 1.2.1
-     */
-    private function get_force_image_extraction(){
-        return $this->force_image_extraction;
-    }
-    /* sets the current value option for 'force_image_extraction' aka generate pdf preview 
-     * 
-     * @since 1.2.1
-     */
-    private function set_force_image_extraction($option){
-        $this->force_image_extraction = $option;
-    }   
     /**
      *
 	 * @since 1.0.2

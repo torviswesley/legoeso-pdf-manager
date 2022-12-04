@@ -732,7 +732,7 @@ class WP_List_Table extends Common\Utility_Functions {
 		$per_page = (int) get_user_option( $option );
 		if ( empty( $per_page ) || $per_page < 1 )
 			$per_page = $default;
-			$this->pdf_DebugLog("***PDF's per page: option::", $option);
+			$this->pdf_DebugLog("PDF's per page: option::", $option);
 		/**
 		 * Filters the number of items to be displayed on each page of the list table.
 		 *
