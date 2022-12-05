@@ -630,7 +630,9 @@ class Utility_Functions {
         if(is_array($HTTP_RAW_POST_DATA)){
             $v = [];
             foreach($HTTP_RAW_POST_DATA as $key => $val){
-                $v[$key] = $this->sanitize_postdata($val);
+                if(!empty($val)){
+                    $v[$key] = $this->sanitize_postdata($val);
+                }
             }
             return $v;
         } 

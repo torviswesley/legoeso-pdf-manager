@@ -162,7 +162,7 @@
 					let tableid = "#"+dt_viewdata.table_id;
 					//  add the new data to the table
 					var legoeso_dtable = $(tableid).DataTable({
-						className: 'ui-toolbar ui-widger-header ui-helper-clearfix ui-corner-tl ui-corner-tr',
+						
 						ajax: ajax_url,
 						//data:  oData.data,
 						autowidth: true,
@@ -170,7 +170,7 @@
 						columns: [
 							{title:'ID'},
 							{title:'Image'},
-							{title:'Filename', className:'legoeso-row-class'},
+							{title:'Filename'},
 							{title:'Category'},
 							{title:'Upload User'},
 							{title:'Upload Date'},

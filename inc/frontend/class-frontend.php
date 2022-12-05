@@ -251,11 +251,9 @@ class Frontend extends Common\Utility_Functions {
 		
 		// update custom class to fix table formating
 		$datatable_template = 	'<div class="legoeso-dt-container ">';
-		$datatable_template .=	'<div class="legoeso-table-category"><i class="dashicons dashicons-editor-table"></i>Category: ';
+		$datatable_template .=	'<div class="legoeso-table-header"><i class="dashicons dashicons-editor-table"></i>Category: ';
 		$datatable_template .=	(!empty($category)) ? esc_html(strtoupper($category)) : 'All Documents';
-		$datatable_template .=	'</div><table id="'.esc_attr($_tableid).'" class="display" style="width:100%"></table>';
-		$datatable_template .=	'</div>';
-
+		$datatable_template .=	'</div><table id="'.esc_attr($_tableid).'" class="stripe hover" style="width:100%"></table></div>';
 		return $datatable_template;
 	}
 
