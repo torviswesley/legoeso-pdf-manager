@@ -135,6 +135,7 @@ class Frontend extends Common\Utility_Functions {
 		// load stylesheets
 		wp_enqueue_style( 'legoeso-frontend-styles', plugin_dir_url( __FILE__ ) . 'css/pdf-doc-manager-frontend.css', array(), $this->version, 'all' );
         wp_enqueue_style( 'legoeso-frontend-styles-datatable', plugin_dir_url( __FILE__ ) .'css/dataTables.jqueryui.min.css');
+		wp_enqueue_style('dashicons');
 		wp_enqueue_style( 'legoeso-frontend-styles-jquery-ui', plugin_dir_url( __FILE__ ) .'css/jquery-ui.min.css');
 	}
 
@@ -222,7 +223,6 @@ class Frontend extends Common\Utility_Functions {
 			'category'		=>	$category,
 			'view_doc_url' 	=> 	home_url(), 
 			'table_id' 		=> 	$datatable_id, 
-			'data_filename' => 	$this->get_json_file()
 		];
  
 		if($type == "listview"){
@@ -250,11 +250,10 @@ class Frontend extends Common\Utility_Functions {
 	public function get_tableview($_tableid, $category){
 		
 		// update custom class to fix table formating
-		$datatable_template = 	'<div class="legoeso-dt-container ui-widget-content">';
-		$datatable_template .=	'<i class="dashicons dashicons-list-view"></i>Category: ';
+		$datatable_template = 	'<div class="legoeso-dt-container ">';
+		$datatable_template .=	'<div class="legoeso-table-category"><i class="dashicons dashicons-editor-table"></i>Category: ';
 		$datatable_template .=	(!empty($category)) ? esc_html(strtoupper($category)) : 'All Documents';
-		//$datatable_template .=	'</h3>';
-		$datatable_template .=	'<table id="'.esc_attr($_tableid).'" class="display" style="width:100%"></table>';
+		$datatable_template .=	'</div><table id="'.esc_attr($_tableid).'" class="display" style="width:100%"></table>';
 		$datatable_template .=	'</div>';
 
 		return $datatable_template;
@@ -308,7 +307,7 @@ class Frontend extends Common\Utility_Functions {
 			$list_class = '';
 			if($list_type == 'u'){
 				$list_class = 'legoeso_ulist';
-				$icon_class = '<i class="ui-icon ui-icon-circle-triangle-e "></i>';
+				$icon_class = '<i class="dashicons dashicons-pdf"></i>';
 			}
 
 			$html_list =  wp_kses_post('<'.$list_type.'l id="'.$listview_id.'" name="'.$listview_id.'" class="'.$list_class.'">');
@@ -387,7 +386,6 @@ class Frontend extends Common\Utility_Functions {
 			 */
 			global $wpdb;
 			$_result = $wpdb->get_results($query, $ResultArrayType);
-			//$wpdb->flush();
 			return( ['db_results' => $_result, 'num_rows' => $wpdb->num_rows, 'error' => $wpdb->last_error,] ) ;
 		}
 	}
@@ -509,7 +507,6 @@ class Frontend extends Common\Utility_Functions {
 			'ajax_url'			=>	admin_url( 'admin-ajax.php'),
 			'action'			=>	'show_data',
 			'datatable_views'	=>	$this->get_datatable_views(),
-			'json_data_url'		=>	plugin_dir_url( __DIR__) .'frontend/data/',
 			'nonce'				=>	wp_create_nonce( $this->get_nonce_seed() ),
 		);
 	
@@ -521,30 +518,20 @@ class Frontend extends Common\Utility_Functions {
 	}
 
 	/**
-	 * Setup ajax handler to retrieve shortcode data for documents
+	 * Setup ajax handler retreives json data to be used with shortcode
 	 * 
 	 * @since 1.2.2
 	 * 
 	 */
 	public function legoeso_frontend_ajax_handler(){
-		if( is_user_logged_in() && current_user_can($this->get_min_capability() ) ){
-			//if( check_ajax_referer($this->get_nonce_seed()) ){
-				$view_category = sanitize_text_field(urldecode($_GET['category']));
-				$this->pdf_DebugLog("Getting data for:: Category:", $view_category);
+		//check_ajax_referer($this->get_nonce_seed(),'nonce', true );
 
-				//	generate json data to be displayed in DataTable 
-				$json_data = $this->generate_datatable_json_data($view_category, $this->get_record_limit());
-				
-				die (wp_json_encode($json_data));
-				// print_r( wp_json_encode($json_data) );
-				// exit();
-				//return( $this->generate_datatable_json_data($view_category, $this->get_record_limit()) );
-				//die('This is a test, ajax frontend. '.$view_category );
-			//}
-		}
-		else {
-			die("Users must be logged in!");
-		}
+		$view_category = sanitize_text_field(urldecode($_GET['category']));
+		
+		//	generate json data to be displayed in DataTable 
+		$json_data = $this->generate_datatable_json_data($view_category, $this->get_record_limit());
+		die (wp_json_encode($json_data));
+
 	}
 
 	/**

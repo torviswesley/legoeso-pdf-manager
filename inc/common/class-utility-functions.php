@@ -166,10 +166,9 @@ class Utility_Functions {
         }
         // get list of files that can be removed/deleted
         $files_to_delete = array_diff($this->legoeso_dir_tree($wp_upload_dir['basedir'],''), $this->get_valid_filepaths());
-       // delete the files
-        $this->delete_files($files_to_delete);
-        //$this->pdf_DebugLog("Legoeso - files deleted:", $files_to_delete);
-        return true;
+
+        // delete the files and return list to caller
+        return ( $this->delete_files($files_to_delete) );
     }
 
     /**
@@ -243,19 +242,22 @@ class Utility_Functions {
      */
     function delete_files($unmapped_files){
         if(is_array($unmapped_files)){
+            $deleted_files = [];
             foreach($unmapped_files as $file){
                 if(file_exists($file)){
                     if(mime_content_type($file) == 'application/x-zip-compressed'){
                         if($this->is_expired($file)){
                             unlink($file);
+                            $deleted_files[] = $file;
                         }
                     }
                     else {
                         unlink($file);
+                        $deleted_files[] = $file;
                     }
                 }
             }
-            return true;
+            return $deleted_files;
         }
     }
 

@@ -156,27 +156,6 @@
 			'&category='+ encodeURIComponent(dt_viewdata.category) + 
 			'&nonce=' + get_wpnonce();
 
-		// create new instance of XMLHttpRequest to fetch data
-		// let xhr = new XMLHttpRequest();
-
-		// xhr.open('GET', ajax_url);
-		// xhr.send();
-		// xhr.addEventListener("load", function (e) {
-		// 	if (xhr.readyState === 4 && xhr.status === 200) {
-
-		// 		//  get and parse the JSON string
-		// 		let json_resp =  xhr.responseText;
-				
-		// 		// if(!isJsonString(json_resp))
-		// 		// 	return;
-
-		// 		let oData = JSON.parse(json_resp);
-		// 		// extract table headers from first row of data
-		// 		let getColumnNames 	= formatColumnNames(oData.columns);
-		// 		// get info to the current used to create DataTable
-		// 		let view_data 	= getDTViewData();
-		// 		let viewType = view_data.view_type;
-		// 		// get document url
 				let _doc_url 	= dt_viewdata.view_doc_url;
 				let viewType = dt_viewdata.view_type;
 					// set table id 
@@ -191,7 +170,7 @@
 						columns: [
 							{title:'ID'},
 							{title:'Image'},
-							{title:'Filename'},
+							{title:'Filename', className:'legoeso-row-class'},
 							{title:'Category'},
 							{title:'Upload User'},
 							{title:'Upload Date'},
@@ -259,8 +238,6 @@
 						}
 					});
 				return;
-			// }
-		// });
 	}
 
 
@@ -275,7 +252,7 @@
 	 * @param {object} objViewData  object containing datatable data
 	 */
 
-	// duck out if the legoesodata onject is not found
+	// duck out if the legoesodata object is not found
 	if(typeof(legoesodata) != "object")
 		return;
 

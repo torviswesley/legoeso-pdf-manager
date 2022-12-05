@@ -458,14 +458,15 @@ class Admin extends Common\Utility_Functions{
 	 */
 	public function legoeso_cron_cleanup(){
 		// execute clean up function
-		$this->legoeso_cleanup();
+		$deleted_files = $this->legoeso_cleanup();
 		//  setup the upload directory to store pdf files
 		$wp_upload_dir = wp_upload_dir();
 
 		// build path to current upload directory
 		$pdm_upload_dir = $wp_upload_dir['path']."/legoeso_pdm_data/";
 		if(is_dir($pdm_upload_dir)){
-			file_put_contents($pdm_upload_dir.'legoeso-last-scheduled-cleanup-run-'.time().'.txt','Legoeso PDF Manager last scheduled cleanup was ran @ '.time().', clean up successful!');
+			$str_text = 'Legoeso PDF Manager last scheduled cleanup was ran @ '.time().', clean up successful! ';
+			file_put_contents($pdm_upload_dir.'legoeso-last-scheduled-cleanup-run-'.time().'.txt', $str_text.'The following files were deleted:');
 		}
 	}
 

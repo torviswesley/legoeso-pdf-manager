@@ -16,7 +16,7 @@
 .convertion_result_button {
 	font-size: 1.1rem;
 	padding:1rem;
-	margin:1rem;
+	
 	border-radius:4px;
 	background-color:#6B6B6B;
 	border: 1px solid #484848;
@@ -41,10 +41,22 @@
 	border: 1px solid #a3a3a3;
 	font-size: 0.8rem;
 }
+.legoeso-row-class{
+	font-family: Verdana, Geneva, Tahoma, sans-serif;
+	color: rgb(250, 0, 50);
+}
+
 .legoeso_header {
 	color:rgb(27, 24, 24);
 }
 
 .legoeso_ulist {
 	list-style: none;
+}
+.legoeso-table-category {
+	padding-bottom: 5px;
+	vertical-align: middle;
+	
+	background-color: #f5f5f5;
+	font-family: Verdana, Geneva, Tahoma, sans-serif;
 }
