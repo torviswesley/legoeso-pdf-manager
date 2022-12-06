@@ -50,7 +50,7 @@ Easily include all or a list of PDF documents into your posts by using one of th
 2. Save and preview your page. A list of documents shall appear on the page.
 
 == Limitations ==
-1. The Legoeso PDF Manager uses smalot/PHP PDF Parser and is not suitable for parsing very large files [See: smalot/pdfparser](https://github.com/smalot/pdfparser/issues/104) and may generate out of memory allocation errors when attempting to parse some file. In cases of large files, no text parsing will be attempted, an image preview will be extracted instead. 
+1. The Legoeso PDF Manager uses smalot/PHP PDF Parser and is not suitable for parsing very large files [See: smalot/pdfparser](https://github.com/smalot/pdfparser/issues/104) and may generate out of memory allocation errors when attempting to parse some files. In cases of large files, no text parsing will be attempted, an image preview will be extracted instead. 
 2. Encrypted PDF's files are not supported 
 
 == Other Usages: ==
