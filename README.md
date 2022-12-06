@@ -18,7 +18,6 @@ Features include unlimited file uploads. Upload documents via drag and drop, bul
 1. Imagick
 2. ZipArchive
 
-
 ## Features include:
 1. Bulk import of PDFs documents - easily drag and drop to upload a single document, a multiple documents or a zip file containing a multiple documents.  
 2. Single or bulk delete of PDFs.
@@ -50,6 +49,9 @@ Features include unlimited file uploads. Upload documents via drag and drop, bul
 1. E-mail PDF - @ request
 2. Restrict documents by user groups - @ request
 3. Extract and collect data from pdf documents that can be stored - @ request
+
+## Screenshots
+![alt text](https://legoeso.com/wp-content/uploads/2022/12/Screenshot-2022-11-13-232526.png?raw=true)
 
 ## Changes v1.2.2 
 1. Implemented new DataTable widget child rows to allow access to document metadata.
