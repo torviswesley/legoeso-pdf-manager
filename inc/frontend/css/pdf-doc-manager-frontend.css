@@ -39,11 +39,37 @@
 	vertical-align: middle;
 	
 }
-.legoeso-dt-container{
+
+.dataTables_wrapper select {
+	color: black;
+	font-size: 1rem;
+}
+.dataTables_wrapper select option{
+	color: black;
+	font-size: .9rem;
+}s
+.legoeso-dt-container a:link  {
+	color:black;
+}
+
+.legoeso-dt-container a:hover  {
+	color:red;
+}
+.legoeso-dt-container a:active  {
+	color:blue;
+}
+
+.legoeso-dt-container a:visited  {
+	color:purple;
+}
+
+
+.legoeso-dt-container {
 	background: #ffffff; 
 	border-radius: 4px; 
 	padding: 1em; 
 	border: 1px solid #a3a3a3;
+	color: black;
 	font-size: 0.8rem;
 	font-family: Verdana, Geneva, Tahoma, sans-serif;
 }

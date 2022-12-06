@@ -6,7 +6,7 @@
 	?>
 	<div class="accordion" id="accordion">
 		<!-- Item #1 -->
-		<h3>Operating System: <?php echo esc_html($sys_info['server']);?></h3>
+		<h3><strong>Operating System:</strong> <?php echo esc_html($sys_info['server']);?></h3>
 
 		<div class="accordion-item accordion-body">
 			<strong>Current Operating System:</strong>  <?php echo esc_html($sys_info['server']);?><br>
@@ -17,7 +17,7 @@
 		</div>
 
 		<!-- Item #2 -->				
-		<h3>Short Codes: How to use shortcodes to display documents within your pages.</h3>
+		<h3> <strong>Short Codes:</strong>  How to use shortcodes to display documents within your pages.</h3>
 
 		<div class="accordion-item accordion-body">
 			<strong>Legoeso PDF Shortcodes</strong><br><br>
@@ -63,6 +63,25 @@
 			</div>
 
 		</div>
+		<!-- Item #3 -->
+				<!-- Item #1 -->
+				<h3><strong>Help: Troubling Shooting : Dealing with errors.</strong></h3>
+
+				<div class="accordion-item accordion-body">
+					<strong>Troubling with common errors:</strong>  <br>
+					<ul style="list-style: square;">
+						<li> The Legoeso PDF Manager uses <u> smalot/PHP PDF Parser</u> and is not suitable for parsing very large files 
+							See: <a href="https://github.com/smalot/pdfparser/issues/104" target="_blank">smalot/pdfparser </a> and may generate out of memory allocation
+							 errors, or HTTP: 500 Internal Server Errors when attempting to parse some files.
+						</li>
+						<li>If one of the errors above occurs, try checking the option "Force PDF Preview Only" when uploading files. No text parsing will be attempted, 
+							 and an image preview will be extracted instead. </li>
+						<li>
+							Encrypted PDF's files are not supported.	
+						</li>
+					</ul>
+				</div>
+
 	</div>
 
 	<div>

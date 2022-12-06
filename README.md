@@ -51,6 +51,7 @@ Features include unlimited file uploads. Upload documents via drag and drop, bul
 3. Extract and collect data from pdf documents that can be stored - @ request
 
 ## Screenshots
+### Tableview with preview image
 ![Tableview with preview image](https://legoeso.com/wp-content/uploads/2022/12/Screenshot-2022-12-06-061842.png?raw=true)
 ![Tableview with metadata](https://legoeso.com/wp-content/uploads/2022/12/Screenshot-2022-12-06-062058.png?raw=true)
 ![Admin | drag drop uploader](https://legoeso.com/wp-content/uploads/2022/12/Screenshot-2022-12-06-063800.png?raw=true)
