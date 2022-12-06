@@ -51,7 +51,13 @@ Features include unlimited file uploads. Upload documents via drag and drop, bul
 3. Extract and collect data from pdf documents that can be stored - @ request
 
 ## Screenshots
-![alt text](https://legoeso.com/wp-content/uploads/2022/12/Screenshot-2022-11-13-232526.png?raw=true)
+![Tableview with preview image](https://legoeso.com/wp-content/uploads/2022/12/Screenshot-2022-12-06-061842.png?raw=true)
+![Tableview with metadata](https://legoeso.com/wp-content/uploads/2022/12/Screenshot-2022-12-06-062058.png?raw=true)
+![Admin | drag drop uploader](https://legoeso.com/wp-content/uploads/2022/12/Screenshot-2022-12-06-063800.png?raw=true)
+![Admin | alternate uploader](https://legoeso.com/wp-content/uploads/2022/12/Screenshot-2022-12-06-061842.png?raw=true)
+![Admin | filter list](https://legoeso.com/wp-content/uploads/2022/12/Screenshot-2022-12-06-063945.png?raw=true)
+![Admin | setting view](https://legoeso.com/wp-content/uploads/2022/12/Screenshot-2022-12-06-064014.png?raw=true)
+![Unorered list view](https://legoeso.com/wp-content/uploads/2022/12/Screenshot-2022-12-06-064051.png?raw=true)
 
 ## Changes v1.2.2 
 1. Implemented new DataTable widget child rows to allow access to document metadata.
