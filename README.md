@@ -51,18 +51,20 @@ Features include unlimited file uploads. Upload documents via drag and drop, bul
 3. Extract and collect data from pdf documents that can be stored - @ request
 
 ## Screenshots
-### Tableview with preview image shortcode: 
-#### [legoeso_display_documents type="document_preview"] 
+### Tableview with preview image: 
+#### shortcode: [legoeso_display_documents type="document_preview"] 
 ![Tableview with preview image](https://legoeso.com/wp-content/uploads/2022/12/Screenshot-2022-12-06-061842.png?raw=true)
-### Tableview with metadata shortcode: 
-#### [legoeso_display_documents]
+### Tableview with metadata: 
+#### shortcode: [legoeso_display_documents]
 ![Tableview with metadata](https://legoeso.com/wp-content/uploads/2022/12/Screenshot-2022-12-06-062058.png?raw=true)
-### Unordered list view shortcode: 
-#### [legoeso_display_documents type="listview" pdf_id="6183770, 221932, 744517, 683331"]
+### Unordered list view: 
+#### shortcode: [legoeso_display_documents type="listview" pdf_id="6183770, 221932, 744517, 683331"]
 ![Unordered list view](https://legoeso.com/wp-content/uploads/2022/12/Screenshot-2022-12-06-064051.png?raw=true)
+### Admin Table view with drag and drop uploader: 
 ![Admin | drag drop uploader](https://legoeso.com/wp-content/uploads/2022/12/Screenshot-2022-12-06-063800.png?raw=true)
-![Admin | alternate uploader](https://legoeso.com/wp-content/uploads/2022/12/Screenshot-2022-12-06-061842.png?raw=true)
+### Admin Table view with filtered list: 
 ![Admin | filter list](https://legoeso.com/wp-content/uploads/2022/12/Screenshot-2022-12-06-063945.png?raw=true)
+### Admin Legoeso Settings: 
 ![Admin | setting view](https://legoeso.com/wp-content/uploads/2022/12/Screenshot-2022-12-06-064014.png?raw=true)
 
 
