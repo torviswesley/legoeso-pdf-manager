@@ -379,7 +379,7 @@
 
 					// draw progress bar
 					doProgressBar( strText + percentComplete + '% ', percentComplete);
-					console.log(percentComplete);
+					//console.log(percentComplete);
 				}
 				change_drag_area_text(percentComplete + '% ' + strText  );
 			}, false
@@ -416,10 +416,10 @@
 				value: _percentComplete,
 				change: function() {
 					progressLabel.text(progressText);
-					console.log('change:'+progressText);
+					//console.log('change:'+progressText);
 				},
 				complete: function() {
-					console.log('complete: ' + progressText);
+					//console.log('complete: ' + progressText);
 				}
 			});
 
@@ -516,7 +516,7 @@
 		//e.stopPropagation();
 		e.preventDefault();
 		change_drag_area_text('Drop Here', 'green');
-		console.log('dragenter');
+		//console.log('dragenter');
 	});
 
 	// prevent page from redirecting
@@ -524,7 +524,7 @@
 		e.preventDefault();
 		//e.stopPropagation();
 		change_drag_area_text("Drop Here", "green");
-		console.log('dragover');
+		//console.log('dragover');
 	});
 
 	// Drag enter 
@@ -532,7 +532,7 @@
 		e.stopPropagation();
 		e.preventDefault();
 		change_drag_area_text('Drag PDF Files Here');
-		console.log('dragleave');
+		//console.log('dragleave');
 	});
 
 	// Drop - Fires after files have been dropped
@@ -580,7 +580,7 @@
 
 			try {
 			
-				console.log('ready!');
+				//console.log('ready!');
 				// grab the form element
 				let _pdm_upload_frm = this;
 
@@ -618,10 +618,10 @@
 			// clear the server response box if it is visible
 			clear_response_area();
 			
-			console.log('clicked browse..');
+			//console.log('clicked browse..');
 			try {
 			
-				console.log('ready!');
+				//console.log('ready!');
 				// grab the form element
 				let _pdm_upload_frm = this.closest('form');
 
