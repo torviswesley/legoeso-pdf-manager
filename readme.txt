@@ -17,7 +17,7 @@ The Legoeso PDF Manager is a lightweight, simple but powerful PDF document manag
 
 Easily include all or a list of PDF documents into your posts by using one of the shortcodes. Secure access to your documents, only logged in users are able to view the documents you provide to your visitors.
 
-== Installation Manually ==
+== Install Manually ==
 1. Download the latest Legoeso PDF Manager archive from WordPress and extract to a folder or alternatively search the WordPress plugin repository for Legoeso PDF Manager
 2. Upload the plugin to the `/wp-content/plugins/` directory
 3. Activate the plugin through the 'Plugins' menu in WordPress
@@ -78,11 +78,28 @@ If no text could be detected from the document only a preview image will be show
 The Legoeso PDF Manager stores your PDF documents within the WordPress upload directory.
 
 == Screenshots ==
+## Screenshots
+### Tableview with preview image: 
+#### shortcode: [legoeso_display_documents type="document_preview"] 
 
-1. Example of table list view of PDF documents with image preview of document.(png|jpg|jpeg|gif). Screenshots are stored in the /assets directory.
-2. Another example of table list view of PDF documents with image preview of document.
-3. Example of table list view of PDF documents.
+### Tableview with metadata: 
+#### shortcode: [legoeso_display_documents]
+
+### Unordered list view: 
+#### shortcode: [legoeso_display_documents type="listview" pdf_id="6183770, 221932, 744517, 683331"]
+
+### Admin Table view with drag and drop uploader: 
+
+1. Example table view of PDF documents with image preview.(png|jpg|jpeg|gif). Screenshots are stored in the /assets directory.
+![Tableview with preview image](https://legoeso.com/wp-content/uploads/2022/12/Screenshot-2022-12-06-061842.png?raw=true)
+2. Example table view of PDF documents with metadata.
+![Tableview with metadata](https://legoeso.com/wp-content/uploads/2022/12/Screenshot-2022-12-06-062058.png?raw=true)
+3. Example of unordered list view of PDF documents.
+![Unordered list view](https://legoeso.com/wp-content/uploads/2022/12/Screenshot-2022-12-06-064051.png?raw=true)
 4. Preview of admin area.
+![Admin | drag drop uploader](https://legoeso.com/wp-content/uploads/2022/12/Screenshot-2022-12-06-063800.png?raw=true)
+![Admin | filter list](https://legoeso.com/wp-content/uploads/2022/12/Screenshot-2022-12-06-063945.png?raw=true)
+![Admin | setting view](https://legoeso.com/wp-content/uploads/2022/12/Screenshot-2022-12-06-064014.png?raw=true)
 
 == Changelog ==
 
