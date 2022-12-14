@@ -51,7 +51,7 @@ Easily include all or a list of PDF documents into your posts by using one of th
 
 == Limitations ==
 1. The Legoeso PDF Manager uses smalot/PHP PDF Parser and is not suitable for parsing very large files [See: smalot/pdfparser](https://github.com/smalot/pdfparser/issues/104) and may generate out of memory allocation errors when attempting to parse some files. In cases of large files, no text parsing will be attempted, an image preview will be extracted instead. 
-2. Encrypted PDF's files are not supported 
+2. Encrypted PDF's files can be uploaded, however, are not supported for extraction or image preview.	
 
 == Other Usages: ==
 1. E-mail PDFs - @ request
@@ -90,16 +90,12 @@ The Legoeso PDF Manager stores your PDF documents within the WordPress upload di
 
 ### Admin Table view with drag and drop uploader: 
 
-1. Example table view of PDF documents with image preview.(png|jpg|jpeg|gif). Screenshots are stored in the /assets directory.
-![Tableview with preview image](https://legoeso.com/wp-content/uploads/2022/12/Screenshot-2022-12-06-061842.png?raw=true)
-2. Example table view of PDF documents with metadata.
-![Tableview with metadata](https://legoeso.com/wp-content/uploads/2022/12/Screenshot-2022-12-06-062058.png?raw=true)
-3. Example of unordered list view of PDF documents.
-![Unordered list view](https://legoeso.com/wp-content/uploads/2022/12/Screenshot-2022-12-06-064051.png?raw=true)
-4. Preview of admin area.
-![Admin | drag drop uploader](https://legoeso.com/wp-content/uploads/2022/12/Screenshot-2022-12-06-063800.png?raw=true)
-![Admin | filter list](https://legoeso.com/wp-content/uploads/2022/12/Screenshot-2022-12-06-063945.png?raw=true)
-![Admin | setting view](https://legoeso.com/wp-content/uploads/2022/12/Screenshot-2022-12-06-064014.png?raw=true)
+1. Table List View of PDF documents with image preview.
+2. Table List View of PDF documents with metadata.
+3. Unordered List View of PDF documents.
+4. Admin Dash Board.
+5. Admin Dash Board - Drag and Drop Area
+6. Admin Dash Board - Settings
 
 == Changelog ==
 

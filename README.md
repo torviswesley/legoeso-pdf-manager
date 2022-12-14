@@ -43,7 +43,7 @@ Features include unlimited file uploads. Upload documents via drag and drop, bul
 
 ## Limitations
 1. The PHP PDF Parser is not suitable for parsing very large files (See: https://github.com/smalot/pdfparser/issues/104 ) and may generate 'Fatal errors:  Allowed memory allocation error' when attempting to parse some files. In cases of large files, no text parsing will be attempted, only an image preview will be extracted. 
-2. Encrypted PDF's files are not supported. 
+2. Encrypted PDF's files can be uploaded, however, are not supported for extraction or image preview.	
 
 ## Other Usages:
 1. E-mail PDF - @ request

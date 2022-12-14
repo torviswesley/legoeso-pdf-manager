@@ -63,15 +63,17 @@
 	color:purple;
 }
 
-
 .legoeso-dt-container {
 	background: #ffffff; 
 	border-radius: 4px; 
 	padding: 1em; 
-	border: 1px solid #a3a3a3;
 	color: black;
 	font-size: 0.8rem;
 	font-family: Verdana, Geneva, Tahoma, sans-serif;
+}
+
+.legoeso-dt-container table td, table th{
+	border: none ;
 }
 
 .legoeso_header {

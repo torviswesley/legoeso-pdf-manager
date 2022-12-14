@@ -65,10 +65,10 @@
 		</div>
 		<!-- Item #3 -->
 				<!-- Item #1 -->
-				<h3><strong>Help: Troubling Shooting : Dealing with errors.</strong></h3>
+				<h3><strong>Help: Troubleshooting : Dealing with errors.</strong></h3>
 
 				<div class="accordion-item accordion-body">
-					<strong>Troubling with common errors:</strong>  <br>
+					<strong>Troubleshooting some common errors:</strong>  <br>
 					<ul style="list-style: square;">
 						<li> The Legoeso PDF Manager uses <u> smalot/PHP PDF Parser</u> and is not suitable for parsing very large files 
 							See: <a href="https://github.com/smalot/pdfparser/issues/104" target="_blank">smalot/pdfparser </a> and may generate out of memory allocation
@@ -77,7 +77,7 @@
 						<li>If one of the errors above occurs, try checking the option "Force PDF Preview Only" when uploading files. No text parsing will be attempted, 
 							 and an image preview will be extracted instead. </li>
 						<li>
-							Encrypted PDF's files are not supported.	
+							Encrypted PDF's files can be uploaded, however, are not supported for extraction or image preview.	
 						</li>
 					</ul>
 				</div>
